@@ -9,6 +9,8 @@ const ARTEN = {
   [WebIFC.IFCWALLSTANDARDCASE]: 'wand',
   [WebIFC.IFCWINDOW]: 'fenster',
   [WebIFC.IFCDOOR]: 'tuer',
+  [WebIFC.IFCCOLUMN]: 'stuetze',
+  [WebIFC.IFCCOLUMNSTANDARDCASE]: 'stuetze',
   [WebIFC.IFCROOF]: 'dach',
   [WebIFC.IFCSITE]: 'gelaende',
 };
@@ -33,7 +35,7 @@ export async function ifcLaden(datei) {
   if (modellID < 0) throw new Error('Die Datei konnte nicht als IFC gelesen werden.');
 
   const gruppe = new THREE.Group();
-  const anzahl = { wand: 0, fenster: 0, tuer: 0, dach: 0, gelaende: 0, rest: 0 };
+  const anzahl = { wand: 0, fenster: 0, tuer: 0, stuetze: 0, dach: 0, gelaende: 0, rest: 0 };
   const waende = new Map(); // expressID → Bauteil, für die Eigenschaft „IsExternal“
 
   try {

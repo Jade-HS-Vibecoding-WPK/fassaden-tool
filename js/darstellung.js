@@ -23,6 +23,7 @@ export const MATERIAL = {
   fenster: flaeche(0xa9b8c8, { transparent: true, opacity: 0.55, depthWrite: false }),
   rahmen: flaeche(0x5f6266), // neu gezeichnete Fensterrahmen, deckend im Grau des Dachs
   tuer: flaeche(0xd6d6d3),
+  stuetze: flaeche(0xeeeeec), // bis das Material aus materialien.js gesetzt ist
   dach: flaeche(0x5f6266),
   gelaende: flaeche(0xf1efea),
 };

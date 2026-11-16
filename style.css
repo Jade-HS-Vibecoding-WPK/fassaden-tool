@@ -54,6 +54,7 @@ h2 span { color: var(--akzent); }
 /* Materialwahl: eine Zeile je Himmelsrichtung */
 .materialwahl { display: grid; gap: 10px; }
 .materialzeile { display: grid; grid-template-columns: 58px 26px 1fr; gap: 10px; align-items: center; font-size: 13px; }
+.materialzeile.stuetzen { padding-top: 10px; border-top: 1px solid var(--linie); }
 .materialzeile small { display: block; font-size: 11px; color: var(--leise); }
 .materialzeile select {
   font: inherit; font-size: 13px; color: var(--text);

@@ -1,7 +1,7 @@
 // Bedienoberfläche: Datei wählen oder hineinziehen, Modell anzeigen, Fassade gestalten
 import { Szene } from './szene.js';
 import { ifcLaden } from './ifc.js';
-import { aussenwaendeErkennen, wandFaerben, oeffnungenZuordnen, fensterAnpassen } from './fassade.js';
+import { aussenwaendeErkennen, wandFaerben, oeffnungenZuordnen, fensterAnpassen, stuetzenVorbereiten, stuetzeFaerben } from './fassade.js';
 import { MATERIALIEN, START_MATERIAL, musterBild } from './materialien.js';
 
 const $ = (id) => document.getElementById(id);
@@ -10,10 +10,14 @@ const szene = new Szene(ansicht);
 
 let waende = []; // alle Wände des geladenen Modells
 let oeffnungen = []; // alle Fenster und Türen
+let stuetzen = []; // alle Stützen
 
 // Gewähltes Fassadenmaterial je Himmelsrichtung
 const RICHTUNGSNAMEN = { N: 'Nord', O: 'Ost', S: 'Süd', W: 'West' };
 const materialJeRichtung = { N: START_MATERIAL, O: START_MATERIAL, S: START_MATERIAL, W: START_MATERIAL };
+
+// Ein Material für alle Stützen, unabhängig von den Himmelsrichtungen
+let materialStuetzen = 'sichtbeton';
 
 // Fenstergröße je Himmelsrichtung in % der Größe aus der IFC
 const fensterJeRichtung = {};
@@ -38,21 +42,22 @@ function geltendeFenster() {
   return { N: fensterAlle, O: fensterAlle, S: fensterAlle, W: fensterAlle };
 }
 
-function alleWaendeFaerben() {
+function allesFaerben() {
   const materialien = geltendeMaterialien();
   for (const wand of waende) wandFaerben(wand, materialien, wand === szene.hoverBauteil);
+  for (const stuetze of stuetzen) stuetzeFaerben(stuetze, materialStuetzen);
 }
 
 // Fenster neu einpassen (z. B. nach Reglerbewegung oder wenn eine Wand umgeschaltet wurde)
 function fensterAktualisieren() {
   fensterAnpassen(waende, oeffnungen, geltendeFenster());
-  alleWaendeFaerben();
+  allesFaerben();
   fensterAnzeigen();
 }
 
 // Wände anfahren (hervorheben) und anklicken (außen ↔ innen umschalten)
 szene.istAnklickbar = (bauteil) => bauteil.userData.art === 'wand';
-szene.beiHover = () => alleWaendeFaerben();
+szene.beiHover = () => allesFaerben();
 szene.beiKlick = (wand) => {
   wand.userData.aussen = !wand.userData.aussen;
   fensterAktualisieren();
@@ -79,6 +84,10 @@ function aussenwaendeAnzeigen() {
     $(`anzahl${richtung}`).textContent = wandText(anzahl);
   }
   $('anzahlAlle').textContent = wandText(aussen);
+
+  // Zeile „Stützen“ nur, wenn die IFC Stützen hat
+  materialZeilen.Stuetzen.zeile.hidden = stuetzen.length === 0;
+  $('anzahlStuetzen').textContent = stuetzen.length === 1 ? '1 Stütze' : `${stuetzen.length} Stützen`;
 }
 
 // Eine Zeile der Materialwahl: Name, Musterbild, Auswahlliste
@@ -86,7 +95,7 @@ function aussenwaendeAnzeigen() {
 const materialZeilen = {};
 function materialzeileAufbauen(schluessel, name, lesen, schreiben) {
   const zeile = document.createElement('label');
-  zeile.className = 'materialzeile';
+  zeile.className = schluessel === 'Stuetzen' ? 'materialzeile stuetzen' : 'materialzeile';
 
   const titel = document.createElement('span');
   titel.textContent = name;
@@ -108,7 +117,7 @@ function materialzeileAufbauen(schluessel, name, lesen, schreiben) {
   liste.addEventListener('change', () => {
     schreiben(liste.value);
     anzeigen();
-    alleWaendeFaerben();
+    allesFaerben();
   });
   anzeigen();
 
@@ -122,12 +131,15 @@ function materialwahlAufbauen() {
   for (const [richtung, name] of Object.entries(RICHTUNGSNAMEN)) {
     materialzeileAufbauen(richtung, name, () => materialJeRichtung[richtung], (wert) => { materialJeRichtung[richtung] = wert; });
   }
+  materialzeileAufbauen('Stuetzen', 'Stützen', () => materialStuetzen, (wert) => { materialStuetzen = wert; });
+  materialZeilen.Stuetzen.zeile.hidden = true; // erscheint erst, wenn ein Modell mit Stützen geladen ist
   materialwahlUmschalten();
 }
 
-// Je nach Schalter nur die Zeile „Alle“ oder die vier Zeilen je Seite zeigen
+// Je nach Schalter nur die Zeile „Alle“ oder die vier Zeilen je Seite zeigen (die Zeile „Stützen“ bleibt)
 function materialwahlUmschalten() {
   for (const [schluessel, { zeile }] of Object.entries(materialZeilen)) {
+    if (schluessel === 'Stuetzen') continue;
     zeile.hidden = (schluessel === 'Alle') !== materialAlleGleich;
   }
 }
@@ -137,7 +149,7 @@ $('materialAlleGleich').addEventListener('change', (ereignis) => {
   if (materialAlleGleich && materialAlle === null) materialAlle = materialJeRichtung.N;
   materialZeilen.Alle.anzeigen();
   materialwahlUmschalten();
-  alleWaendeFaerben();
+  allesFaerben();
 });
 materialwahlAufbauen();
 
@@ -264,6 +276,7 @@ async function dateiOeffnen(datei) {
     const { gruppe, anzahl } = await ifcLaden(datei);
     waende = aussenwaendeErkennen(gruppe);
     oeffnungen = oeffnungenZuordnen(gruppe, waende);
+    stuetzen = stuetzenVorbereiten(gruppe);
     szene.zeigeModell(gruppe);
     fensterAktualisieren();
     aussenwaendeAnzeigen();
@@ -271,7 +284,7 @@ async function dateiOeffnen(datei) {
     $('legende').hidden = false;
     statusZeigen(
       `${datei.name}\n` +
-      `${anzahl.wand} Wände · ${anzahl.fenster} Fenster · ${anzahl.tuer} Türen · ${anzahl.dach} Dachteile · ${anzahl.rest} weitere Bauteile`
+      `${anzahl.wand} Wände · ${anzahl.fenster} Fenster · ${anzahl.tuer} Türen · ${anzahl.stuetze ? `${anzahl.stuetze} Stützen · ` : ''}${anzahl.dach} Dachteile · ${anzahl.rest} weitere Bauteile`
     );
   } catch (fehler) {
     console.error(fehler);

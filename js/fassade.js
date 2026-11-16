@@ -224,6 +224,41 @@ export function wandFaerben(wand, materialJeRichtung, hover = false) {
   for (const netz of wand.children) netz.material = material;
 }
 
+// ---------- Stützen ----------
+
+// Alle Stützen des Modells; bekommen Texturkoordinaten in Metern, damit das Material im echten Maßstab sitzt.
+// Seitenflächen: waagerecht entlang der Fläche, senkrecht die Höhe. Ober- und Unterseite: Draufsicht.
+export function stuetzenVorbereiten(gruppe) {
+  gruppe.updateMatrixWorld(true);
+  const stuetzen = gruppe.children.filter((b) => b.userData.art === 'stuetze');
+  const p = new THREE.Vector3();
+  const n = new THREE.Vector3();
+  for (const stuetze of stuetzen) {
+    for (const netz of stuetze.children) {
+      const pos = netz.geometry.attributes.position;
+      const nor = netz.geometry.attributes.normal;
+      const normalenMatrix = new THREE.Matrix3().getNormalMatrix(netz.matrixWorld);
+      const uv = new Float32Array(pos.count * 2);
+      for (let i = 0; i < pos.count; i++) {
+        p.fromBufferAttribute(pos, i).applyMatrix4(netz.matrixWorld);
+        n.fromBufferAttribute(nor, i).applyMatrix3(normalenMatrix).normalize();
+        const deckflaeche = Math.abs(n.y) > 0.7;
+        // Richtung entlang der Seitenfläche: waagerecht und quer zur Flächenrichtung
+        uv[2 * i] = deckflaeche ? p.x : (p.x * -n.z + p.z * n.x) / Math.hypot(n.x, n.z);
+        uv[2 * i + 1] = deckflaeche ? p.z : p.y;
+      }
+      netz.geometry.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+    }
+  }
+  return stuetzen;
+}
+
+// Stütze mit dem gewählten Material einfärben
+export function stuetzeFaerben(stuetze, materialID) {
+  const material = fassadenMaterial(materialID);
+  for (const netz of stuetze.children) netz.material = material;
+}
+
 // ---------- Fenster und Wandscheiben ----------
 
 // Punkt der Welt in Wand-Koordinaten: u entlang der Wand, v = Höhe, w quer dazu (0 = Wandmitte)

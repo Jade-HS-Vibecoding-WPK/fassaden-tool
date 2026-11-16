@@ -98,6 +98,7 @@ Erledigte Sitzungen abhaken, die nächste offene Nummer ist dran.
 - [x] 6. Fenster pro Himmelsrichtung (Breite/Höhe in %) (16.11.)
 - [x] 6b. Material: Schalter „Alle Seiten gleich“ (Wunsch der Nutzerin, wie die Oberflächen-Überschreibung in ArchiCAD) (16.11.)
 - [x] 6c. Fenster: Schalter „Alle Seiten gleich“ (wie 6b, Wunsch der Nutzerin) (16.11.)
+- [x] 6d. Stützen: ein Material für alle Stützen (Wunsch der Nutzerin) (16.11.)
 - [ ] 7. Kennwerte (Fassadenfläche, Fensterfläche, Fensterflächenanteil)
 - [ ] 8. Varianten speichern, mit 5 Bildern (Perspektive + N/O/S/W)
 - [ ] 9. Variantenvergleich nebeneinander
@@ -122,7 +123,7 @@ Erledigte Sitzungen abhaken, die nächste offene Nummer ist dran.
 Wenn es eng wird, zuerst streichen: 19 (PDF-Einzelseiten), dann 16 (Ortssuche).
 Was bis Do 10:30 nicht fertig ist, wandert zu Could.
 
-## Stand (16.11.2026, nach Sitzung 6c)
+## Stand (16.11.2026, nach Sitzung 6d)
 - CLAUDE.md und PLAN.md angelegt, Plan mit der Nutzerin abgestimmt.
 - Test-IFC liegt in `testdaten/` (Einfamilienhaus, Revit 2023, IFC2x3: 192 Wände, 57 Fenster, 49 Türen).
   Quelle: Bundesingenieurkammer, Seite „BIM-Praxisbeispiele“ (Download zum Betrachten angeboten).
@@ -196,6 +197,17 @@ Was bis Do 10:30 nicht fertig ist, wandert zu Could.
   Material- und Fenster-Schalter sind unabhängig voneinander. Getestet mit `Test-ArchiCAD.ifc`: an/aus/wieder an,
   3D-Fenster ändern sich sofort, Zurücksetzen klappt, keine Fehler. Nur `app.js` und `index.html` geändert.
   Problem: keines. Auch dieser Schalter geht beim Neuladen verloren (gespeichert wird mit den Varianten, Sitzung 8).
+
+- Sitzung 6d (16.11.): Stützen (IfcColumn) sind eine eigene Bauteil-Art und bekommen ein gemeinsames Material.
+  Im Bereich „3 Fassade“ unter den Himmelsrichtungen eine eigene Zeile „Stützen“ (mit dünner Trennlinie, Anzahl,
+  Musterbild, gleiche 10 Materialien). **Entscheidung:** Startwert Sichtbeton. Die Zeile hängt nicht am Schalter
+  „Alle Seiten gleich“ und erscheint nur, wenn die IFC Stützen hat. Muster im echten Maßstab:
+  Seitenflächen waagerecht entlang der Fläche, Ober-/Unterseite in Draufsicht. Statuszeile nennt jetzt auch die Stützen.
+  Getestet: `Test-ArchiCAD.ifc` 4 runde Stützen, Einfamilienhaus (Revit) 8 Stützen; Materialwechsel sofort sichtbar,
+  Schalter an/aus lässt die Zeile stehen, keine Fehler. Geändert: `ifc.js`, `fassade.js`, `darstellung.js`, `app.js`, `index.html`, `style.css`.
+  Probleme: Bei runden Stützen kann das Muster an einer Stelle einen kleinen Versatz haben (fällt bei Beton/Putz nicht auf,
+  bei Klinker/Holz evtl. schon). Das Ausblenden der Zeile ohne Stützen ist nicht getestet, da beide Test-IFCs Stützen haben.
+  Auch die Stützenwahl geht beim Neuladen verloren (gespeichert wird mit den Varianten, Sitzung 8).
 
 ## Nächste Schritte
 - Sitzung 7: Kennwerte (Fassadenfläche, Fensterfläche, Fensterflächenanteil) je Himmelsrichtung und gesamt.
