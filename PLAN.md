@@ -9,14 +9,14 @@ nebeneinander vergleicht und als PDF mitnimmt.
 ## Must (läuft spätestens Do 12 Uhr)
 - [ ] IFC-Datei des eigenen Entwurfs hochladen (Button oder Datei ins Fenster ziehen) und in 3D ansehen
 - [x] Außenwände automatisch erkennen (IFC-Eigenschaft „IsExternal“ + Lage im Gebäude), per Klick korrigierbar
-- [ ] Norden = Plan-oben (keine Einstellung)
-- [ ] Material pro Himmelsrichtung (N/O/S/W): Klinker, Holz, Sichtbeton, Putz, Metall, Glas (je 1–2 Farbtöne)
+- [x] Norden = Plan-oben (keine Einstellung)
+- [x] Material pro Himmelsrichtung (N/O/S/W): Klinker, Holz, Sichtbeton, Putz, Metall, Glas (je 1–2 Farbtöne)
 - [ ] Fenster pro Himmelsrichtung: Breite und Höhe in % (Sturz bleibt, Brüstung wandert, 0 % = Fenster zu)
 - [ ] Kennwerte je Himmelsrichtung und gesamt: Fassadenfläche, Fensterfläche, Fensterflächenanteil
 - [ ] Darstellung mit klarem Unterschied zwischen Rohmodell und Entwurf:
       - Alles aus der IFC (Decken, Innenwände, nicht gestaltete Wände) hellgrau-weiß wie ein Arbeitsmodell
       - Dächer in einem festen, ruhigen Dunkelgrau mit Zeichenlinien (nicht weiß)
-      - Gestaltete Fassade „farbig + Zeichenlinien“: kräftige, ruhige Materialfarben, dunkle Kantenlinien
+      - Gestaltete Fassade „farbig + Zeichenlinien“: gedeckte, ruhige Materialfarben (nicht knallig), dunkle Kantenlinien
         und gezeichnete Struktur (Fugen, Bretter, Raster), wie eine kolorierte Architekturzeichnung –
         künstlerisch, nicht realistisch
 - [ ] Varianten speichern (Name + Bilder) und nebeneinander vergleichen;
@@ -92,7 +92,7 @@ Erledigte Sitzungen abhaken, die nächste offene Nummer ist dran.
 - [x] 2. IFC hochladen und in 3D ansehen (16.11.)
 - [x] 3. Außenwände erkennen und per Klick korrigieren (16.11.)
 - [x] 4. Darstellung: Rohmodell hellgrau-weiß, Dach dunkelgrau, Zeichenstil mit Kantenlinien (16.11.)
-- [ ] 5. Material pro Himmelsrichtung
+- [x] 5. Material pro Himmelsrichtung (16.11.)
 
 **Mi 18.11. – Must fertig, dann Should 1 + 2**
 - [ ] 6. Fenster pro Himmelsrichtung (Breite/Höhe in %)
@@ -120,7 +120,7 @@ Erledigte Sitzungen abhaken, die nächste offene Nummer ist dran.
 Wenn es eng wird, zuerst streichen: 19 (PDF-Einzelseiten), dann 16 (Ortssuche).
 Was bis Do 10:30 nicht fertig ist, wandert zu Could.
 
-## Stand (16.11.2026, nach Sitzung 2)
+## Stand (16.11.2026, nach Sitzung 5)
 - CLAUDE.md und PLAN.md angelegt, Plan mit der Nutzerin abgestimmt.
 - Test-IFC liegt in `testdaten/` (Einfamilienhaus, Revit 2023, IFC2x3: 192 Wände, 57 Fenster, 49 Türen).
   Quelle: Bundesingenieurkammer, Seite „BIM-Praxisbeispiele“ (Download zum Betrachten angeboten).
@@ -148,9 +148,34 @@ Was bis Do 10:30 nicht fertig ist, wandert zu Could.
   Außenwände vorläufig in ruhigerem Blau (#5b7db3), bis in Sitzung 5 die Materialien kommen.
   Dach = IfcRoof, Decke mit Typ „Dach“ (IfcSlab ROOF) oder Decke, die zu einem IfcRoof gehört. Test-IFC: 14 Dachteile.
   Gelände = IfcSite (hell, ohne Linien). Die Kamera richtet sich jetzt auf Wände und Dach aus, nicht aufs ganze Gelände.
+- Sitzung 5 (16.11.): Material pro Himmelsrichtung. Neuer Bereich „3 Fassade“: je Seite (Nord/Ost/Süd/West)
+  eine Auswahlliste mit Musterbild und Anzahl der Wände. Neue Datei `js/materialien.js`.
+  10 Materialien: Klinker rot/anthrazit, Holz natur/vergraut, Sichtbeton, Putz altweiß/sand,
+  Fassadenplatten anthrazit/silbergrau, Glas blaugrau. Start: überall Klinker rot.
+  Muster im echten Maßstab gezeichnet (Klinker 24 × 7,1 cm, Bretter 12 cm, Schaltafeln 2,50 × 0,50 m,
+  Fassadenplatten 1,25 × 0,625 m, Glasfelder 1,25 × 1,50 m), Fugen etwas dunkler als die Grundfarbe.
+  Nach Rückmeldung überarbeitet: Kacheln mehrere Meter groß (Klinker 4 × 2,5 m), damit sich nichts sichtbar wiederholt;
+  Holz weniger gelb, Klinker rot ohne Braunstich, Klinker anthrazit heller,
+  Sichtbeton ohne Ankerlöcher, „Metall“ heißt jetzt „Fassadenplatten“ (Fugenraster statt Stehfalz).
+  Himmelsrichtung = Richtung der freien Außenseite der Wand, auf die nächste der 4 Richtungen gerundet (Norden = -Z = Plan-oben).
+  Test-IFC: Nord 13, Ost 29, Süd 14, West 36 Außenwände. Hover zeigt einen blauen Schimmer, Klick schaltet weiter außen ↔ innen.
 
 ## Nächste Schritte
-- Sitzung 5: Material pro Himmelsrichtung.
+- Sitzung 6: Fenster pro Himmelsrichtung (Breite/Höhe in %). Dafür die Außenwände als eigene „Scheiben“ nachbauen.
+- **Entscheidung (Sitzung 5):** Alle Materialfarben gedeckt und nicht zu knallig, eher etwas grau gebrochen.
+- **Entscheidung (Sitzung 5):** Linien nicht „sklavisch korrekt“, sondern wie eine Handskizze:
+  Fugen nur angedeutet wie mit der Feder: jeder Strich scharf und gleich kräftig, aber stellenweise fehlen Striche
+  oder hören früher auf (keine weich ausgeblendeten, „verschwommenen“ Stellen – so war der erste Versuch, gefiel nicht).
+  Klinker und Fassadenplatten ohne wolkige Helligkeitsflecken. Holz: Fugen relativ durchgängig gezogen
+  (nur selten eine Lücke von wenigen Zentimetern), leicht unterschiedlich kräftig, dazu ganz leichte Wolken.
+  Viele Lücken wirkten beim Holz komisch, beim Klinker gefallen sie.
+  Glas ohne dunkle Profilstriche, die Felder (1,25 × 1,50 m) erkennt man nur an der leichten Spiegelung.
+  Bauteilkanten stehen an den Enden etwas über (bis 15 cm) und sind unterschiedlich kräftig.
+- Eigene Texturen (Fotos) vorerst nicht nötig; passen eher zum Umschalter „realistisch“ (Sitzung 17).
+  Dann nur freie Quellen ohne Namensnennungspflicht nehmen, z. B. CC0 von ambientCG oder Poly Haven.
+- Probleme in Sitzung 5: Das Muster liegt direkt auf den IFC-Wänden, auch auf Gauben-Seitenwänden und Schornsteinen,
+  wenn sie als Außenwand erkannt sind (per Klick abschaltbar). Kellerwände bekommen keine eigene Regel, ebenfalls per Klick.
+  Die Materialwahl geht beim Neuladen verloren (gespeichert wird mit den Varianten, Sitzung 8).
 - Probleme in Sitzung 4: Das Gelände in der Test-IFC ist kein IfcSite, sondern mehrere Revit-Körper („Mass 1“ bis „Mass 9“,
   IfcBuildingElementProxy). Die App kann sie nicht sicher als Gelände erkennen, deshalb erscheinen sie wie das übrige
   Rohmodell (weiß mit Linien, wirkt wie eine Modellplatte). Ist so in Ordnung.

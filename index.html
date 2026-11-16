@@ -34,10 +34,16 @@
 
       <section id="bereichAussenwaende" hidden>
         <h2><span>2</span> Außenwände</h2>
-        <p class="zaehler"><span class="farbfeld"></span><span id="aussenZaehler"></span></p>
-        <p class="hinweis">Blau = Außenwand. Erkannt aus der IFC-Eigenschaft „Außenbauteil“ und der Lage im Gebäude.
-          Stimmt etwas nicht? Wand anklicken, um sie umzuschalten.</p>
+        <p class="zaehler" id="aussenZaehler"></p>
+        <p class="hinweis">Farbig = Außenwand, weiß = Innenwand. Erkannt aus der IFC-Eigenschaft „Außenbauteil“
+          und der Lage im Gebäude. Stimmt etwas nicht? Wand anklicken, um sie umzuschalten.</p>
         <button class="textknopf" id="erkennungZuruecksetzen" hidden>Erkennung zurücksetzen</button>
+      </section>
+
+      <section id="bereichFassade" hidden>
+        <h2><span>3</span> Fassade</h2>
+        <div class="materialwahl" id="materialwahl"></div>
+        <p class="hinweis">Material je Himmelsrichtung. Norden ist im Plan oben.</p>
       </section>
     </aside>
 
