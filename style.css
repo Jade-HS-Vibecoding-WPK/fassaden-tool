@@ -47,6 +47,10 @@ h2 span { color: var(--akzent); }
 }
 .zaehler { font-size: 13px; margin: 0; }
 
+/* Schalter „Alle Seiten gleich“ */
+.schalter { display: flex; gap: 8px; align-items: center; font-size: 13px; margin-bottom: 14px; cursor: pointer; }
+.schalter input { margin: 0; width: 15px; height: 15px; accent-color: var(--akzent); cursor: pointer; }
+
 /* Materialwahl: eine Zeile je Himmelsrichtung */
 .materialwahl { display: grid; gap: 10px; }
 .materialzeile { display: grid; grid-template-columns: 58px 26px 1fr; gap: 10px; align-items: center; font-size: 13px; }

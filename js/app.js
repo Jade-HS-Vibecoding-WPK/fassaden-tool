@@ -19,8 +19,19 @@ const materialJeRichtung = { N: START_MATERIAL, O: START_MATERIAL, S: START_MATE
 const fensterJeRichtung = {};
 for (const richtung of Object.keys(RICHTUNGSNAMEN)) fensterJeRichtung[richtung] = { breite: 100, hoehe: 100 };
 
+// Schalter „Alle Seiten gleich“: ein Material für alle Seiten, die Auswahl je Seite bleibt im Hintergrund erhalten
+let alleGleich = false;
+let materialAlle = null; // wird beim ersten Einschalten mit dem Material der Nordseite belegt
+
+// Das Material, das gerade wirklich je Seite gilt
+function geltendeMaterialien() {
+  if (!alleGleich) return materialJeRichtung;
+  return { N: materialAlle, O: materialAlle, S: materialAlle, W: materialAlle };
+}
+
 function alleWaendeFaerben() {
-  for (const wand of waende) wandFaerben(wand, materialJeRichtung, wand === szene.hoverBauteil);
+  const materialien = geltendeMaterialien();
+  for (const wand of waende) wandFaerben(wand, materialien, wand === szene.hoverBauteil);
 }
 
 // Fenster neu einpassen (z. B. nach Reglerbewegung oder wenn eine Wand umgeschaltet wurde)
@@ -52,44 +63,73 @@ function aussenwaendeAnzeigen() {
   $('bereichAussenwaende').hidden = waende.length === 0;
   $('bereichFassade').hidden = waende.length === 0;
 
-  // Anzahl der Außenwände je Himmelsrichtung
+  // Anzahl der Außenwände je Himmelsrichtung und für „Alle“
+  const wandText = (anzahl) => (anzahl === 1 ? '1 Wand' : `${anzahl} Wände`);
   for (const richtung of Object.keys(RICHTUNGSNAMEN)) {
     const anzahl = waende.filter((w) => w.userData.aussen && w.userData.himmelsrichtung === richtung).length;
-    $(`anzahl${richtung}`).textContent = anzahl === 1 ? '1 Wand' : `${anzahl} Wände`;
+    $(`anzahl${richtung}`).textContent = wandText(anzahl);
   }
+  $('anzahlAlle').textContent = wandText(aussen);
 }
 
-// Je Himmelsrichtung eine Zeile: Name, Musterbild, Auswahlliste
+// Eine Zeile der Materialwahl: Name, Musterbild, Auswahlliste
+// schluessel: N/O/S/W oder 'Alle'; lesen/schreiben: woher das Material kommt und wohin es geht
+const materialZeilen = {};
+function materialzeileAufbauen(schluessel, name, lesen, schreiben) {
+  const zeile = document.createElement('label');
+  zeile.className = 'materialzeile';
+
+  const titel = document.createElement('span');
+  titel.textContent = name;
+  const anzahl = document.createElement('small');
+  anzahl.id = `anzahl${schluessel}`;
+  titel.append(anzahl);
+
+  const muster = document.createElement('span');
+  muster.className = 'muster';
+
+  const liste = document.createElement('select');
+  for (const m of MATERIALIEN) liste.add(new Option(m.name, m.id));
+
+  // Liste und Musterbild auf den gespeicherten Wert setzen
+  const anzeigen = () => {
+    liste.value = lesen();
+    muster.style.backgroundImage = `url(${musterBild(liste.value)})`;
+  };
+  liste.addEventListener('change', () => {
+    schreiben(liste.value);
+    anzeigen();
+    alleWaendeFaerben();
+  });
+  anzeigen();
+
+  zeile.append(titel, muster, liste);
+  $('materialwahl').append(zeile);
+  materialZeilen[schluessel] = { zeile, anzeigen };
+}
+
 function materialwahlAufbauen() {
+  materialzeileAufbauen('Alle', 'Alle', () => materialAlle ?? materialJeRichtung.N, (wert) => { materialAlle = wert; });
   for (const [richtung, name] of Object.entries(RICHTUNGSNAMEN)) {
-    const zeile = document.createElement('label');
-    zeile.className = 'materialzeile';
+    materialzeileAufbauen(richtung, name, () => materialJeRichtung[richtung], (wert) => { materialJeRichtung[richtung] = wert; });
+  }
+  materialwahlUmschalten();
+}
 
-    const titel = document.createElement('span');
-    titel.textContent = name;
-    const anzahl = document.createElement('small');
-    anzahl.id = `anzahl${richtung}`;
-    titel.append(anzahl);
-
-    const muster = document.createElement('span');
-    muster.className = 'muster';
-
-    const liste = document.createElement('select');
-    for (const m of MATERIALIEN) liste.add(new Option(m.name, m.id));
-    liste.value = materialJeRichtung[richtung];
-
-    const musterZeigen = () => { muster.style.backgroundImage = `url(${musterBild(liste.value)})`; };
-    liste.addEventListener('change', () => {
-      materialJeRichtung[richtung] = liste.value;
-      musterZeigen();
-      alleWaendeFaerben();
-    });
-    musterZeigen();
-
-    zeile.append(titel, muster, liste);
-    $('materialwahl').append(zeile);
+// Je nach Schalter nur die Zeile „Alle“ oder die vier Zeilen je Seite zeigen
+function materialwahlUmschalten() {
+  for (const [schluessel, { zeile }] of Object.entries(materialZeilen)) {
+    zeile.hidden = (schluessel === 'Alle') !== alleGleich;
   }
 }
+
+$('alleGleich').addEventListener('change', (ereignis) => {
+  alleGleich = ereignis.target.checked;
+  if (alleGleich && materialAlle === null) materialAlle = materialJeRichtung.N;
+  materialZeilen.Alle.anzeigen();
+  materialwahlUmschalten();
+  alleWaendeFaerben();
+});
 materialwahlAufbauen();
 
 // Je Himmelsrichtung eine Zeile: Name mit Anzahl der Fenster, Regler für Breite und Höhe

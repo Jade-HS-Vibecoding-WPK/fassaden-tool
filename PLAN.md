@@ -96,7 +96,8 @@ Erledigte Sitzungen abhaken, die nächste offene Nummer ist dran.
 
 **Mi 18.11. – Must fertig, dann Should 1 + 2**
 - [x] 6. Fenster pro Himmelsrichtung (Breite/Höhe in %) (16.11.)
-- [ ] 6b. Material: Schalter „Alle Seiten gleich“ (Wunsch der Nutzerin, wie die Oberflächen-Überschreibung in ArchiCAD)
+- [x] 6b. Material: Schalter „Alle Seiten gleich“ (Wunsch der Nutzerin, wie die Oberflächen-Überschreibung in ArchiCAD) (16.11.)
+- [ ] 6c. Fenster: Schalter „Alle Seiten gleich“ (wie 6b, Wunsch der Nutzerin)
 - [ ] 7. Kennwerte (Fassadenfläche, Fensterfläche, Fensterflächenanteil)
 - [ ] 8. Varianten speichern, mit 5 Bildern (Perspektive + N/O/S/W)
 - [ ] 9. Variantenvergleich nebeneinander
@@ -121,7 +122,7 @@ Erledigte Sitzungen abhaken, die nächste offene Nummer ist dran.
 Wenn es eng wird, zuerst streichen: 19 (PDF-Einzelseiten), dann 16 (Ortssuche).
 Was bis Do 10:30 nicht fertig ist, wandert zu Could.
 
-## Stand (16.11.2026, nach Sitzung 6)
+## Stand (16.11.2026, nach Sitzung 6b)
 - CLAUDE.md und PLAN.md angelegt, Plan mit der Nutzerin abgestimmt.
 - Test-IFC liegt in `testdaten/` (Einfamilienhaus, Revit 2023, IFC2x3: 192 Wände, 57 Fenster, 49 Türen).
   Quelle: Bundesingenieurkammer, Seite „BIM-Praxisbeispiele“ (Download zum Betrachten angeboten).
@@ -181,10 +182,18 @@ Was bis Do 10:30 nicht fertig ist, wandert zu Could.
   Jetzt: Richtung = die Richtung mit der meisten senkrechten Fläche (±2°); „regelmäßig“ = mindestens die Hälfte der Fläche
   liegt auf Vorder- oder Rückseite. Ergebnis: alle 4 Außenwände (36 cm) nachbaubar, alle 4 Fenster verstellbar.
 
+- Sitzung 6b (16.11.): Schalter „Alle Seiten gleich“ im Bereich „3 Fassade“. An: nur eine Zeile „Alle“
+  (mit Gesamtzahl der Außenwände), ihr Material gilt für Nord/Ost/Süd/West. Aus: wieder die vier Zeilen,
+  die Auswahl je Seite bleibt im Hintergrund erhalten. „Alle“ startet beim ersten Einschalten mit dem Material
+  der Nordseite und merkt sich danach die eigene Auswahl. Getestet mit `Test-ArchiCAD.ifc`: an/aus/wieder an
+  stellt jeweils die richtige Auswahl her, 3D-Wände wechseln sofort, keine Fehler. Nur `app.js`, `index.html`, `style.css` geändert.
+  Problem: keines. Auch der Schalter geht beim Neuladen verloren (gespeichert wird mit den Varianten, Sitzung 8).
+
 ## Nächste Schritte
-- Sitzung 6b (vor 7, klein): Im Bereich „3 Fassade“ ein Schalter „Alle Seiten gleich“. Ist er an, gibt es nur
-  eine Materialauswahl, die für Nord/Ost/Süd/West gilt (wie die Oberflächen-Überschreibung in ArchiCAD).
-  Schalter aus: wieder je Seite einzeln, die vorherige Auswahl je Seite bleibt erhalten.
+- Sitzung 6c (vor 7, klein): Im Bereich „4 Fenster“ ein Schalter „Alle Seiten gleich“, genau wie bei 6b.
+  An: nur eine Zeile „Alle“ mit Reglern Breite und Höhe, gilt für alle vier Seiten. Aus: wieder je Seite einzeln,
+  die vorherige Einstellung je Seite bleibt erhalten. „Alle“ startet beim ersten Einschalten mit den Werten der Nordseite.
+  „Alle Fenster auf 100 %“ setzt auch „Alle“ zurück.
 - Sitzung 7: Kennwerte (Fassadenfläche, Fensterfläche, Fensterflächenanteil) je Himmelsrichtung und gesamt.
   Fensterfläche lässt sich aus den Lochrechtecken von Sitzung 6 rechnen, Fassadenfläche aus dem Wandumriss.
 - Probleme in Sitzung 6: Die Wand wird mit ihrem äußeren Umriss nachgebaut. Hat eine Wand eine Einbuchtung
