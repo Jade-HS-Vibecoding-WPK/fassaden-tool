@@ -68,6 +68,7 @@ export async function ifcLaden(datei) {
         const netz = new THREE.Mesh(geometrie, MATERIAL[art]);
         netz.matrixAutoUpdate = false;
         netz.matrix.fromArray(stueck.flatTransformation);
+        netz.userData.durchsichtig = stueck.color.w < 0.99; // Glas (für Glastüren bei den Kennwerten)
         if (art !== 'gelaende') kantenlinienHinzufuegen(netz); // Gelände ohne Linien, sonst zu unruhig
         bauteil.add(netz);
       }

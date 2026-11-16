@@ -1,7 +1,7 @@
 // Bedienoberfläche: Datei wählen oder hineinziehen, Modell anzeigen, Fassade gestalten
 import { Szene } from './szene.js';
 import { ifcLaden } from './ifc.js';
-import { aussenwaendeErkennen, wandFaerben, oeffnungenZuordnen, fensterAnpassen, stuetzenVorbereiten, stuetzeFaerben } from './fassade.js';
+import { aussenwaendeErkennen, wandFaerben, oeffnungenZuordnen, fensterAnpassen, stuetzenVorbereiten, stuetzeFaerben, kennwerteBerechnen } from './fassade.js';
 import { MATERIALIEN, START_MATERIAL, musterBild } from './materialien.js';
 
 const $ = (id) => document.getElementById(id);
@@ -53,6 +53,31 @@ function fensterAktualisieren() {
   fensterAnpassen(waende, oeffnungen, geltendeFenster());
   allesFaerben();
   fensterAnzeigen();
+  kennwerteAnzeigen();
+}
+
+// Tabelle „Kennwerte“: Fassadenfläche, Fensterfläche und Fensterflächenanteil je Seite und gesamt
+const quadratmeter = (wert) => wert.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+function kennwerteAnzeigen() {
+  $('bereichKennwerte').hidden = waende.length === 0;
+  const kennwerte = kennwerteBerechnen(waende, oeffnungen);  const gesamt = { fassade: 0, fenster: 0 };
+  const zeilen = Object.entries(RICHTUNGSNAMEN).map(([richtung, name]) => {
+    gesamt.fassade += kennwerte[richtung].fassade;
+    gesamt.fenster += kennwerte[richtung].fenster;
+    return [name, kennwerte[richtung]];
+  });
+  zeilen.push(['Gesamt', gesamt]);
+
+  const tabelle = $('kennwerteTabelle');
+  tabelle.replaceChildren();
+  for (const [name, { fassade, fenster }] of zeilen) {
+    const zeile = tabelle.insertRow();
+    if (name === 'Gesamt') zeile.className = 'gesamt';
+    const anteil = fassade > 0 ? `${Math.round((fenster / fassade) * 100)} %` : '–';
+    for (const text of [name, quadratmeter(fassade), quadratmeter(fenster), anteil]) {
+      zeile.insertCell().textContent = text;
+    }
+  }
 }
 
 // Wände anfahren (hervorheben) und anklicken (außen ↔ innen umschalten)

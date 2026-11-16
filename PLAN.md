@@ -12,7 +12,7 @@ nebeneinander vergleicht und als PDF mitnimmt.
 - [x] Norden = Plan-oben (keine Einstellung)
 - [x] Material pro Himmelsrichtung (N/O/S/W): Klinker, Holz, Sichtbeton, Putz, Metall, Glas (je 1–2 Farbtöne)
 - [x] Fenster pro Himmelsrichtung: Breite und Höhe in % (Sturz bleibt, Brüstung wandert, 0 % = Fenster zu)
-- [ ] Kennwerte je Himmelsrichtung und gesamt: Fassadenfläche, Fensterfläche, Fensterflächenanteil
+- [x] Kennwerte je Himmelsrichtung und gesamt: Fassadenfläche, Fensterfläche, Fensterflächenanteil
 - [ ] Darstellung mit klarem Unterschied zwischen Rohmodell und Entwurf:
       - Alles aus der IFC (Decken, Innenwände, nicht gestaltete Wände) hellgrau-weiß wie ein Arbeitsmodell
       - Dächer in einem festen, ruhigen Dunkelgrau mit Zeichenlinien (nicht weiß)
@@ -99,7 +99,7 @@ Erledigte Sitzungen abhaken, die nächste offene Nummer ist dran.
 - [x] 6b. Material: Schalter „Alle Seiten gleich“ (Wunsch der Nutzerin, wie die Oberflächen-Überschreibung in ArchiCAD) (16.11.)
 - [x] 6c. Fenster: Schalter „Alle Seiten gleich“ (wie 6b, Wunsch der Nutzerin) (16.11.)
 - [x] 6d. Stützen: ein Material für alle Stützen (Wunsch der Nutzerin) (16.11.)
-- [ ] 7. Kennwerte (Fassadenfläche, Fensterfläche, Fensterflächenanteil)
+- [x] 7. Kennwerte (Fassadenfläche, Fensterfläche, Fensterflächenanteil) (16.11.)
 - [ ] 8. Varianten speichern, mit 5 Bildern (Perspektive + N/O/S/W)
 - [ ] 9. Variantenvergleich nebeneinander
 - [ ] 10. PDF-Übersichtsseite A3 quer
@@ -123,7 +123,7 @@ Erledigte Sitzungen abhaken, die nächste offene Nummer ist dran.
 Wenn es eng wird, zuerst streichen: 19 (PDF-Einzelseiten), dann 16 (Ortssuche).
 Was bis Do 10:30 nicht fertig ist, wandert zu Could.
 
-## Stand (16.11.2026, nach Sitzung 6d)
+## Stand (16.11.2026, nach Sitzung 7)
 - CLAUDE.md und PLAN.md angelegt, Plan mit der Nutzerin abgestimmt.
 - Test-IFC liegt in `testdaten/` (Einfamilienhaus, Revit 2023, IFC2x3: 192 Wände, 57 Fenster, 49 Türen).
   Quelle: Bundesingenieurkammer, Seite „BIM-Praxisbeispiele“ (Download zum Betrachten angeboten).
@@ -209,9 +209,31 @@ Was bis Do 10:30 nicht fertig ist, wandert zu Could.
   bei Klinker/Holz evtl. schon). Das Ausblenden der Zeile ohne Stützen ist nicht getestet, da beide Test-IFCs Stützen haben.
   Auch die Stützenwahl geht beim Neuladen verloren (gespeichert wird mit den Varianten, Sitzung 8).
 
+- Sitzung 7 (16.11.): Neuer Bereich „5 Kennwerte“ mit Tabelle Nord/Ost/Süd/West + Gesamt: Fassadenfläche,
+  Fensterfläche (m², 0,1 genau) und Fensterflächenanteil (ganze %). Rechnet sofort neu bei Reglern,
+  „Alle Seiten gleich“, Zurücksetzen und Klick auf eine Wand (außen ↔ innen).
+  So wird gerechnet: Fassade = Umriss der Außenseite jeder Außenwand (mit Giebel, Öffnungen mitgezählt);
+  gebogene/L-förmige Wände ohne Umriss: Länge × Höhe. Fenster = aktuelle Lochgröße (nach Regler),
+  jede Öffnung nur einmal (in ihrer Außenwand). Glastür: die durchsichtigen Teile der Tür (Transparenz aus der IFC)
+  decken in der Ansicht mindestens die Hälfte der Türöffnung ab, dann zählt die ganze Öffnung als Fenster.
+  Getestet: `Test-ArchiCAD.ifc` gesamt 83,1 m² Fassade, 15,5 m² Fenster, 19 % (West 48 % wegen großer Glasfront,
+  wird richtig als Glastür erkannt). Regler Nord 0 % / 200 % / zurück ändert die Werte richtig. Einfamilienhaus (Revit):
+  831,5 m² Fassade, 139,0 m² Fenster, 17 %. Keine Fehler. Geändert: `ifc.js`, `fassade.js`, `app.js`, `index.html`, `style.css`.
+  Probleme: Die Kennwerte sind nur so gut wie die Außenwand-Erkennung. Im Einfamilienhaus zählen Kellerwände,
+  Schornstein- und Gaubenwände sowie einige dünne Dachgeschoss-Wände (13 cm, vermutlich Innenwände) mit,
+  dadurch sind Fassade und Fenster dort zu groß; per Klick korrigierbar. Revit-Innentüren mit großem Glaseinsatz
+  (ca. 54 % Glas) zählen als Glastür, wenn sie in einer Wand sitzen, die als Außenwand gilt.
+  Mehrschalige Wände: Gelten beide Schalen als außen, wird die Fläche doppelt gezählt (Schale per Klick abschalten).
+
 ## Nächste Schritte
-- Sitzung 7: Kennwerte (Fassadenfläche, Fensterfläche, Fensterflächenanteil) je Himmelsrichtung und gesamt.
-  Fensterfläche lässt sich aus den Lochrechtecken von Sitzung 6 rechnen, Fassadenfläche aus dem Wandumriss.
+- Sitzung 8: Varianten speichern (Name + 5 Bilder: Perspektive + N/O/S/W), mit allen Einstellungen
+  (Material, Fenster, Schalter, Stützen, Wand-Klicks) und den Kennwerten.
+- **Entscheidung (16.11., vor Sitzung 7):** Neuer Bereich „5 Kennwerte“ als Tabelle Nord/Ost/Süd/West + Gesamt,
+  rechnet sofort neu bei jeder Änderung. Fassadenfläche = Außenseite der Außenwände (Rohbaumaß, Öffnungen mitgezählt).
+  Fensterfläche = Fensteröffnungen (Rohbaumaß). **Glastüren zählen als Fenster** (Wunsch der Nutzerin),
+  geschlossene Türen nur zur Fassadenfläche. Glastür = Tür, deren Ansicht mindestens zur Hälfte aus
+  durchsichtigen Teilen besteht (Transparenz aus der IFC); dann zählt die ganze Türöffnung.
+  Material „Glas“ ist nur Optik und zählt nicht als Fenster. Flächen auf 0,1 m², Anteil in ganzen Prozent.
 - Probleme in Sitzung 6: Die Wand wird mit ihrem äußeren Umriss nachgebaut. Hat eine Wand eine Einbuchtung
   (z. B. stufige Oberkante) oder ein Loch ohne Fenster/Tür, wird das beim Nachbau zugemacht.
   Gebogene oder L-förmige Wände werden nicht nachgebaut, ihre Fenster bleiben unverändert.

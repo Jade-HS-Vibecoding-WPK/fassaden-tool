@@ -46,6 +46,7 @@ export function aussenwaendeErkennen(gruppe) {
     // Unentschieden: die Seite, die von der Gebäudemitte wegzeigt.
     let seite = pruefung.seite;
     if (seite === 0) seite = lage.mitte.clone().sub(gebaeudeMitte).dot(lage.quer) >= 0 ? 1 : -1;
+    wand.userData.aussenSeite = seite;
     wand.userData.himmelsrichtung = himmelsrichtung(lage.quer.clone().multiplyScalar(seite));
     texturKoordinatenSetzen(wand.children, lage);
   }
@@ -95,11 +96,12 @@ function wandLage(wand) {
   return { mitte, laengs, quer, laenge: lMax - lMin, dicke: qMax - qMin, yMin, yMax };
 }
 
-// Alle Dreiecke eines Bauteils in Weltkoordinaten (nur die Original-Netze aus der IFC)
-function weltDreiecke(bauteil) {
+// Alle Dreiecke eines Bauteils in Weltkoordinaten (nur die Original-Netze aus der IFC).
+// auswahl: welche Netze mitzählen (z. B. nur die durchsichtigen)
+function weltDreiecke(bauteil, auswahl = () => true) {
   const dreiecke = [];
   for (const netz of bauteil.children) {
-    if (netz === bauteil.userData.scheibe) continue;
+    if (netz === bauteil.userData.scheibe || !auswahl(netz)) continue;
     const pos = netz.geometry.attributes.position;
     const index = netz.geometry.index;
     const anzahl = index ? index.count : pos.count;
@@ -389,8 +391,25 @@ export function oeffnungenZuordnen(gruppe, waende) {
       oe.userData.rechteck.set(wand, r);
       wand.userData.oeffnungen.push(oe);
     }
+    if (oe.userData.art === 'tuer') oe.userData.glastuer = istGlastuer(oe);
   }
   return oeffnungen;
+}
+
+// Glastür = in der Ansicht ist mindestens die Hälfte der Türöffnung durchsichtig (Glas laut IFC).
+// Glasfläche = durchsichtige Flächen auf die Wand projiziert, halbiert (Glas hat Vorder- und Rückseite).
+function istGlastuer(oe) {
+  const wand = oe.userData.waende[0];
+  if (!wand) return false;
+  const { quer } = wand.userData.lage;
+  const r = oe.userData.rechteck.get(wand);
+  const n = new THREE.Vector3();
+  let glas = 0;
+  for (const [a, b, c] of weltDreiecke(oe, (netz) => netz.userData.durchsichtig)) {
+    n.crossVectors(b.clone().sub(a), c.clone().sub(a));
+    glas += Math.abs(n.dot(quer)) / 2;
+  }
+  return glas / 2 >= 0.5 * (r.u1 - r.u0) * (r.v1 - r.v0);
 }
 
 // Fenster nach Himmelsrichtung vergrößern/verkleinern und die betroffenen Wände mit neuen Löchern bauen.
@@ -403,6 +422,7 @@ export function fensterAnpassen(waende, oeffnungen, groesseJeRichtung) {
     einfachesFensterEntfernen(oe);
     oe.visible = true;
     oe.userData.himmelsrichtung = undefined;
+    oe.userData.aktuell = undefined; // aktuelles Rechteck für die Kennwerte (null = zu)
     if (oe.userData.art !== 'fenster') continue;
 
     // Maßgebend ist die Außenwand, in der das Fenster sitzt
@@ -412,6 +432,7 @@ export function fensterAnpassen(waende, oeffnungen, groesseJeRichtung) {
     const { breite, hoehe } = groesseJeRichtung[wand.userData.himmelsrichtung];
     const r0 = oe.userData.rechteck.get(wand);
     const r = breite === 100 && hoehe === 100 ? r0 : neuesRechteck(oe, wand, breite / 100, hoehe / 100);
+    oe.userData.aktuell = r;
     if (r !== r0) neu.set(oe, r ? { wand, r } : null);
     if (r) einfachesFensterBauen(oe, wand, r);
     else oe.visible = false;
@@ -620,4 +641,47 @@ function scheibeEntfernen(wand) {
     wand.userData.scheibe = null;
   }
   for (const netz of wand.children) netz.visible = true;
+}
+
+
+// ---------- Kennwerte ----------
+
+// Fassadenfläche und Fensterfläche je Himmelsrichtung in m² (Rohbaumaße).
+// Fassade = Außenseite der Außenwände, Öffnungen mitgezählt. Fenster = Fensteröffnungen und Glastüren,
+// jede Öffnung nur einmal (in der Außenwand, in der sie sitzt), mit der aktuell eingestellten Größe.
+export function kennwerteBerechnen(waende, oeffnungen) {
+  const kennwerte = {};
+  for (const richtung of RICHTUNGEN) kennwerte[richtung] = { fassade: 0, fenster: 0 };
+
+  for (const wand of waende) {
+    const richtung = wand.userData.himmelsrichtung;
+    if (!wand.userData.aussen || !richtung) continue;
+    const { lage, umriss, aussenSeite } = wand.userData;
+    // Gebogene oder L-förmige Wände (ohne Umriss): Länge × Höhe als Näherung
+    kennwerte[richtung].fassade += umriss
+      ? vieleckFlaeche(aussenSeite < 0 ? umriss.minus : umriss.plus)
+      : lage.laenge * (lage.yMax - lage.yMin);
+  }
+
+  for (const oe of oeffnungen) {
+    const istFenster = oe.userData.art === 'fenster';
+    if (!istFenster && !oe.userData.glastuer) continue;
+    const wand = oe.userData.waende.find((w) => w.userData.aussen);
+    const richtung = wand?.userData.himmelsrichtung;
+    if (!richtung) continue;
+    const r = istFenster && oe.userData.aktuell !== undefined ? oe.userData.aktuell : oe.userData.rechteck.get(wand);
+    if (r) kennwerte[richtung].fenster += (r.u1 - r.u0) * (r.v1 - r.v0);
+  }
+  return kennwerte;
+}
+
+// Flächeninhalt eines Vielecks [[u, v], …] (Gaußsche Trapezformel)
+function vieleckFlaeche(ecken) {
+  let summe = 0;
+  for (let i = 0; i < ecken.length; i++) {
+    const [au, av] = ecken[i];
+    const [bu, bv] = ecken[(i + 1) % ecken.length];
+    summe += au * bv - bu * av;
+  }
+  return Math.abs(summe) / 2;
 }
