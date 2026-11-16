@@ -89,7 +89,7 @@ Erledigte Sitzungen abhaken, die nächste offene Nummer ist dran.
 
 **Di 17.11. – Grundgerüst**
 - [x] 1. Git im Projekt einrichten und erster Commit (16.11.)
-- [ ] 2. IFC hochladen und in 3D ansehen
+- [x] 2. IFC hochladen und in 3D ansehen (16.11.)
 - [ ] 3. Außenwände erkennen und per Klick korrigieren
 - [ ] 4. Darstellung: Rohmodell hellgrau-weiß, Dach dunkelgrau, Zeichenstil mit Kantenlinien
 - [ ] 5. Material pro Himmelsrichtung
@@ -120,7 +120,7 @@ Erledigte Sitzungen abhaken, die nächste offene Nummer ist dran.
 Wenn es eng wird, zuerst streichen: 19 (PDF-Einzelseiten), dann 16 (Ortssuche).
 Was bis Do 10:30 nicht fertig ist, wandert zu Could.
 
-## Stand (16.11.2026)
+## Stand (16.11.2026, nach Sitzung 2)
 - CLAUDE.md und PLAN.md angelegt, Plan mit der Nutzerin abgestimmt.
 - Test-IFC liegt in `testdaten/` (Einfamilienhaus, Revit 2023, IFC2x3: 192 Wände, 57 Fenster, 49 Türen).
   Quelle: Bundesingenieurkammer, Seite „BIM-Praxisbeispiele“ (Download zum Betrachten angeboten).
@@ -128,8 +128,15 @@ Was bis Do 10:30 nicht fertig ist, wandert zu Could.
   wer es doch will, fragt vorher bei der Kammer (info@bingk.de) nach.
 - Git ist im Projekt eingerichtet (Zweig `main`, Name Paulina Awick, Uni-E-Mail, nur für dieses Projekt hinterlegt).
 - `.gitignore` schließt `testdaten/` aus. Erster Commit gemacht (Sitzung 1).
-- `index.html` und `style.css` existieren als früher Entwurf ohne Funktion; beim Start der Umsetzung entscheiden, ob behalten.
+- Sitzung 2 (16.11.): IFC hochladen (Knopf oder ins Fenster ziehen) und in 3D ansehen läuft.
+  Test-IFC lädt in ca. 5 s: 192 Wände, 57 Fenster, 49 Türen, 316 weitere Bauteile. Drehen/Zoomen/Verschieben geht,
+  falsche Dateien (z. B. .pdf) bekommen eine verständliche Meldung.
+- Früher Entwurf verschlankt: Oberfläche zeigt nur, was schon funktioniert; weitere Bereiche kommen in ihrer Sitzung dazu.
+  Akzentfarbe jetzt Dunkelblau (#1f3a68). Name der App: „Fassaden-Tool“.
+- Bauteile sind schon nach Art sortiert (Wand/Fenster/Tür/Rest), vorläufig nur grau eingefärbt.
+- Lokaler Testserver: `.claude/launch.json` (python -m http.server 8000).
 
 ## Nächste Schritte
-- Sitzung 2: IFC hochladen und in 3D ansehen (dabei entscheiden, ob der frühe Entwurf von `index.html`/`style.css` bleibt).
-- Probleme in Sitzung 1: keine.
+- Sitzung 3: Außenwände erkennen und per Klick korrigieren.
+- Probleme in Sitzung 2: keine Fehler. Auffällig: Das Gelände (Grundstück) aus der Test-IFC ist viel größer als das Haus
+  und weiß auf weiß kaum zu sehen; bei der Darstellung (Sitzung 4) mitbedenken.

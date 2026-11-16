@@ -31,6 +31,7 @@ Entsteht in der Vibecoding KI-Werkstatt (Jade Hochschule, 16.–20.11.2026). Abg
 # Entscheidungen
 - Kein Beispielhaus: Die App ist fürs Studium, man lädt immer den eigenen Entwurf als einfache IFC hoch.
 - PDF-Export des Variantenvergleichs ist Must.
+- Oberfläche schlank: nur zeigen, was schon funktioniert; jeder Bereich kommt in seiner Sitzung dazu.
 
 # Gestaltung
 - Swiss Style: weiß, viel Weißraum, dünne Linien, eine Akzentfarbe (Dunkelblau).

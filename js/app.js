@@ -1,0 +1,56 @@
+// Bedienoberfläche: Datei wählen oder hineinziehen, Modell anzeigen
+import { Szene } from './szene.js';
+import { ifcLaden } from './ifc.js';
+
+const $ = (id) => document.getElementById(id);
+const ansicht = $('ansicht');
+const szene = new Szene(ansicht);
+
+$('datei').addEventListener('change', (ereignis) => {
+  const datei = ereignis.target.files[0];
+  if (datei) dateiOeffnen(datei);
+  ereignis.target.value = ''; // gleiche Datei darf nochmal gewählt werden
+});
+
+// Datei ins Fenster ziehen
+let ziehZaehler = 0;
+window.addEventListener('dragenter', (e) => { e.preventDefault(); ziehZaehler++; $('ablage').hidden = false; });
+window.addEventListener('dragleave', () => { if (--ziehZaehler <= 0) { ziehZaehler = 0; $('ablage').hidden = true; } });
+window.addEventListener('dragover', (e) => e.preventDefault());
+window.addEventListener('drop', (e) => {
+  e.preventDefault();
+  ziehZaehler = 0;
+  $('ablage').hidden = true;
+  const datei = e.dataTransfer.files[0];
+  if (datei) dateiOeffnen(datei);
+});
+
+async function dateiOeffnen(datei) {
+  if (!datei.name.toLowerCase().endsWith('.ifc')) {
+    statusZeigen(`„${datei.name}“ ist keine IFC-Datei. Bitte eine Datei mit der Endung .ifc wählen.`, true);
+    return;
+  }
+  $('laden').hidden = false;
+  statusZeigen('');
+  try {
+    const { gruppe, anzahl } = await ifcLaden(datei);
+    szene.zeigeModell(gruppe);
+    $('leerHinweis').hidden = true;
+    $('legende').hidden = false;
+    statusZeigen(
+      `${datei.name}\n` +
+      `${anzahl.wand} Wände · ${anzahl.fenster} Fenster · ${anzahl.tuer} Türen · ${anzahl.rest} weitere Bauteile`
+    );
+  } catch (fehler) {
+    console.error(fehler);
+    statusZeigen(`Die Datei konnte nicht geöffnet werden: ${fehler.message}`, true);
+  } finally {
+    $('laden').hidden = true;
+  }
+}
+
+function statusZeigen(text, istFehler = false) {
+  const status = $('status');
+  status.textContent = text; // textContent: Dateinamen werden nie als HTML gelesen
+  status.classList.toggle('fehler', istFehler);
+}
