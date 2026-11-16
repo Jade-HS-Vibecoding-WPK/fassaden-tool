@@ -1,13 +1,6 @@
 // Außenwände erkennen und markieren
 import * as THREE from 'three';
-
-// Farben zum Markieren (der eigentliche Zeichenstil kommt in Sitzung 4)
-const MATERIAL = {
-  innen: new THREE.MeshLambertMaterial({ color: 0xd9d9d9, side: THREE.DoubleSide }),
-  innenHover: new THREE.MeshLambertMaterial({ color: 0xb9c6dc, side: THREE.DoubleSide }),
-  aussen: new THREE.MeshLambertMaterial({ color: 0x2c4f8a, side: THREE.DoubleSide }),
-  aussenHover: new THREE.MeshLambertMaterial({ color: 0x5579b5, side: THREE.DoubleSide }),
-};
+import { MATERIAL } from './darstellung.js';
 
 // Für jede Wand entscheiden, ob sie eine Außenwand ist (userData.aussenAuto).
 // Zwei Prüfungen müssen zusammenpassen:
@@ -93,6 +86,6 @@ function wandIstAmRand(wand, lage, alleNetze, strahl) {
 
 // Wand je nach Zustand einfärben (außen/innen, Maus darüber ja/nein)
 export function wandFaerben(wand, hover = false) {
-  const name = (wand.userData.aussen ? 'aussen' : 'innen') + (hover ? 'Hover' : '');
+  const name = (wand.userData.aussen ? 'aussen' : 'wand') + (hover ? 'Hover' : '');
   for (const netz of wand.children) netz.material = MATERIAL[name];
 }

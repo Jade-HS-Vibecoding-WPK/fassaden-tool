@@ -104,12 +104,17 @@ export class Szene {
     this.kameraEinpassen();
   }
 
+  // Kamera auf das Gebäude (Wände und Dach) ausrichten, nicht auf das oft riesige Gelände
   kameraEinpassen() {
-    const box = new THREE.Box3().setFromObject(this.modell);
+    const box = new THREE.Box3();
+    for (const bauteil of this.modell.children) {
+      if (['wand', 'dach'].includes(bauteil.userData.art)) box.expandByObject(bauteil);
+    }
+    if (box.isEmpty()) box.setFromObject(this.modell);
     if (box.isEmpty()) return;
     const mitte = box.getCenter(new THREE.Vector3());
     const radius = box.getSize(new THREE.Vector3()).length() / 2;
-    const abstand = radius / Math.sin(THREE.MathUtils.degToRad(this.kamera.fov / 2)) * 0.75;
+    const abstand = radius / Math.sin(THREE.MathUtils.degToRad(this.kamera.fov / 2)) * 1.1;
 
     // Blick von Südosten schräg von oben (Norden = Plan-oben = -Z)
     const richtung = new THREE.Vector3(1, 0.7, 1).normalize();

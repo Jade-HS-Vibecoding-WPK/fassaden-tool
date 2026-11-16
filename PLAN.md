@@ -91,7 +91,7 @@ Erledigte Sitzungen abhaken, die nächste offene Nummer ist dran.
 - [x] 1. Git im Projekt einrichten und erster Commit (16.11.)
 - [x] 2. IFC hochladen und in 3D ansehen (16.11.)
 - [x] 3. Außenwände erkennen und per Klick korrigieren (16.11.)
-- [ ] 4. Darstellung: Rohmodell hellgrau-weiß, Dach dunkelgrau, Zeichenstil mit Kantenlinien
+- [x] 4. Darstellung: Rohmodell hellgrau-weiß, Dach dunkelgrau, Zeichenstil mit Kantenlinien (16.11.)
 - [ ] 5. Material pro Himmelsrichtung
 
 **Mi 18.11. – Must fertig, dann Should 1 + 2**
@@ -141,9 +141,20 @@ Was bis Do 10:30 nicht fertig ist, wandert zu Could.
   Deshalb zählt eine Wand nur als Außenwand, wenn (1) die IFC nicht „nein“ sagt und (2) auf einer Seite keine
   andere Wand mehr kommt (waagerechte Sichtprüfung von 6 Punkten der Wand aus).
   Ergebnis Test-IFC: 92 von 192 Wänden außen, Erkennung dauert unter 0,1 s.
+- Sitzung 4 (16.11.): Zeichenstil. Neue Datei `js/darstellung.js` mit allen Farben und den Kantenlinien.
+  Rohmodell hellgrau-weiß (#eeeeec), Dach dunkelgrau (#5f6266), Fenster hellblau-grau halb durchsichtig,
+  Türen hellgrau, Kantenlinien an allen Bauteilen (nur echte Kanten ab 30° Knick).
+  **Entscheidung:** Linien als Mittelding: grau (#727272), leicht durchscheinend, nicht fast schwarz.
+  Außenwände vorläufig in ruhigerem Blau (#5b7db3), bis in Sitzung 5 die Materialien kommen.
+  Dach = IfcRoof, Decke mit Typ „Dach“ (IfcSlab ROOF) oder Decke, die zu einem IfcRoof gehört. Test-IFC: 14 Dachteile.
+  Gelände = IfcSite (hell, ohne Linien). Die Kamera richtet sich jetzt auf Wände und Dach aus, nicht aufs ganze Gelände.
 
 ## Nächste Schritte
-- Sitzung 4: Darstellung (Rohmodell hellgrau-weiß, Dach dunkelgrau, Zeichenstil mit Kantenlinien).
+- Sitzung 5: Material pro Himmelsrichtung.
+- Probleme in Sitzung 4: Das Gelände in der Test-IFC ist kein IfcSite, sondern mehrere Revit-Körper („Mass 1“ bis „Mass 9“,
+  IfcBuildingElementProxy). Die App kann sie nicht sicher als Gelände erkennen, deshalb erscheinen sie wie das übrige
+  Rohmodell (weiß mit Linien, wirkt wie eine Modellplatte). Ist so in Ordnung.
+  Der Browser hält beim Testen manchmal alte JS-Dateien fest: dann Strg+Umschalt+R (neu laden ohne Zwischenspeicher).
 - Probleme in Sitzung 2: keine Fehler. Auffällig: Das Gelände (Grundstück) aus der Test-IFC ist viel größer als das Haus
   und weiß auf weiß kaum zu sehen; bei der Darstellung (Sitzung 4) mitbedenken.
 - Probleme in Sitzung 3: Die Erkennung ist nicht perfekt. Einzelne Innenwände gelten als außen, einige Kellerwände

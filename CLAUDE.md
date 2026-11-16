@@ -26,6 +26,7 @@ Entsteht in der Vibecoding KI-Werkstatt (Jade Hochschule, 16.–20.11.2026). Abg
 - `js/szene.js` – 3D-Szene, Kamera, Ansichten, Screenshot
 - `js/ifc.js` – IFC-Datei in 3D-Bauteile umwandeln (Wände, Fenster, Türen, Rest)
 - `js/fassade.js` – Außenwände erkennen, Fassade mit Fensteröffnungen neu bauen, Flächen berechnen
+- `js/darstellung.js` – Zeichenstil: Farben der Bauteile (Rohmodell, Dach, Fenster …) und Kantenlinien
 - `js/materialien.js` – Fassadenmaterialien als selbst gezeichnete Texturen
 
 # Entscheidungen

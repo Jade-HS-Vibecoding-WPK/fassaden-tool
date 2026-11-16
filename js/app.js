@@ -70,7 +70,7 @@ async function dateiOeffnen(datei) {
     $('legende').hidden = false;
     statusZeigen(
       `${datei.name}\n` +
-      `${anzahl.wand} Wände · ${anzahl.fenster} Fenster · ${anzahl.tuer} Türen · ${anzahl.rest} weitere Bauteile`
+      `${anzahl.wand} Wände · ${anzahl.fenster} Fenster · ${anzahl.tuer} Türen · ${anzahl.dach} Dachteile · ${anzahl.rest} weitere Bauteile`
     );
   } catch (fehler) {
     console.error(fehler);

@@ -1,6 +1,7 @@
 // IFC-Datei lesen und in 3D-Bauteile umwandeln
 import * as THREE from 'three';
 import * as WebIFC from 'web-ifc';
+import { MATERIAL, kantenlinienHinzufuegen } from './darstellung.js';
 
 // Bauteil-Arten, die die App unterscheidet
 const ARTEN = {
@@ -8,14 +9,8 @@ const ARTEN = {
   [WebIFC.IFCWALLSTANDARDCASE]: 'wand',
   [WebIFC.IFCWINDOW]: 'fenster',
   [WebIFC.IFCDOOR]: 'tuer',
-};
-
-// Vorläufige Farben (die eigentliche Darstellung kommt später)
-const FARBEN = {
-  wand: 0xd9d9d9,
-  fenster: 0x9aa7b8,
-  tuer: 0xb5b5b5,
-  rest: 0xeeeeee,
+  [WebIFC.IFCROOF]: 'dach',
+  [WebIFC.IFCSITE]: 'gelaende',
 };
 
 let ifcApi = null;
@@ -38,17 +33,14 @@ export async function ifcLaden(datei) {
   if (modellID < 0) throw new Error('Die Datei konnte nicht als IFC gelesen werden.');
 
   const gruppe = new THREE.Group();
-  const anzahl = { wand: 0, fenster: 0, tuer: 0, rest: 0 };
-  const materialien = {};
-  for (const [art, farbe] of Object.entries(FARBEN)) {
-    materialien[art] = new THREE.MeshLambertMaterial({ color: farbe, side: THREE.DoubleSide });
-  }
-
+  const anzahl = { wand: 0, fenster: 0, tuer: 0, dach: 0, gelaende: 0, rest: 0 };
   const waende = new Map(); // expressID → Bauteil, für die Eigenschaft „IsExternal“
 
   try {
+    const dachTeile = dachTeileFinden(api, modellID);
     api.StreamAllMeshes(modellID, (ifcTeil) => {
-      const art = ARTEN[api.GetLineType(modellID, ifcTeil.expressID)] ?? 'rest';
+      const art = dachTeile.has(ifcTeil.expressID) ? 'dach'
+        : ARTEN[api.GetLineType(modellID, ifcTeil.expressID)] ?? 'rest';
       anzahl[art]++;
 
       // Ein Bauteil kann aus mehreren Stücken bestehen
@@ -71,9 +63,10 @@ export async function ifcLaden(datei) {
         geometrie.setAttribute('normal', new THREE.InterleavedBufferAttribute(verschraenkt, 3, 3));
         geometrie.setIndex(new THREE.BufferAttribute(dreiecke, 1));
 
-        const netz = new THREE.Mesh(geometrie, materialien[art]);
+        const netz = new THREE.Mesh(geometrie, MATERIAL[art]);
         netz.matrixAutoUpdate = false;
         netz.matrix.fromArray(stueck.flatTransformation);
+        if (art !== 'gelaende') kantenlinienHinzufuegen(netz); // Gelände ohne Linien, sonst zu unruhig
         bauteil.add(netz);
       }
       gruppe.add(bauteil);
@@ -87,6 +80,25 @@ export async function ifcLaden(datei) {
     throw new Error('In der Datei wurden keine 3D-Bauteile gefunden.');
   }
   return { gruppe, anzahl };
+}
+
+// Dächer kommen in der IFC auf zwei Wegen vor:
+// als Decke mit dem Typ „Dach“ (IfcSlab ROOF) oder als Decken, die zu einem Dach (IfcRoof) gehören.
+function dachTeileFinden(api, modellID) {
+  const dachTeile = new Set();
+  const decken = api.GetLineIDsWithType(modellID, WebIFC.IFCSLAB);
+  for (let i = 0; i < decken.size(); i++) {
+    const decke = api.GetLine(modellID, decken.get(i));
+    if (decke?.PredefinedType?.value === 'ROOF') dachTeile.add(decke.expressID);
+  }
+  const zugehoerig = api.GetLineIDsWithType(modellID, WebIFC.IFCRELAGGREGATES);
+  for (let i = 0; i < zugehoerig.size(); i++) {
+    const rel = api.GetLine(modellID, zugehoerig.get(i));
+    const ganzes = rel.RelatingObject?.value;
+    if (ganzes === undefined || api.GetLineType(modellID, ganzes) !== WebIFC.IFCROOF) continue;
+    for (const teil of rel.RelatedObjects ?? []) dachTeile.add(teil.value);
+  }
+  return dachTeile;
 }
 
 // Liest für jede Wand die Eigenschaft „IsExternal“ (Außenbauteil ja/nein) aus Pset_WallCommon.
