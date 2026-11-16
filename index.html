@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fassaden-Studio</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Bibliotheken aus dem Internet: three.js (3D) und web-ifc (IFC lesen) -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
+      "web-ifc": "https://cdn.jsdelivr.net/npm/web-ifc@0.0.57/web-ifc-api.js"
+    }
+  }
+  </script>
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <div class="app">
+    <aside class="seitenleiste">
+      <header>
+        <h1>Fassaden-Studio</h1>
+        <p>IFC laden · Fassade gestalten · Varianten vergleichen</p>
+      </header>
+
+      <section>
+        <h2><span>1</span> Modell</h2>
+        <div class="zeile">
+          <label class="knopf">IFC-Datei wählen<input type="file" id="datei" accept=".ifc" hidden></label>
+        </div>
+        <p class="status" id="status"></p>
+      </section>
+
+      <section>
+        <h2><span>2</span> Fassade</h2>
+        <label class="schalter"><input type="checkbox" id="getrennt"> Jede Himmelsrichtung einzeln</label>
+        <div class="seiten-tabs" id="seitenTabs" hidden>
+          <button data-seite="N">Nord</button>
+          <button data-seite="O">Ost</button>
+          <button data-seite="S">Süd</button>
+          <button data-seite="W">West</button>
+        </div>
+        <p class="geltung" id="geltung"></p>
+
+        <h3>Material</h3>
+        <div class="material-raster" id="materialien"></div>
+
+        <h3>Fenster</h3>
+        <div class="regler">
+          <label for="breite">Breite</label>
+          <input type="range" id="breite" min="0" max="250" step="5">
+          <output id="breiteWert"></output>
+        </div>
+        <div class="regler">
+          <label for="hoehe">Höhe</label>
+          <input type="range" id="hoehe" min="0" max="250" step="5">
+          <output id="hoeheWert"></output>
+        </div>
+        <p class="hinweis">100 % = Maß aus dem Modell. Die Oberkante (Sturz) bleibt, die Brüstung wandert. 0 % = Fenster zu.</p>
+
+        <h3>Fensterrahmen</h3>
+        <div class="farben" id="rahmen"></div>
+      </section>
+
+      <section>
+        <h2><span>3</span> Kennwerte</h2>
+        <table class="kennwerte" id="kennwerte"></table>
+      </section>
+
+      <section>
+        <h2><span>4</span> Varianten</h2>
+        <div class="zeile">
+          <input type="text" id="variantenName" placeholder="Name, z. B. Klinker, Süd groß">
+          <button class="knopf haupt" id="speichern">Variante speichern</button>
+        </div>
+        <ul class="varianten" id="varianten"></ul>
+        <button class="knopf leise breit" id="vergleichen">Varianten vergleichen</button>
+      </section>
+    </aside>
+
+    <main class="ansicht" id="ansicht">
+      <div class="werkzeuge">
+        <div class="gruppe">
+          <button data-ansicht="3D" class="aktiv">3D</button>
+          <button data-ansicht="N">Nord</button>
+          <button data-ansicht="O">Ost</button>
+          <button data-ansicht="S">Süd</button>
+          <button data-ansicht="W">West</button>
+        </div>
+        <div class="gruppe"><button id="auswahl">Außenwände wählen</button></div>
+      </div>
+      <div class="laden" id="laden" hidden><span>IFC wird gelesen …</span></div>
+      <div class="ablage" id="ablage" hidden><span>IFC-Datei hier ablegen</span></div>
+      <p class="legende" id="legende"></p>
+    </main>
+  </div>
+
+  <div class="vergleich" id="vergleich" hidden>
+    <div class="vergleich-kopf">
+      <h2>Variantenvergleich</h2>
+      <div class="zeile">
+        <button class="knopf leise" id="drucken">Drucken / PDF</button>
+        <button class="knopf leise" id="schliessen">Schließen</button>
+      </div>
+    </div>
+    <div class="vergleich-raster" id="vergleichRaster"></div>
+  </div>
+</body>
+</html>

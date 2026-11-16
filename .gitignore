@@ -1,0 +1,7 @@
+# Beispiel-IFC: Lizenz unklar, nicht auf GitHub hochladen
+testdaten/
+
+# Systemdateien
+Thumbs.db
+desktop.ini
+.DS_Store
