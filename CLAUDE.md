@@ -12,7 +12,7 @@ Entsteht in der Vibecoding KI-Werkstatt (Jade Hochschule, 16.–20.11.2026). Abg
   und die Nutzerin daran erinnern.
 - Neue Regel oder Entscheidung → sofort hier bzw. in PLAN.md eintragen.
 - Keine API-Keys, keine personenbezogenen Daten, keine Büro-/Kundendaten.
-- `testdaten/` nicht auf GitHub hochladen (Lizenz der Beispiel-IFC unklar) – steht in `.gitignore`.
+- `testdaten/` nicht auf GitHub hochladen (Beispiel-IFC von der Bundesingenieurkammer, Nutzungsbedingungen nicht geklärt) – steht in `.gitignore`.
 
 # Technik
 - Reine statische Webseite, läuft ohne Installation und auf GitHub Pages: `index.html`, `style.css`, `js/*.js`.

@@ -78,7 +78,7 @@ nebeneinander vergleicht und als PDF mitnimmt.
 ## Speicherstände und GitHub
 - Nach jedem fertigen Feature ein lokaler Commit (Speicherstand) auf dem Laptop.
 - Zu GitHub hochladen erst am Donnerstag (Veröffentlichung über GitHub Pages) und zur Abgabe am Freitag.
-- `testdaten/` wird nicht hochgeladen (Lizenz der Beispiel-IFC unklar).
+- `testdaten/` wird nicht hochgeladen (Beispiel-IFC stammt von der Bundesingenieurkammer, Nutzungsbedingungen nicht geklärt).
 
 ## Sitzungsplan (ein Feature pro Sitzung)
 Ablauf jeder Sitzung: `/clear` → ein Feature bauen → testen → Commit → Stand hier in PLAN.md festhalten.
@@ -123,6 +123,9 @@ Was bis Do 10:30 nicht fertig ist, wandert zu Could.
 ## Stand (16.11.2026)
 - CLAUDE.md und PLAN.md angelegt, Plan mit der Nutzerin abgestimmt.
 - Test-IFC liegt in `testdaten/` (Einfamilienhaus, Revit 2023, IFC2x3: 192 Wände, 57 Fenster, 49 Türen).
+  Quelle: Bundesingenieurkammer, Seite „BIM-Praxisbeispiele“ (Download zum Betrachten angeboten).
+  Weder in der Datei noch auf der Seite steht eine Erlaubnis zum Weiterverbreiten. Deshalb nicht hochladen;
+  wer es doch will, fragt vorher bei der Kammer (info@bingk.de) nach.
 - Git ist im Projekt eingerichtet (Zweig `main`, Name Paulina Awick, Uni-E-Mail, nur für dieses Projekt hinterlegt).
 - `.gitignore` schließt `testdaten/` aus. Erster Commit gemacht (Sitzung 1).
 - `index.html` und `style.css` existieren als früher Entwurf ohne Funktion; beim Start der Umsetzung entscheiden, ob behalten.
