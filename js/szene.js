@@ -2,6 +2,12 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
+// Ist das Teil zu sehen? (es selbst und alle, zu denen es gehört)
+function istSichtbar(teil) {
+  for (let t = teil; t; t = t.parent) if (!t.visible) return false;
+  return true;
+}
+
 export class Szene {
   constructor(behaelter) {
     this.behaelter = behaelter;
@@ -60,7 +66,8 @@ export class Szene {
       const rahmen = leinwand.getBoundingClientRect();
       maus.set(((e.clientX - rahmen.left) / rahmen.width) * 2 - 1, -((e.clientY - rahmen.top) / rahmen.height) * 2 + 1);
       strahl.setFromCamera(maus, this.kamera);
-      const treffer = strahl.intersectObject(this.modell, true)[0];
+      // Ausgeblendete Teile (z. B. Original-Wand hinter einer nachgebauten Scheibe) zählen nicht
+      const treffer = strahl.intersectObject(this.modell, true).find((t) => istSichtbar(t.object));
       const bauteil = treffer?.object.parent;
       return bauteil && this.istAnklickbar(bauteil) ? bauteil : null;
     };

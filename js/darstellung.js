@@ -21,6 +21,7 @@ export const MATERIAL = {
   wand: flaeche(0xeeeeec),
   wandHover: flaeche(0xc9d3e4),
   fenster: flaeche(0xa9b8c8, { transparent: true, opacity: 0.55, depthWrite: false }),
+  rahmen: flaeche(0x5f6266), // neu gezeichnete Fensterrahmen, deckend im Grau des Dachs
   tuer: flaeche(0xd6d6d3),
   dach: flaeche(0x5f6266),
   gelaende: flaeche(0xf1efea),

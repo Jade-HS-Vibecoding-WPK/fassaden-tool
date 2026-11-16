@@ -59,6 +59,15 @@ h2 span { color: var(--akzent); }
 .materialzeile select:hover, .materialzeile select:focus { border-color: var(--text); outline: none; }
 .muster { width: 26px; height: 26px; border: 1px solid var(--linie); background-size: cover; background-position: center; }
 
+/* Fenstergröße: je Himmelsrichtung zwei Regler */
+.fensterwahl { display: grid; gap: 12px; }
+.fensterzeile { display: grid; grid-template-columns: 58px 1fr; gap: 10px; font-size: 13px; }
+.fensterzeile small { display: block; font-size: 11px; color: var(--leise); }
+.fensterzeile .regler { display: grid; gap: 2px; }
+.fensterzeile label { display: grid; grid-template-columns: 42px 1fr 40px; gap: 8px; align-items: center; font-size: 12px; }
+.fensterzeile input[type=range] { width: 100%; min-width: 0; margin: 0; accent-color: var(--akzent); cursor: pointer; }
+.fensterzeile output { text-align: right; font-variant-numeric: tabular-nums; }
+
 .hinweis { font-size: 12px; color: var(--leise); margin: 8px 0 0; line-height: 1.45; }
 .status { font-size: 13px; line-height: 1.5; margin: 16px 0 0; white-space: pre-line; }
 .status::first-line { font-weight: 600; }

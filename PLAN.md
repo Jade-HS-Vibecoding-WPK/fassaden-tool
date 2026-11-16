@@ -11,7 +11,7 @@ nebeneinander vergleicht und als PDF mitnimmt.
 - [x] Außenwände automatisch erkennen (IFC-Eigenschaft „IsExternal“ + Lage im Gebäude), per Klick korrigierbar
 - [x] Norden = Plan-oben (keine Einstellung)
 - [x] Material pro Himmelsrichtung (N/O/S/W): Klinker, Holz, Sichtbeton, Putz, Metall, Glas (je 1–2 Farbtöne)
-- [ ] Fenster pro Himmelsrichtung: Breite und Höhe in % (Sturz bleibt, Brüstung wandert, 0 % = Fenster zu)
+- [x] Fenster pro Himmelsrichtung: Breite und Höhe in % (Sturz bleibt, Brüstung wandert, 0 % = Fenster zu)
 - [ ] Kennwerte je Himmelsrichtung und gesamt: Fassadenfläche, Fensterfläche, Fensterflächenanteil
 - [ ] Darstellung mit klarem Unterschied zwischen Rohmodell und Entwurf:
       - Alles aus der IFC (Decken, Innenwände, nicht gestaltete Wände) hellgrau-weiß wie ein Arbeitsmodell
@@ -95,7 +95,8 @@ Erledigte Sitzungen abhaken, die nächste offene Nummer ist dran.
 - [x] 5. Material pro Himmelsrichtung (16.11.)
 
 **Mi 18.11. – Must fertig, dann Should 1 + 2**
-- [ ] 6. Fenster pro Himmelsrichtung (Breite/Höhe in %)
+- [x] 6. Fenster pro Himmelsrichtung (Breite/Höhe in %) (16.11.)
+- [ ] 6b. Material: Schalter „Alle Seiten gleich“ (Wunsch der Nutzerin, wie die Oberflächen-Überschreibung in ArchiCAD)
 - [ ] 7. Kennwerte (Fassadenfläche, Fensterfläche, Fensterflächenanteil)
 - [ ] 8. Varianten speichern, mit 5 Bildern (Perspektive + N/O/S/W)
 - [ ] 9. Variantenvergleich nebeneinander
@@ -120,7 +121,7 @@ Erledigte Sitzungen abhaken, die nächste offene Nummer ist dran.
 Wenn es eng wird, zuerst streichen: 19 (PDF-Einzelseiten), dann 16 (Ortssuche).
 Was bis Do 10:30 nicht fertig ist, wandert zu Could.
 
-## Stand (16.11.2026, nach Sitzung 5)
+## Stand (16.11.2026, nach Sitzung 6)
 - CLAUDE.md und PLAN.md angelegt, Plan mit der Nutzerin abgestimmt.
 - Test-IFC liegt in `testdaten/` (Einfamilienhaus, Revit 2023, IFC2x3: 192 Wände, 57 Fenster, 49 Türen).
   Quelle: Bundesingenieurkammer, Seite „BIM-Praxisbeispiele“ (Download zum Betrachten angeboten).
@@ -159,9 +160,48 @@ Was bis Do 10:30 nicht fertig ist, wandert zu Could.
   Sichtbeton ohne Ankerlöcher, „Metall“ heißt jetzt „Fassadenplatten“ (Fugenraster statt Stehfalz).
   Himmelsrichtung = Richtung der freien Außenseite der Wand, auf die nächste der 4 Richtungen gerundet (Norden = -Z = Plan-oben).
   Test-IFC: Nord 13, Ost 29, Süd 14, West 36 Außenwände. Hover zeigt einen blauen Schimmer, Klick schaltet weiter außen ↔ innen.
+- Sitzung 6 (16.11.): Fenster pro Himmelsrichtung. Neuer Bereich „4 Fenster“: je Seite Regler Breite und Höhe (0–200 %, 5er-Schritte),
+  Anzahl der Fenster je Seite, Textknopf „Alle Fenster auf 100 %“.
+  So funktioniert es: Fenster und Türen werden ihren Wänden zugeordnet (auch beiden Schalen einer mehrschaligen Wand).
+  Sobald ein Fenster nicht mehr 100 % hat, baut die App jede betroffene Wand als eigene Scheibe nach
+  (Umriss der beiden Wandseiten aus der IFC, auch Giebel und schräge Ecken) und schneidet die Löcher neu aus.
+  Die Original-Wand wird so lange ausgeblendet. Bei 100 % überall sieht man wieder die unveränderte IFC.
+  Das Fenster wird neu gezeichnet (Rahmen + Glas, ohne Sprossen, siehe Entscheidung unten). Beim Vergrößern: 10 cm Abstand zu Wandrand
+  und Nachbaröffnungen, zwei wachsende Nachbarfenster teilen sich die Lücke; sitzt ein Fenster schon in der IFC
+  näher am Rand, gilt dieser Abstand. Kleiner als 100 % geht immer, 0 % = Fenster weg, Wand geschlossen.
+  Neu bauen dauert ca. 80 ms, die Regler reagieren also fast sofort.
+  **Änderung an der Wanderkennung:** Die Richtung einer Wand kommt jetzt aus ihren großen Seitenflächen statt aus der
+  Streuung der Eckpunkte (die war bei Wänden mit vielen Fenstern leicht schief). Test-IFC jetzt 89 statt 92 Außenwände:
+  Nord 14, Ost 29, Süd 11, West 35.
+  Test-IFC: 54 von 57 Fenstern verstellbar (Nord 10, Ost 14, Süd 12, West 18). 3 Fenster sitzen in keiner Wand
+  (vermutlich Dachfenster/Gauben). 87 von 89 Außenwänden lassen sich nachbauen.
+  **Nachbesserung nach Test mit eigener ArchiCAD-IFC** (IFC4, 14 Wände, 4 Fenster; Kopie als `testdaten/Test-ArchiCAD.ifc`):
+  Vorher war dort kein Fenster verstellbar. Gründe: (1) Wandrichtung durch schräge Flächen und Laibungsstufen um 2–3° verdreht,
+  (2) ArchiCAD baut Laibungen mit vielen Stufen/Anschlägen, die App hielt die Wände deshalb für unregelmäßig.
+  Jetzt: Richtung = die Richtung mit der meisten senkrechten Fläche (±2°); „regelmäßig“ = mindestens die Hälfte der Fläche
+  liegt auf Vorder- oder Rückseite. Ergebnis: alle 4 Außenwände (36 cm) nachbaubar, alle 4 Fenster verstellbar.
 
 ## Nächste Schritte
-- Sitzung 6: Fenster pro Himmelsrichtung (Breite/Höhe in %). Dafür die Außenwände als eigene „Scheiben“ nachbauen.
+- Sitzung 6b (vor 7, klein): Im Bereich „3 Fassade“ ein Schalter „Alle Seiten gleich“. Ist er an, gibt es nur
+  eine Materialauswahl, die für Nord/Ost/Süd/West gilt (wie die Oberflächen-Überschreibung in ArchiCAD).
+  Schalter aus: wieder je Seite einzeln, die vorherige Auswahl je Seite bleibt erhalten.
+- Sitzung 7: Kennwerte (Fassadenfläche, Fensterfläche, Fensterflächenanteil) je Himmelsrichtung und gesamt.
+  Fensterfläche lässt sich aus den Lochrechtecken von Sitzung 6 rechnen, Fassadenfläche aus dem Wandumriss.
+- Probleme in Sitzung 6: Die Wand wird mit ihrem äußeren Umriss nachgebaut. Hat eine Wand eine Einbuchtung
+  (z. B. stufige Oberkante) oder ein Loch ohne Fenster/Tür, wird das beim Nachbau zugemacht.
+  Gebogene oder L-förmige Wände werden nicht nachgebaut, ihre Fenster bleiben unverändert.
+  Bei mehrschaligen Wänden wird die innere Schale mitgeschnitten, wenn sie sich nachbauen lässt.
+  Durch das Glas sieht man den (weißen) Innenraum des Modells – gewollt, wirkt wie ein Arbeitsmodell.
+  Unter Türen bzw. über raumhohen Fenstern bleibt beim Nachbau ein 5 mm dünner Wandstreifen (rechnerisch nötig, nicht sichtbar).
+  Die Fenstergrößen gehen beim Neuladen verloren (gespeichert wird mit den Varianten, Sitzung 8).
+  Fenster können nur so groß werden, wie die (meist geschosshohe) Wand es zulässt.
+  **Entscheidung (16.11., vor Sitzung 6):** Regler 0–200 %. Breite wächst von der Fenstermitte aus, Sturz bleibt,
+  Brüstung wandert. Das Original-Fenster aus der IFC wird gestreckt bzw. gestaucht (Sprossen verzerren mit).
+  Türen bleiben unverändert. Abstand zu Nachbaröffnung und Wandende mindestens 10 cm.
+  **Geändert (16.11., nach Test):** Sprossen sollen weg. Alle Fenster in Außenwänden werden neu gezeichnet
+  (schmaler Rahmen + Glas, ohne Sprossen), auch bei 100 %. Das Original-Fenster wird nicht mehr gestreckt.
+  Rahmen 6 cm breit, 7 cm tief, deckend im Dunkelgrau des Dachs (#5f6266); sitzt so tief in der Wand wie das Original-Fenster.
+  Nachgebaute Wand übernimmt den Umriss der IFC-Wand (auch Giebelspitzen).
 - **Entscheidung (Sitzung 5):** Alle Materialfarben gedeckt und nicht zu knallig, eher etwas grau gebrochen.
 - **Entscheidung (Sitzung 5):** Linien nicht „sklavisch korrekt“, sondern wie eine Handskizze:
   Fugen nur angedeutet wie mit der Feder: jeder Strich scharf und gleich kräftig, aber stellenweise fehlen Striche
