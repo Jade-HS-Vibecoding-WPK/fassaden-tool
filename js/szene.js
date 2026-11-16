@@ -30,6 +30,7 @@ export class Szene {
     this.szene.add(sonne);
 
     this.modell = null;
+    this.mausAnklickenEinrichten();
 
     // Größe anpassen, wenn sich das Fenster ändert
     new ResizeObserver(() => this.groesseAnpassen()).observe(behaelter);
@@ -38,6 +39,47 @@ export class Szene {
     this.renderer.setAnimationLoop(() => {
       this.steuerung.update();
       this.renderer.render(this.szene, this.kamera);
+    });
+  }
+
+  // Bauteile mit der Maus anfahren und anklicken.
+  // Wer mitmachen will, setzt: istAnklickbar(bauteil), beiHover(bauteil oder null), beiKlick(bauteil)
+  mausAnklickenEinrichten() {
+    this.istAnklickbar = () => false;
+    this.beiHover = () => {};
+    this.beiKlick = () => {};
+    this.hoverBauteil = null;
+
+    const leinwand = this.renderer.domElement;
+    const strahl = new THREE.Raycaster();
+    const maus = new THREE.Vector2();
+    let gedrueckt = null;
+
+    const bauteilUnterMaus = (e) => {
+      if (!this.modell) return null;
+      const rahmen = leinwand.getBoundingClientRect();
+      maus.set(((e.clientX - rahmen.left) / rahmen.width) * 2 - 1, -((e.clientY - rahmen.top) / rahmen.height) * 2 + 1);
+      strahl.setFromCamera(maus, this.kamera);
+      const treffer = strahl.intersectObject(this.modell, true)[0];
+      const bauteil = treffer?.object.parent;
+      return bauteil && this.istAnklickbar(bauteil) ? bauteil : null;
+    };
+
+    leinwand.addEventListener('pointermove', (e) => {
+      if (e.buttons !== 0) return; // beim Drehen nicht hervorheben
+      const bauteil = bauteilUnterMaus(e);
+      if (bauteil === this.hoverBauteil) return;
+      this.hoverBauteil = bauteil;
+      leinwand.style.cursor = bauteil ? 'pointer' : '';
+      this.beiHover(bauteil);
+    });
+    leinwand.addEventListener('pointerdown', (e) => { gedrueckt = e.button === 0 ? { x: e.clientX, y: e.clientY } : null; });
+    leinwand.addEventListener('pointerup', (e) => {
+      // Nur ein Klick, wenn die Maus dabei kaum bewegt wurde (sonst war es Drehen)
+      if (!gedrueckt || Math.hypot(e.clientX - gedrueckt.x, e.clientY - gedrueckt.y) > 4) return;
+      gedrueckt = null;
+      const bauteil = bauteilUnterMaus(e);
+      if (bauteil) this.beiKlick(bauteil);
     });
   }
 
@@ -57,6 +99,7 @@ export class Szene {
       this.modell.traverse((teil) => teil.geometry?.dispose());
     }
     this.modell = gruppe;
+    this.hoverBauteil = null;
     this.szene.add(gruppe);
     this.kameraEinpassen();
   }

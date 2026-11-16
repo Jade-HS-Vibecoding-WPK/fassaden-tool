@@ -40,6 +40,14 @@ h2 span { color: var(--akzent); }
 }
 .knopf:hover { background: var(--akzent-hell); }
 
+.textknopf {
+  font: inherit; font-size: 12px; color: var(--akzent);
+  background: none; border: none; padding: 0; margin-top: 12px;
+  cursor: pointer; text-decoration: underline; text-underline-offset: 3px;
+}
+.zaehler { font-size: 13px; margin: 0; display: flex; gap: 10px; align-items: center; }
+.farbfeld { width: 14px; height: 14px; background: #2c4f8a; flex: none; }
+
 .hinweis { font-size: 12px; color: var(--leise); margin: 8px 0 0; line-height: 1.45; }
 .status { font-size: 13px; line-height: 1.5; margin: 16px 0 0; white-space: pre-line; }
 .status::first-line { font-weight: 600; }

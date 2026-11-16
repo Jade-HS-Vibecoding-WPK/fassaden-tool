@@ -44,6 +44,8 @@ export async function ifcLaden(datei) {
     materialien[art] = new THREE.MeshLambertMaterial({ color: farbe, side: THREE.DoubleSide });
   }
 
+  const waende = new Map(); // expressID → Bauteil, für die Eigenschaft „IsExternal“
+
   try {
     api.StreamAllMeshes(modellID, (ifcTeil) => {
       const art = ARTEN[api.GetLineType(modellID, ifcTeil.expressID)] ?? 'rest';
@@ -52,6 +54,7 @@ export async function ifcLaden(datei) {
       // Ein Bauteil kann aus mehreren Stücken bestehen
       const bauteil = new THREE.Group();
       bauteil.userData = { expressID: ifcTeil.expressID, art };
+      if (art === 'wand') waende.set(ifcTeil.expressID, bauteil);
 
       const stuecke = ifcTeil.geometries;
       for (let i = 0; i < stuecke.size(); i++) {
@@ -75,6 +78,7 @@ export async function ifcLaden(datei) {
       }
       gruppe.add(bauteil);
     });
+    istExternLesen(api, modellID, waende);
   } finally {
     api.CloseModel(modellID);
   }
@@ -83,4 +87,33 @@ export async function ifcLaden(datei) {
     throw new Error('In der Datei wurden keine 3D-Bauteile gefunden.');
   }
   return { gruppe, anzahl };
+}
+
+// Liest für jede Wand die Eigenschaft „IsExternal“ (Außenbauteil ja/nein) aus Pset_WallCommon.
+// Ergebnis steht in bauteil.userData.istExternIfc: true, false oder undefined (nicht angegeben).
+function istExternLesen(api, modellID, waende) {
+  const psetWerte = new Map(); // gleiche Eigenschaftsgruppe nur einmal lesen
+  const zuordnungen = api.GetLineIDsWithType(modellID, WebIFC.IFCRELDEFINESBYPROPERTIES);
+  for (let i = 0; i < zuordnungen.size(); i++) {
+    const zuordnung = api.GetLine(modellID, zuordnungen.get(i));
+    const betroffen = (zuordnung.RelatedObjects ?? []).filter((o) => waende.has(o.value));
+    if (betroffen.length === 0) continue;
+
+    const psetID = zuordnung.RelatingPropertyDefinition?.value;
+    if (!psetWerte.has(psetID)) psetWerte.set(psetID, istExternImPset(api, modellID, psetID));
+    const wert = psetWerte.get(psetID);
+    if (wert === undefined) continue;
+    for (const o of betroffen) waende.get(o.value).userData.istExternIfc = wert;
+  }
+}
+
+function istExternImPset(api, modellID, psetID) {
+  const pset = api.GetLine(modellID, psetID);
+  for (const verweis of pset?.HasProperties ?? []) {
+    const eigenschaft = api.GetLine(modellID, verweis.value);
+    if (eigenschaft?.Name?.value !== 'IsExternal') continue;
+    const wert = eigenschaft.NominalValue?.value;
+    return wert === true || wert === 'T' || wert === '.T.';
+  }
+  return undefined;
 }

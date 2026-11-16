@@ -31,6 +31,14 @@
         <p class="hinweis">… oder die Datei einfach ins Fenster ziehen.</p>
         <p class="status" id="status"></p>
       </section>
+
+      <section id="bereichAussenwaende" hidden>
+        <h2><span>2</span> Außenwände</h2>
+        <p class="zaehler"><span class="farbfeld"></span><span id="aussenZaehler"></span></p>
+        <p class="hinweis">Blau = Außenwand. Erkannt aus der IFC-Eigenschaft „Außenbauteil“ und der Lage im Gebäude.
+          Stimmt etwas nicht? Wand anklicken, um sie umzuschalten.</p>
+        <button class="textknopf" id="erkennungZuruecksetzen" hidden>Erkennung zurücksetzen</button>
+      </section>
     </aside>
 
     <main class="ansicht" id="ansicht">

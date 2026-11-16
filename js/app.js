@@ -1,10 +1,39 @@
 // Bedienoberfläche: Datei wählen oder hineinziehen, Modell anzeigen
 import { Szene } from './szene.js';
 import { ifcLaden } from './ifc.js';
+import { aussenwaendeErkennen, wandFaerben } from './fassade.js';
 
 const $ = (id) => document.getElementById(id);
 const ansicht = $('ansicht');
 const szene = new Szene(ansicht);
+
+let waende = []; // alle Wände des geladenen Modells
+
+// Wände anfahren (hervorheben) und anklicken (außen ↔ innen umschalten)
+szene.istAnklickbar = (bauteil) => bauteil.userData.art === 'wand';
+szene.beiHover = (bauteil) => {
+  for (const wand of waende) wandFaerben(wand, wand === bauteil);
+};
+szene.beiKlick = (wand) => {
+  wand.userData.aussen = !wand.userData.aussen;
+  wandFaerben(wand, true);
+  aussenwaendeAnzeigen();
+};
+
+$('erkennungZuruecksetzen').addEventListener('click', () => {
+  for (const wand of waende) {
+    wand.userData.aussen = wand.userData.aussenAuto;
+    wandFaerben(wand);
+  }
+  aussenwaendeAnzeigen();
+});
+
+function aussenwaendeAnzeigen() {
+  const aussen = waende.filter((w) => w.userData.aussen).length;
+  $('aussenZaehler').textContent = `${aussen} von ${waende.length} Wänden sind Außenwände`;
+  $('erkennungZuruecksetzen').hidden = waende.every((w) => w.userData.aussen === w.userData.aussenAuto);
+  $('bereichAussenwaende').hidden = waende.length === 0;
+}
 
 $('datei').addEventListener('change', (ereignis) => {
   const datei = ereignis.target.files[0];
@@ -34,7 +63,9 @@ async function dateiOeffnen(datei) {
   statusZeigen('');
   try {
     const { gruppe, anzahl } = await ifcLaden(datei);
+    waende = aussenwaendeErkennen(gruppe);
     szene.zeigeModell(gruppe);
+    aussenwaendeAnzeigen();
     $('leerHinweis').hidden = true;
     $('legende').hidden = false;
     statusZeigen(

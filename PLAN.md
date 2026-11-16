@@ -8,7 +8,7 @@ nebeneinander vergleicht und als PDF mitnimmt.
 
 ## Must (läuft spätestens Do 12 Uhr)
 - [ ] IFC-Datei des eigenen Entwurfs hochladen (Button oder Datei ins Fenster ziehen) und in 3D ansehen
-- [ ] Außenwände automatisch erkennen (IFC-Eigenschaft „IsExternal“), per Klick korrigierbar
+- [x] Außenwände automatisch erkennen (IFC-Eigenschaft „IsExternal“ + Lage im Gebäude), per Klick korrigierbar
 - [ ] Norden = Plan-oben (keine Einstellung)
 - [ ] Material pro Himmelsrichtung (N/O/S/W): Klinker, Holz, Sichtbeton, Putz, Metall, Glas (je 1–2 Farbtöne)
 - [ ] Fenster pro Himmelsrichtung: Breite und Höhe in % (Sturz bleibt, Brüstung wandert, 0 % = Fenster zu)
@@ -90,7 +90,7 @@ Erledigte Sitzungen abhaken, die nächste offene Nummer ist dran.
 **Di 17.11. – Grundgerüst**
 - [x] 1. Git im Projekt einrichten und erster Commit (16.11.)
 - [x] 2. IFC hochladen und in 3D ansehen (16.11.)
-- [ ] 3. Außenwände erkennen und per Klick korrigieren
+- [x] 3. Außenwände erkennen und per Klick korrigieren (16.11.)
 - [ ] 4. Darstellung: Rohmodell hellgrau-weiß, Dach dunkelgrau, Zeichenstil mit Kantenlinien
 - [ ] 5. Material pro Himmelsrichtung
 
@@ -135,8 +135,20 @@ Was bis Do 10:30 nicht fertig ist, wandert zu Could.
   Akzentfarbe jetzt Dunkelblau (#1f3a68). Name der App: „Fassaden-Tool“.
 - Bauteile sind schon nach Art sortiert (Wand/Fenster/Tür/Rest), vorläufig nur grau eingefärbt.
 - Lokaler Testserver: `.claude/launch.json` (python -m http.server 8000).
+- Sitzung 3 (16.11.): Außenwände werden erkannt und blau markiert, Klick auf eine Wand schaltet außen ↔ innen,
+  „Erkennung zurücksetzen“ macht alle Klicks rückgängig. Neue Datei `js/fassade.js`.
+  **Entscheidung:** In der Test-IFC stehen 191 von 192 Wänden auf „IsExternal = ja“, sogar „Innenwand 13 cm“.
+  Deshalb zählt eine Wand nur als Außenwand, wenn (1) die IFC nicht „nein“ sagt und (2) auf einer Seite keine
+  andere Wand mehr kommt (waagerechte Sichtprüfung von 6 Punkten der Wand aus).
+  Ergebnis Test-IFC: 92 von 192 Wänden außen, Erkennung dauert unter 0,1 s.
 
 ## Nächste Schritte
-- Sitzung 3: Außenwände erkennen und per Klick korrigieren.
+- Sitzung 4: Darstellung (Rohmodell hellgrau-weiß, Dach dunkelgrau, Zeichenstil mit Kantenlinien).
 - Probleme in Sitzung 2: keine Fehler. Auffällig: Das Gelände (Grundstück) aus der Test-IFC ist viel größer als das Haus
   und weiß auf weiß kaum zu sehen; bei der Darstellung (Sitzung 4) mitbedenken.
+- Probleme in Sitzung 3: Die Erkennung ist nicht perfekt. Einzelne Innenwände gelten als außen, einige Kellerwände
+  als innen, und bei mehrschaligen Wänden (Revit „Front wall“/„Back wall“) zählt meist nur die äußere Schale.
+  Das ist gewollt, denn die Fassade sitzt außen. Korrektur per Klick. Die Klicks gehen beim Neuladen verloren
+  (gespeichert wird erst mit den Varianten, Sitzung 8).
+  Kellerwände unter dem Gelände werden als außen erkannt; ob sie eine Fassade bekommen, in Sitzung 5 klären.
+  Die blaue Markierung ist vorläufig, der Zeichenstil kommt in Sitzung 4.
