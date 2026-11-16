@@ -19,14 +19,23 @@ const materialJeRichtung = { N: START_MATERIAL, O: START_MATERIAL, S: START_MATE
 const fensterJeRichtung = {};
 for (const richtung of Object.keys(RICHTUNGSNAMEN)) fensterJeRichtung[richtung] = { breite: 100, hoehe: 100 };
 
-// Schalter „Alle Seiten gleich“: ein Material für alle Seiten, die Auswahl je Seite bleibt im Hintergrund erhalten
-let alleGleich = false;
+// Schalter „Alle Seiten gleich“ (Material und Fenster getrennt): ein Wert für alle Seiten,
+// die Einstellung je Seite bleibt im Hintergrund erhalten
+let materialAlleGleich = false;
 let materialAlle = null; // wird beim ersten Einschalten mit dem Material der Nordseite belegt
+let fensterAlleGleich = false;
+let fensterAlle = null; // wird beim ersten Einschalten mit den Werten der Nordseite belegt
 
 // Das Material, das gerade wirklich je Seite gilt
 function geltendeMaterialien() {
-  if (!alleGleich) return materialJeRichtung;
+  if (!materialAlleGleich) return materialJeRichtung;
   return { N: materialAlle, O: materialAlle, S: materialAlle, W: materialAlle };
+}
+
+// Die Fenstergröße, die gerade wirklich je Seite gilt
+function geltendeFenster() {
+  if (!fensterAlleGleich) return fensterJeRichtung;
+  return { N: fensterAlle, O: fensterAlle, S: fensterAlle, W: fensterAlle };
 }
 
 function alleWaendeFaerben() {
@@ -36,7 +45,7 @@ function alleWaendeFaerben() {
 
 // Fenster neu einpassen (z. B. nach Reglerbewegung oder wenn eine Wand umgeschaltet wurde)
 function fensterAktualisieren() {
-  fensterAnpassen(waende, oeffnungen, fensterJeRichtung);
+  fensterAnpassen(waende, oeffnungen, geltendeFenster());
   alleWaendeFaerben();
   fensterAnzeigen();
 }
@@ -119,69 +128,96 @@ function materialwahlAufbauen() {
 // Je nach Schalter nur die Zeile „Alle“ oder die vier Zeilen je Seite zeigen
 function materialwahlUmschalten() {
   for (const [schluessel, { zeile }] of Object.entries(materialZeilen)) {
-    zeile.hidden = (schluessel === 'Alle') !== alleGleich;
+    zeile.hidden = (schluessel === 'Alle') !== materialAlleGleich;
   }
 }
 
-$('alleGleich').addEventListener('change', (ereignis) => {
-  alleGleich = ereignis.target.checked;
-  if (alleGleich && materialAlle === null) materialAlle = materialJeRichtung.N;
+$('materialAlleGleich').addEventListener('change', (ereignis) => {
+  materialAlleGleich = ereignis.target.checked;
+  if (materialAlleGleich && materialAlle === null) materialAlle = materialJeRichtung.N;
   materialZeilen.Alle.anzeigen();
   materialwahlUmschalten();
   alleWaendeFaerben();
 });
 materialwahlAufbauen();
 
-// Je Himmelsrichtung eine Zeile: Name mit Anzahl der Fenster, Regler für Breite und Höhe
-const fensterRegler = []; // zum Zurücksetzen
+// Eine Zeile der Fensterwahl: Name mit Anzahl der Fenster, Regler für Breite und Höhe
+// schluessel: N/O/S/W oder 'Alle'; groesse(): das Objekt { breite, hoehe }, das die Regler verstellen
+const fensterZeilen = {};
+let fensterGeplant = false;
+function fensterSpaeterAktualisieren() {
+  // Beim Ziehen am Regler höchstens einmal pro Bild neu bauen
+  if (fensterGeplant) return;
+  fensterGeplant = true;
+  requestAnimationFrame(() => { fensterGeplant = false; fensterAktualisieren(); });
+}
+
+function fensterzeileAufbauen(schluessel, name, groesse) {
+  const zeile = document.createElement('div');
+  zeile.className = 'fensterzeile';
+
+  const titel = document.createElement('span');
+  titel.textContent = name;
+  const anzahl = document.createElement('small');
+  anzahl.id = `fensterAnzahl${schluessel}`;
+  titel.append(anzahl);
+
+  const regler = document.createElement('div');
+  regler.className = 'regler';
+  const anzeigen = []; // Regler auf die gespeicherten Werte setzen
+  for (const [mass, beschriftung] of [['breite', 'Breite'], ['hoehe', 'Höhe']]) {
+    const zeileRegler = document.createElement('label');
+    const schieber = document.createElement('input');
+    Object.assign(schieber, { type: 'range', min: 0, max: 200, step: 5 });
+    schieber.setAttribute('aria-label', `${beschriftung} der Fenster ${name}`);
+    const wert = document.createElement('output');
+    anzeigen.push(() => {
+      schieber.value = groesse()[mass];
+      wert.textContent = `${schieber.value} %`;
+    });
+    schieber.addEventListener('input', () => {
+      groesse()[mass] = Number(schieber.value);
+      wert.textContent = `${schieber.value} %`;
+      fensterSpaeterAktualisieren();
+    });
+    zeileRegler.append(beschriftung, schieber, wert);
+    regler.append(zeileRegler);
+  }
+
+  zeile.append(titel, regler);
+  $('fensterwahl').append(zeile);
+  fensterZeilen[schluessel] = { zeile, anzeigen: () => anzeigen.forEach((f) => f()) };
+  fensterZeilen[schluessel].anzeigen();
+}
+
 function fensterwahlAufbauen() {
-  let geplant = false;
-  const spaeterAktualisieren = () => {
-    // Beim Ziehen am Regler höchstens einmal pro Bild neu bauen
-    if (geplant) return;
-    geplant = true;
-    requestAnimationFrame(() => { geplant = false; fensterAktualisieren(); });
-  };
-
+  fensterzeileAufbauen('Alle', 'Alle', () => fensterAlle ?? fensterJeRichtung.N);
   for (const [richtung, name] of Object.entries(RICHTUNGSNAMEN)) {
-    const zeile = document.createElement('div');
-    zeile.className = 'fensterzeile';
+    fensterzeileAufbauen(richtung, name, () => fensterJeRichtung[richtung]);
+  }
+  fensterwahlUmschalten();
+}
 
-    const titel = document.createElement('span');
-    titel.textContent = name;
-    const anzahl = document.createElement('small');
-    anzahl.id = `fensterAnzahl${richtung}`;
-    titel.append(anzahl);
-
-    const regler = document.createElement('div');
-    regler.className = 'regler';
-    for (const [mass, beschriftung] of [['breite', 'Breite'], ['hoehe', 'Höhe']]) {
-      const zeileRegler = document.createElement('label');
-      const schieber = document.createElement('input');
-      Object.assign(schieber, { type: 'range', min: 0, max: 200, step: 5, value: fensterJeRichtung[richtung][mass] });
-      schieber.setAttribute('aria-label', `${beschriftung} der Fenster ${name}`);
-      const wert = document.createElement('output');
-      const wertZeigen = () => { wert.textContent = `${schieber.value} %`; };
-      schieber.addEventListener('input', () => {
-        fensterJeRichtung[richtung][mass] = Number(schieber.value);
-        wertZeigen();
-        spaeterAktualisieren();
-      });
-      wertZeigen();
-      fensterRegler.push({ schieber, wertZeigen });
-      zeileRegler.append(beschriftung, schieber, wert);
-      regler.append(zeileRegler);
-    }
-
-    zeile.append(titel, regler);
-    $('fensterwahl').append(zeile);
+// Je nach Schalter nur die Zeile „Alle“ oder die vier Zeilen je Seite zeigen
+function fensterwahlUmschalten() {
+  for (const [schluessel, { zeile }] of Object.entries(fensterZeilen)) {
+    zeile.hidden = (schluessel === 'Alle') !== fensterAlleGleich;
   }
 }
+
+$('fensterAlleGleich').addEventListener('change', (ereignis) => {
+  fensterAlleGleich = ereignis.target.checked;
+  if (fensterAlleGleich && fensterAlle === null) fensterAlle = { ...fensterJeRichtung.N }; // Kopie, sonst verstellt „Alle“ die Nordseite mit
+  fensterZeilen.Alle.anzeigen();
+  fensterwahlUmschalten();
+  fensterAktualisieren();
+});
 fensterwahlAufbauen();
 
 $('fensterZuruecksetzen').addEventListener('click', () => {
   for (const richtung of Object.keys(fensterJeRichtung)) fensterJeRichtung[richtung] = { breite: 100, hoehe: 100 };
-  for (const { schieber, wertZeigen } of fensterRegler) { schieber.value = 100; wertZeigen(); }
+  if (fensterAlle !== null) fensterAlle = { breite: 100, hoehe: 100 };
+  for (const { anzeigen } of Object.values(fensterZeilen)) anzeigen();
   fensterAktualisieren();
 });
 
@@ -191,7 +227,11 @@ function fensterAnzeigen() {
     const anzahl = oeffnungen.filter((oe) => oe.userData.himmelsrichtung === richtung).length;
     $(`fensterAnzahl${richtung}`).textContent = `${anzahl} Fenster`;
   }
-  $('fensterZuruecksetzen').hidden = Object.values(fensterJeRichtung).every((g) => g.breite === 100 && g.hoehe === 100);
+  const alle = oeffnungen.filter((oe) => oe.userData.himmelsrichtung in RICHTUNGSNAMEN).length;
+  $('fensterAnzahlAlle').textContent = `${alle} Fenster`;
+  // Knopf nur zeigen, wenn irgendwo (auch im Hintergrund) nicht 100 % eingestellt ist
+  const groessen = [...Object.values(fensterJeRichtung), ...(fensterAlle ? [fensterAlle] : [])];
+  $('fensterZuruecksetzen').hidden = groessen.every((g) => g.breite === 100 && g.hoehe === 100);
 }
 
 $('datei').addEventListener('change', (ereignis) => {
