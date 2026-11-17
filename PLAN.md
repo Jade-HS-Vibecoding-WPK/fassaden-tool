@@ -28,7 +28,7 @@ nebeneinander vergleicht und als PDF mitnimmt.
 ## Should (wenn Must steht, Ziel Mittwoch) – in dieser Reihenfolge abarbeiten
 **1. Feinjustierung**
 - [x] 2. Schritt: einzelne Wand anklicken und anderes Material geben
-- [ ] 2. Schritt: einzelnes Fenster anklicken, Breite/Höhe per Regler oder in cm ändern
+- [x] 2. Schritt: einzelnes Fenster anklicken, Breite/Höhe in cm ändern
 
 **2. Pfosten-Riegel**
 - [ ] Pfosten-Riegel-Fassade als eigenes Material für eine ganze Seite;
@@ -110,7 +110,7 @@ Erledigte Sitzungen abhaken, die nächste offene Nummer ist dran.
 - [x] 10c. Seitenleiste ruhiger: Nebensächliches und Erklärtexte ausklappbar (Wunsch der Nutzerin, 17.11.)
 - [x] 11. Kurze Anleitung beim ersten Öffnen + IFC-Export-Hinweise → **Must komplett** (17.11.)
 - [x] 12. Should 1a: einzelne Wand → anderes Material (17.11.)
-- [ ] 13. Should 1b: einzelnes Fenster → Maße ändern
+- [x] 13. Should 1b: einzelnes Fenster → Maße ändern (17.11.)
 - [ ] 14. Should 2: Pfosten-Riegel-Fassade
 
 **Do 19.11. – bis 12 Uhr fertig**
@@ -128,7 +128,7 @@ Erledigte Sitzungen abhaken, die nächste offene Nummer ist dran.
 Wenn es eng wird, zuerst streichen: 19 (PDF-Einzelseiten), dann 16 (Ortssuche).
 Was bis Do 10:30 nicht fertig ist, wandert zu Could.
 
-## Stand (17.11.2026, nach Sitzung 12)
+## Stand (17.11.2026, nach Sitzung 13)
 - CLAUDE.md und PLAN.md angelegt, Plan mit der Nutzerin abgestimmt.
 - Test-IFC liegt in `testdaten/` (Einfamilienhaus, Revit 2023, IFC2x3: 192 Wände, 57 Fenster, 49 Türen).
   Quelle: Bundesingenieurkammer, Seite „BIM-Praxisbeispiele“ (Download zum Betrachten angeboten).
@@ -374,7 +374,41 @@ Was bis Do 10:30 nicht fertig ist, wandert zu Could.
   Von der Nutzerin mit dem Einfamilienhaus ausprobiert: passt. Erklärung auf einen Satz gekürzt:
   „Wand anklicken, Umschalt + Klick für mehrere.“
 
+- Sitzung 13 (17.11.): Einzelnes Fenster → Maße ändern. Im Bereich „4 Fenster“ unter „Alle Fenster auf 100 %“ (mit dünner Trennlinie)
+  der Schalter „Einzelne Fenster“. Ist er an, geht „Einzelne Wände“ aus und umgekehrt. An: nur verstellbare Fenster
+  (in nachbaubaren Außenwänden) lassen sich anfahren (heller blauer Schimmer); Klick wählt, Umschalt + Klick nimmt dazu/heraus,
+  Klick ins Leere hebt die Auswahl auf. Gewählte Fenster: Glas blau, Rahmen dunkelblau.
+  Darunter „n Fenster gewählt.“ und zwei Felder Breite / Höhe in cm (aktuelle Größe, gerundet auf ganze cm);
+  bei verschiedenen Maßen leer mit „verschieden“. Übernommen wird beim Bestätigen (Eingabetaste, Feld verlassen, Pfeile);
+  eine Eingabe ändert nur dieses Maß, das andere bleibt, wie das Fenster gerade ist. 0 = Fenster zu.
+  Passt das Maß nicht (10 cm Abstand zu Wandrand/Nachbaröffnung), baut die App so groß wie möglich, das Feld zeigt das
+  tatsächliche Maß und darunter steht „Größer passt hier nicht …“. Textknöpfe „wie die Seite“ (für die Auswahl) und
+  „Einzelne Fenster zurücksetzen (n Fenster)“. Eigenes Maß bleibt bei Reglern der Seite und „Alle Seiten gleich“.
+  Gespeichert mit der Variante (Liste Fenster-Nummer → Breite/Höhe in cm), „Laden“ stellt es wieder her; ältere Varianten: keine.
+  Vor dem Fotografieren wird die Auswahl aufgehoben. Vergleich: neue Zeile „Einzelne Fenster“ unter den Fenstern
+  (z. B. „1 Fenster 150 × 120 cm“), nur wenn eine der Varianten welche hat. Neues Modell laden löscht die eigenen Maße.
+  Getestet mit `Test-ArchiCAD.ifc`: echter Mausklick und Umschalt + Klick, Eingabe 200 cm (Kennwerte Süd 1,0 → 2,0 m²),
+  900 cm → 430 cm mit Hinweis, Regler Süd 50 % lässt das eigene Maß stehen, Höhe 0 = zu, zwei Fenster „verschieden“,
+  Speichern → Zurücksetzen → Laden, Vergleich, Schalter schließen sich gegenseitig aus. Testvariante wieder gelöscht. Keine Fehler.
+  Geändert: `app.js`, `fassade.js`, `darstellung.js` (Farben für Hover/Auswahl der Fenster), `szene.js` (findet auch neu
+  gezeichnete Fenster beim Anklicken), `index.html`, `style.css`.
+  Versionsnummern alle auf `v=15`: `app.js`, `szene.js`, `ifc.js`, `fassade.js`, `materialien.js`, `darstellung.js`
+  (in `ifc.js`, `fassade.js`, `materialien.js` gleich!), `style.css`.
+  Probleme: Die Zuordnung hängt an der Fenster-Nummer aus der IFC (wie bei den Wänden: nach neuem Export evtl. falsche Fenster).
+  Türen und Fenster in gebogenen/L-förmigen Wänden lassen sich nicht einzeln ändern. Der Browser im Test hatte die alte
+  `index.html` im Zwischenspeicher – falls der Schalter fehlt: Strg+Umschalt+R. Mit echter Maus nur kurz ausprobiert.
+  **Geändert (Wunsch der Nutzerin):** In der ausklappbaren Erklärung zu „Einzelne Fenster“ steht kein „0 = Fenster zu“ mehr.
+
 ## Nächste Schritte
+- **Sitzung 13 (erledigt, s. o.; Entscheidung 17.11., vor dem Bauen):** Einzelnes Fenster → Maße ändern.
+  Im Bereich „4 Fenster“ ein Schalter **„Einzelne Fenster“** (wie „Einzelne Wände“; ist der eine an, geht der andere aus).
+  An: Fenster anklicken, **Umschalt + Klick** nimmt weitere dazu, gewählte Fenster blau getönt.
+  Maße in **cm**: zwei Felder Breite × Höhe, Startwert = aktuelle Größe; bei mehreren Fenstern mit verschiedenen Maßen
+  bleibt das Feld leer („verschieden“), eine Eingabe gilt dann für alle gewählten. Wie bisher: Sturz bleibt, Brüstung wandert,
+  10 cm Abstand zu Wandrand und Nachbaröffnung, 0 = Fenster zu. **Eigenes Maß bleibt**, auch wenn der Regler der Seite
+  oder „Alle Seiten gleich“ bewegt wird, bis „wie die Seite“ oder Textknopf „Einzelne Fenster zurücksetzen“.
+  Nur Fenster in nachbaubaren Außenwänden, Türen nicht. Wird mit der Variante gespeichert und geladen,
+  Kennwerte rechnen mit, Vergleich bekommt eine Zeile „Einzelne Fenster“; PDF zeigt es über die Bilder.
 - **Sitzung 12 (erledigt, s. o.; Entscheidung 17.11., vor dem Bauen):** Einzelne Wand → anderes Material.
   Im Bereich „3 Fassade“ ein Schalter **„Einzelne Wände“**. Aus: Klick schaltet wie bisher außen ↔ innen.
   An: Klick wählt eine Außenwand aus, **Umschalt + Klick** nimmt weitere dazu; für die Auswahl gibt es eine

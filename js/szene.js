@@ -77,7 +77,9 @@ export class Szene {
       strahl.setFromCamera(maus, this.kamera);
       // Ausgeblendete Teile (z. B. Original-Wand hinter einer nachgebauten Scheibe) zählen nicht
       const treffer = strahl.intersectObject(this.modell, true).find((t) => istSichtbar(t.object));
-      const bauteil = treffer?.object.parent;
+      // Bauteil = das nächste übergeordnete Teil mit einer Art (neu gezeichnete Fenster liegen eine Ebene tiefer)
+      let bauteil = treffer?.object.parent;
+      while (bauteil && !bauteil.userData.art) bauteil = bauteil.parent;
       return bauteil && this.istAnklickbar(bauteil) ? bauteil : null;
     };
 

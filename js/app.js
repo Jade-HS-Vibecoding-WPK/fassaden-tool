@@ -1,8 +1,8 @@
 // Bedienoberfläche: Datei wählen oder hineinziehen, Modell anzeigen, Fassade gestalten
-import { Szene } from './szene.js?v=14';
-import { ifcLaden } from './ifc.js';
-import { aussenwaendeErkennen, wandFaerben, oeffnungenZuordnen, fensterAnpassen, stuetzenVorbereiten, stuetzeFaerben, kennwerteBerechnen, hauptrichtungBestimmen } from './fassade.js?v=14b';
-import { MATERIALIEN, START_MATERIAL, musterBild } from './materialien.js?v=14b';
+import { Szene } from './szene.js?v=15';
+import { ifcLaden } from './ifc.js?v=15';
+import { aussenwaendeErkennen, wandFaerben, oeffnungenZuordnen, fensterAnpassen, stuetzenVorbereiten, stuetzeFaerben, kennwerteBerechnen, hauptrichtungBestimmen, fensterFaerben } from './fassade.js?v=15';
+import { MATERIALIEN, START_MATERIAL, musterBild } from './materialien.js?v=15';
 import { variantenLesen, varianteSpeichern, varianteLoeschen } from './varianten.js';
 import { pdfErstellen, pdfDateiname } from './pdf.js?v=11';
 
@@ -67,6 +67,11 @@ let einzelneWaende = false;
 const materialJeWand = new Map(); // Wand-Nummer aus der IFC (expressID) → eigenes Material
 const auswahl = new Set(); // gerade ausgewählte Wände (nur bei eingeschaltetem Schalter)
 
+// Schalter „Einzelne Fenster“: einzelnen Fenstern ein eigenes Maß in cm geben (gilt vor dem Prozentwert der Seite)
+let einzelneFenster = false;
+const massJeFenster = new Map(); // Fenster-Nummer aus der IFC (expressID) → { breite, hoehe } in cm
+const fensterAuswahl = new Set(); // gerade ausgewählte Fenster (nur bei eingeschaltetem Schalter)
+
 function allesFaerben() {
   const materialien = geltendeMaterialien();
   for (const wand of waende) {
@@ -74,13 +79,19 @@ function allesFaerben() {
     wandFaerben(wand, materialien, schimmer, materialJeWand.get(wand.userData.expressID));
   }
   for (const stuetze of stuetzen) stuetzeFaerben(stuetze, materialStuetzen);
+  for (const oe of oeffnungen) {
+    fensterFaerben(oe, fensterAuswahl.has(oe) ? 'auswahl' : einzelneFenster && oe === szene.hoverBauteil);
+  }
 }
 
 // Fenster neu einpassen (z. B. nach Reglerbewegung oder wenn eine Wand umgeschaltet wurde)
 function fensterAktualisieren() {
-  fensterAnpassen(waende, oeffnungen, geltendeFenster());
+  fensterAnpassen(waende, oeffnungen, geltendeFenster(), massJeFenster);
+  // Fenster, die nicht mehr verstellbar sind (z. B. Wand auf „innen“ geschaltet), fallen aus der Auswahl
+  for (const oe of [...fensterAuswahl]) if (!oe.userData.himmelsrichtung) fensterAuswahl.delete(oe);
   allesFaerben();
   fensterAnzeigen();
+  fensterEinzelwahlAnzeigen();
   kennwerteAnzeigen();
 }
 
@@ -115,22 +126,37 @@ function kennwerteAnzeigen() {
   }
 }
 
+// Klick bei „Einzelne Wände“ bzw. „Einzelne Fenster“: einfacher Klick wählt nur dieses Bauteil
+// (Klick auf das einzige gewählte oder ins Leere hebt die Auswahl auf), Umschalt + Klick nimmt es dazu oder heraus
+function auswahlKlick(menge, bauteil, ereignis) {
+  if (!ereignis.shiftKey) {
+    const nurDieses = bauteil && menge.size === 1 && menge.has(bauteil);
+    menge.clear();
+    if (bauteil && !nurDieses) menge.add(bauteil);
+  } else if (bauteil) {
+    if (menge.has(bauteil)) menge.delete(bauteil);
+    else menge.add(bauteil);
+  }
+}
+
 // Wände anfahren (hervorheben) und anklicken:
-// normal schaltet ein Klick außen ↔ innen um; mit Schalter „Einzelne Wände“ wählt er Außenwände aus
-szene.istAnklickbar = (bauteil) => bauteil.userData.art === 'wand' && (!einzelneWaende || bauteil.userData.aussen);
+// normal schaltet ein Klick außen ↔ innen um; mit Schalter „Einzelne Wände“ wählt er Außenwände aus,
+// mit Schalter „Einzelne Fenster“ verstellbare Fenster (in nachbaubaren Außenwänden)
+szene.istAnklickbar = (bauteil) => {
+  if (einzelneFenster) return bauteil.userData.art === 'fenster' && !!bauteil.userData.himmelsrichtung;
+  return bauteil.userData.art === 'wand' && (!einzelneWaende || bauteil.userData.aussen);
+};
 szene.beiHover = () => allesFaerben();
-szene.beiKlick = (wand, ereignis) => {
+szene.beiKlick = (bauteil, ereignis) => {
+  if (einzelneFenster) {
+    auswahlKlick(fensterAuswahl, bauteil, ereignis);
+    fensterEinzelwahlAnzeigen();
+    allesFaerben();
+    return;
+  }
+  const wand = bauteil;
   if (einzelneWaende) {
-    if (!ereignis.shiftKey) {
-      // Einfacher Klick: nur diese Wand (Klick auf die einzige gewählte Wand oder ins Leere hebt die Auswahl auf)
-      const nurDiese = wand && auswahl.size === 1 && auswahl.has(wand);
-      auswahl.clear();
-      if (wand && !nurDiese) auswahl.add(wand);
-    } else if (wand) {
-      // Umschalt + Klick: Wand dazunehmen oder wieder herausnehmen
-      if (auswahl.has(wand)) auswahl.delete(wand);
-      else auswahl.add(wand);
-    }
+    auswahlKlick(auswahl, wand, ereignis);
     einzelwahlAnzeigen();
     allesFaerben();
     return;
@@ -278,6 +304,7 @@ $('einzelMaterial').addEventListener('change', () => {
 
 $('einzelneWaende').addEventListener('change', (ereignis) => {
   einzelneWaende = ereignis.target.checked;
+  if (einzelneWaende) einzelneFensterSchalten(false); // nie beide Schalter gleichzeitig
   auswahl.clear();
   szene.hoverBauteil = null;
   einzelwahlAnzeigen();
@@ -383,6 +410,102 @@ function fensterAnzeigen() {
   $('fensterZuruecksetzen').hidden = groessen.every((g) => g.breite === 100 && g.hoehe === 100);
 }
 
+// ---------- Einzelne Fenster: eigenes Maß in cm für ausgewählte Fenster ----------
+
+const fensterText = (anzahl) => `${anzahl} Fenster`;
+const zentimeter = (meter) => Math.round(meter * 100);
+
+// Aktuelle Größe eines Fensters in cm, so wie es gerade gebaut ist.
+// Ist es zu (0 %), zählt die gewünschte Größe (so bleibt z. B. die Höhe sichtbar, wenn nur die Breite 0 ist).
+function fensterMass(oe) {
+  const r = oe.userData.aktuell;
+  if (r) return { breite: zentimeter(r.u1 - r.u0), hoehe: zentimeter(r.v1 - r.v0) };
+  const soll = oe.userData.soll ?? { breite: 0, hoehe: 0 };
+  return { breite: zentimeter(soll.breite), hoehe: zentimeter(soll.hoehe) };
+}
+
+function fensterEinzelwahlAnzeigen() {
+  $('fensterEinzelwahl').hidden = !einzelneFenster;
+  const anzahl = fensterAuswahl.size;
+  $('fensterEinzelZaehler').hidden = anzahl === 0;
+  $('fensterEinzelZaehler').textContent = `${fensterText(anzahl)} gewählt.`;
+  $('fensterEinzelZeile').hidden = anzahl === 0;
+
+  // Gleiche Maße bei allen gewählten Fenstern? Dann stehen sie im Feld, sonst bleibt es leer („verschieden“)
+  const masse = [...fensterAuswahl].map(fensterMass);
+  for (const [mass, feldId] of [['breite', 'fensterEinzelBreite'], ['hoehe', 'fensterEinzelHoehe']]) {
+    const werte = new Set(masse.map((m) => m[mass]));
+    const feld = $(feldId);
+    if (document.activeElement === feld) continue; // beim Tippen nicht dazwischenfunken
+    feld.value = werte.size === 1 ? [...werte][0] : '';
+    feld.placeholder = werte.size > 1 ? 'verschieden' : '';
+  }
+
+  // Hinweis, wenn ein gewünschtes Maß nicht ganz in die Wand passt
+  const begrenzt = [...fensterAuswahl].some((oe) => {
+    const eigenes = massJeFenster.get(oe.userData.expressID);
+    if (!eigenes || eigenes.breite === 0 || eigenes.hoehe === 0) return false;
+    const ist = fensterMass(oe);
+    return ist.breite < eigenes.breite - 1 || ist.hoehe < eigenes.hoehe - 1;
+  });
+  $('fensterEinzelGrenze').hidden = !begrenzt;
+  $('fensterEinzelGrenze').textContent =
+    'Größer passt hier nicht: 10 cm Abstand zum Wandrand und zu den Nachbaröffnungen bleiben frei.';
+
+  $('fensterEinzelWieSeite').hidden = ![...fensterAuswahl].some((oe) => massJeFenster.has(oe.userData.expressID));
+
+  const anzahlEigene = oeffnungen.filter((oe) => massJeFenster.has(oe.userData.expressID)).length;
+  $('fensterEinzelZuruecksetzen').hidden = anzahlEigene === 0;
+  $('fensterEinzelZuruecksetzen').textContent = `Einzelne Fenster zurücksetzen (${fensterText(anzahlEigene)})`;
+}
+
+// Eingabe in cm übernehmen (beim Bestätigen mit der Eingabetaste, beim Verlassen des Felds oder mit den Pfeilen)
+for (const [mass, feldId] of [['breite', 'fensterEinzelBreite'], ['hoehe', 'fensterEinzelHoehe']]) {
+  $(feldId).addEventListener('change', () => {
+    const feld = $(feldId);
+    const wert = Math.round(Number(feld.value));
+    if (feld.value.trim() !== '' && Number.isFinite(wert)) {
+      const begrenzt = Math.min(2000, Math.max(0, wert));
+      for (const oe of fensterAuswahl) {
+        // Das andere Maß bleibt, wie das Fenster gerade ist
+        const neu = { ...(massJeFenster.get(oe.userData.expressID) ?? fensterMass(oe)) };
+        neu[mass] = begrenzt;
+        massJeFenster.set(oe.userData.expressID, neu);
+      }
+    }
+    feld.blur(); // damit das Feld danach das tatsächliche Maß zeigt
+    fensterAktualisieren();
+  });
+  $(feldId).addEventListener('keydown', (ereignis) => { if (ereignis.key === 'Enter') $(feldId).blur(); });
+}
+
+$('fensterEinzelWieSeite').addEventListener('click', () => {
+  for (const oe of fensterAuswahl) massJeFenster.delete(oe.userData.expressID);
+  fensterAktualisieren();
+});
+
+$('fensterEinzelZuruecksetzen').addEventListener('click', () => {
+  massJeFenster.clear();
+  fensterAktualisieren();
+});
+
+// Schalter ein- oder ausschalten (auch vom Schalter „Einzelne Wände“ aus: nie beide gleichzeitig an)
+function einzelneFensterSchalten(an) {
+  einzelneFenster = an;
+  $('einzelneFenster').checked = an;
+  if (an && einzelneWaende) {
+    einzelneWaende = false;
+    $('einzelneWaende').checked = false;
+    auswahl.clear();
+    einzelwahlAnzeigen();
+  }
+  fensterAuswahl.clear();
+  szene.hoverBauteil = null;
+  fensterEinzelwahlAnzeigen();
+  allesFaerben();
+}
+$('einzelneFenster').addEventListener('change', (ereignis) => einzelneFensterSchalten(ereignis.target.checked));
+
 // ---------- Perspektive: Blick aus einer Ecke, Blickhöhe in Grad ----------
 
 const BLICK_NAMEN = { 45: 'Nordosten', 135: 'Südosten', 225: 'Südwesten', 315: 'Nordwesten' };
@@ -432,6 +555,8 @@ function einstellungenSammeln() {
     wandUmgeschaltet: waende.filter((w) => w.userData.aussen !== w.userData.aussenAuto).map((w) => w.userData.expressID),
     // Wände mit eigenem Material: [Wand-Nummer, Material]
     materialJeWand: [...materialJeWand],
+    // Fenster mit eigenem Maß: [Fenster-Nummer, { breite, hoehe } in cm]
+    massJeFenster: [...massJeFenster],
   });
 }
 
@@ -447,6 +572,7 @@ $('varianteSpeichern').addEventListener('click', async () => {
     szene.hoverBauteil = null;
     auswahl.clear();
     einzelwahlAnzeigen();
+    fensterAuswahl.clear();
     fensterAktualisieren();
     const drehung = hauptrichtungBestimmen(waende);
     const bilder = await szene.bilderAufnehmen(undefined, undefined, drehung, blick);
@@ -484,6 +610,10 @@ function varianteLaden(variante) {
   for (const [id, material] of e.materialJeWand ?? []) materialJeWand.set(id, material);
   auswahl.clear();
   einzelwahlAnzeigen();
+  // Eigenes Maß einzelner Fenster (ältere Varianten haben keins)
+  massJeFenster.clear();
+  for (const [id, mass] of e.massJeFenster ?? []) massJeFenster.set(id, { ...mass });
+  fensterAuswahl.clear();
 
   $('materialAlleGleich').checked = materialAlleGleich;
   $('fensterAlleGleich').checked = fensterAlleGleich;
@@ -739,6 +869,18 @@ function vergleichOeffnen() {
       return textElement('span', breite === 0 || hoehe === 0 ? 'zu (0 %)' : `Breite ${breite} % · Höhe ${hoehe} %`);
     });
   }
+  // Fenster mit eigenem Maß: Anzahl je Maß (nur, wenn eine der Varianten welche hat)
+  if (varianten.some((v) => v.einstellungen.massJeFenster?.length)) {
+    zeile('Einzelne Fenster', (v) => {
+      const anzahlJeMass = new Map();
+      for (const [, { breite, hoehe }] of v.einstellungen.massJeFenster ?? []) {
+        const text = breite === 0 || hoehe === 0 ? 'zu' : `${breite} × ${hoehe} cm`;
+        anzahlJeMass.set(text, (anzahlJeMass.get(text) ?? 0) + 1);
+      }
+      if (anzahlJeMass.size === 0) return textElement('span', '–');
+      return [...anzahlJeMass].map(([text, anzahl]) => textElement('span', `${fensterText(anzahl)} ${text}`));
+    }, 'einzeln');
+  }
 
   zwischentitel('Kennwerte');
   const dreiWerte = (werte, klasse = 'werte') => {
@@ -841,6 +983,9 @@ async function dateiOeffnen(datei) {
     materialJeWand.clear();
     auswahl.clear();
     einzelwahlAnzeigen();
+    // Ebenso das eigene Maß einzelner Fenster
+    massJeFenster.clear();
+    fensterAuswahl.clear();
     szene.zeigeModell(gruppe);
     fensterAktualisieren();
     aussenwaendeAnzeigen();

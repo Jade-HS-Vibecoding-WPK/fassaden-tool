@@ -3,7 +3,7 @@
 // jeder Strich scharf, aber stellenweise fehlen Striche oder hören früher auf. Die Kacheln sind groß
 // (mehrere Meter), damit man nicht sieht, wie sich das Muster wiederholt.
 import * as THREE from 'three';
-import { flaeche } from './darstellung.js';
+import { flaeche } from './darstellung.js?v=15';
 
 export const MATERIALIEN = [
   { id: 'klinker-rot', name: 'Klinker rot', farbe: '#98534a', muster: 'klinker' },

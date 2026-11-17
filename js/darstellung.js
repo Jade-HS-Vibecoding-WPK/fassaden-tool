@@ -22,6 +22,11 @@ export const MATERIAL = {
   wandHover: flaeche(0xc9d3e4),
   fenster: flaeche(0xa9b8c8, { transparent: true, opacity: 0.55, depthWrite: false }),
   rahmen: flaeche(0x5f6266), // neu gezeichnete Fensterrahmen, deckend im Grau des Dachs
+  // Schalter „Einzelne Fenster“: Maus über dem Fenster (heller Schimmer) bzw. ausgewählt (deutlich blau)
+  fensterHover: flaeche(0xc9d3e4, { transparent: true, opacity: 0.75, depthWrite: false }),
+  rahmenHover: flaeche(0x7d8ca6),
+  fensterAuswahl: flaeche(0x5b7db3, { transparent: true, opacity: 0.8, depthWrite: false }),
+  rahmenAuswahl: flaeche(0x1f3a68),
   tuer: flaeche(0xd6d6d3),
   stuetze: flaeche(0xeeeeec), // bis das Material aus materialien.js gesetzt ist
   dach: flaeche(0x5f6266),

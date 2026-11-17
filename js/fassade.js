@@ -1,8 +1,8 @@
 // Außenwände erkennen, Himmelsrichtung bestimmen, einfärben
 // und die Wände mit veränderten Fensteröffnungen als eigene „Scheiben“ neu bauen
 import * as THREE from 'three';
-import { MATERIAL, kantenlinienHinzufuegen } from './darstellung.js';
-import { fassadenMaterial } from './materialien.js?v=14b';
+import { MATERIAL, kantenlinienHinzufuegen } from './darstellung.js?v=15';
+import { fassadenMaterial } from './materialien.js?v=15';
 
 // Reihenfolge im Uhrzeigersinn, Norden = Plan-oben = -Z in der 3D-Szene
 const RICHTUNGEN = ['N', 'O', 'S', 'W'];
@@ -437,22 +437,34 @@ function istGlastuer(oe) {
 // groesseJeRichtung: z. B. { N: { breite: 100, hoehe: 100 }, … } in Prozent der Größe aus der IFC.
 // Breite wächst von der Fenstermitte aus, der Sturz bleibt, die Brüstung wandert. 0 % = Fenster zu.
 // Alle Fenster in Außenwänden werden neu gezeichnet (Rahmen + Glas, ohne Sprossen), auch bei 100 %.
-export function fensterAnpassen(waende, oeffnungen, groesseJeRichtung) {
+// massJeFenster: Fenster-Nummer aus der IFC (expressID) → { breite, hoehe } in cm (Schalter „Einzelne Fenster“);
+// ein eigenes Maß gilt vor dem Prozentwert der Seite.
+export function fensterAnpassen(waende, oeffnungen, groesseJeRichtung, massJeFenster = new Map()) {
   const neu = new Map(); // Öffnung → { wand, r } oder null (= zu). Nicht enthalten = unverändert.
   for (const oe of oeffnungen) {
     einfachesFensterEntfernen(oe);
     oe.visible = true;
     oe.userData.himmelsrichtung = undefined;
     oe.userData.aktuell = undefined; // aktuelles Rechteck für die Kennwerte (null = zu)
+    oe.userData.soll = undefined; // gewünschte Größe in Metern, bevor Wandrand und Nachbarn sie begrenzen
     if (oe.userData.art !== 'fenster') continue;
 
     // Maßgebend ist die Außenwand, in der das Fenster sitzt
     const wand = oe.userData.waende.find((w) => w.userData.aussen);
     if (!wand?.userData.umriss) continue;
     oe.userData.himmelsrichtung = wand.userData.himmelsrichtung;
-    const { breite, hoehe } = groesseJeRichtung[wand.userData.himmelsrichtung];
     const r0 = oe.userData.rechteck.get(wand);
-    const r = breite === 100 && hoehe === 100 ? r0 : neuesRechteck(oe, wand, breite / 100, hoehe / 100);
+    const breite0 = r0.u1 - r0.u0, hoehe0 = r0.v1 - r0.v0;
+    // Faktor gegenüber der Größe aus der IFC: aus dem eigenen Maß (cm) oder aus dem Prozentwert der Seite
+    const eigenes = massJeFenster.get(oe.userData.expressID);
+    const seite = groesseJeRichtung[wand.userData.himmelsrichtung];
+    let faktorBreite = eigenes ? eigenes.breite / 100 / breite0 : seite.breite / 100;
+    let faktorHoehe = eigenes ? eigenes.hoehe / 100 / hoehe0 : seite.hoehe / 100;
+    // Weniger als 5 mm Unterschied zur IFC: unverändert lassen (Rundung auf ganze cm)
+    if (Math.abs(faktorBreite - 1) * breite0 < 0.005) faktorBreite = 1;
+    if (Math.abs(faktorHoehe - 1) * hoehe0 < 0.005) faktorHoehe = 1;
+    oe.userData.soll = { breite: breite0 * faktorBreite, hoehe: hoehe0 * faktorHoehe };
+    const r = faktorBreite === 1 && faktorHoehe === 1 ? r0 : neuesRechteck(oe, wand, faktorBreite, faktorHoehe);
     oe.userData.aktuell = r;
     if (r !== r0) neu.set(oe, r ? { wand, r } : null);
     if (r) einfachesFensterBauen(oe, wand, r);
@@ -579,6 +591,7 @@ function einfachesFensterBauen(oe, wand, r) {
   const rahmen = Math.min(RAHMEN_BREITE, breite / 4, hoehe / 4);
   const teil = (geometrie, material, u, v) => {
     const netz = new THREE.Mesh(geometrie, material);
+    netz.userData.rolle = material === MATERIAL.rahmen ? 'rahmen' : 'glas'; // für fensterFaerben()
     netz.position.set(u, v, wMitte);
     kantenlinienHinzufuegen(netz);
     fenster.add(netz);
@@ -592,6 +605,17 @@ function einfachesFensterBauen(oe, wand, r) {
   for (const netz of oe.children) netz.visible = false;
   oe.add(fenster);
   oe.userData.einfach = fenster;
+}
+
+// Neu gezeichnetes Fenster einfärben: zustand = 'auswahl' (ausgewählt, Schalter „Einzelne Fenster“),
+// true (Maus darüber) oder false (normal)
+export function fensterFaerben(oe, zustand = false) {
+  const fenster = oe.userData.einfach;
+  if (!fenster) return;
+  const zusatz = zustand === 'auswahl' ? 'Auswahl' : zustand ? 'Hover' : '';
+  for (const netz of fenster.children) {
+    if (netz.userData.rolle) netz.material = MATERIAL[netz.userData.rolle === 'rahmen' ? `rahmen${zusatz}` : `fenster${zusatz}`];
+  }
 }
 
 // Neu gezeichnetes Fenster entfernen und wieder das Original aus der IFC zeigen

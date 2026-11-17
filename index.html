@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Fassaden-Tool</title>
-  <link rel="stylesheet" href="style.css?v=14">
+  <link rel="stylesheet" href="style.css?v=15">
   <!-- Bibliotheken aus dem Internet: three.js (3D) und web-ifc (IFC lesen) -->
   <script type="importmap">
   {
@@ -16,7 +16,7 @@
   }
   </script>
   <!-- ?v=… erzwingt nach Änderungen die neue Fassung (sonst hält der Browser alte Dateien fest) -->
-  <script type="module" src="js/app.js?v=14c"></script>
+  <script type="module" src="js/app.js?v=15"></script>
 </head>
 <body>
   <div class="app">
@@ -80,6 +80,22 @@
           der Sturz bleibt und die Brüstung wandert. 0 % = Fenster zu.</p>
         </details>
         <button class="textknopf" id="fensterZuruecksetzen" hidden>Alle Fenster auf 100 %</button>
+        <div class="einzelne">
+          <label class="schalter"><input type="checkbox" id="einzelneFenster" autocomplete="off"> Einzelne Fenster</label>
+          <div id="fensterEinzelwahl" hidden>
+            <p class="zaehler" id="fensterEinzelZaehler"></p>
+            <div class="masszeile" id="fensterEinzelZeile" hidden>
+              <label>Breite <input type="number" class="eingabe" id="fensterEinzelBreite" min="0" max="2000" step="1" autocomplete="off"> cm</label>
+              <label>Höhe <input type="number" class="eingabe" id="fensterEinzelHoehe" min="0" max="2000" step="1" autocomplete="off"> cm</label>
+            </div>
+            <p class="hinweis" id="fensterEinzelGrenze" hidden></p>
+            <button class="textknopf" id="fensterEinzelWieSeite" hidden>wie die Seite</button>
+          </div>
+          <details class="erklaerung"><summary class="nur-ecke" title="Erklärung aufklappen" aria-label="Erklärung"></summary>
+            <p class="hinweis">Fenster anklicken, Umschalt + Klick für mehrere. Maße in cm, mit Eingabetaste bestätigen.</p>
+          </details>
+          <button class="textknopf" id="fensterEinzelZuruecksetzen" hidden>Einzelne Fenster zurücksetzen</button>
+        </div>
       </section>
 
       <section id="bereichKennwerte" hidden>
