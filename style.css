@@ -66,6 +66,12 @@ h2 span { color: var(--akzent); }
 .einzelne { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--linie); }
 .einzelne .schalter { margin-bottom: 10px; }
 .einzelne .materialzeile { margin-top: 10px; }
+/* Pfosten-Riegel: Anzahl der Felder unter der Materialzeile */
+.felderzeile { display: grid; grid-template-columns: 58px 1fr 1fr; gap: 10px; align-items: center; font-size: 12px; margin-top: 6px; }
+.felderzeile > span { color: var(--leise); }
+.felderzeile label { display: flex; gap: 6px; align-items: center; }
+.felderzeile .eingabe { width: 54px; margin: 0; padding: 5px 6px; font-variant-numeric: tabular-nums; }
+.felderzeile .eingabe::placeholder { font-size: 11px; }
 .muster { width: 26px; height: 26px; border: 1px solid var(--linie); background-size: cover; background-position: center; }
 
 /* Fenstergröße: je Himmelsrichtung zwei Regler */
@@ -76,6 +82,9 @@ h2 span { color: var(--akzent); }
 .fensterzeile label { display: grid; grid-template-columns: 42px 1fr 40px; gap: 8px; align-items: center; font-size: 12px; }
 .fensterzeile input[type=range] { width: 100%; min-width: 0; margin: 0; accent-color: var(--akzent); cursor: pointer; }
 .fensterzeile output { text-align: right; font-variant-numeric: tabular-nums; }
+/* Seite mit Pfosten-Riegel: Regler grau, nicht bedienbar */
+.fensterzeile.gesperrt .regler { opacity: .35; }
+.fensterzeile.gesperrt input[type=range] { cursor: not-allowed; }
 /* Schalter „Einzelne Fenster“: Breite und Höhe in cm */
 .masszeile { display: grid; gap: 6px; margin-top: 10px; }
 .masszeile label { display: grid; grid-template-columns: 58px 1fr 24px; gap: 8px; align-items: center; font-size: 13px; }

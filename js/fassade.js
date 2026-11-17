@@ -1,8 +1,8 @@
 // Außenwände erkennen, Himmelsrichtung bestimmen, einfärben
 // und die Wände mit veränderten Fensteröffnungen als eigene „Scheiben“ neu bauen
 import * as THREE from 'three';
-import { MATERIAL, kantenlinienHinzufuegen } from './darstellung.js?v=15';
-import { fassadenMaterial } from './materialien.js?v=15';
+import { MATERIAL, kantenlinienHinzufuegen } from './darstellung.js?v=16';
+import { fassadenMaterial } from './materialien.js?v=16';
 
 // Reihenfolge im Uhrzeigersinn, Norden = Plan-oben = -Z in der 3D-Szene
 const RICHTUNGEN = ['N', 'O', 'S', 'W'];
@@ -13,6 +13,10 @@ const ABSTAND = 0.1;
 // Neu gezeichnete Fenster (ohne Sprossen): Rahmenbreite und -tiefe in Metern
 const RAHMEN_BREITE = 0.06;
 const RAHMEN_TIEFE = 0.07;
+
+// Pfosten-Riegel-Fassade: Breite (Ansicht) und Tiefe der Profile in Metern
+const PROFIL_BREITE = 0.05;
+const PROFIL_TIEFE = 0.15;
 
 // Für jede Wand entscheiden, ob sie eine Außenwand ist (userData.aussenAuto).
 // Zwei Prüfungen müssen zusammenpassen:
@@ -109,11 +113,6 @@ function weltDreiecke(bauteil, auswahl = () => true) {
     for (let i = 0; i + 2 < anzahl; i += 3) dreiecke.push([ecke(i), ecke(i + 1), ecke(i + 2)]);
   }
   return dreiecke;
-}
-
-// Flächeninhalt eines Dreiecks
-function dreiecksflaeche([a, b, c]) {
-  return new THREE.Vector3().crossVectors(b.clone().sub(a), c.clone().sub(a)).length() / 2;
 }
 
 // Richtung quer zur Wand: die Richtung, in die die meiste senkrechte Fläche zeigt.
@@ -245,6 +244,14 @@ export function wandFaerben(wand, materialJeRichtung, hover = false, eigenesMate
     ? fassadenMaterial(eigenesMaterial ?? materialJeRichtung[wand.userData.himmelsrichtung ?? 'S'], hover)
     : MATERIAL[hover ? 'wandHover' : 'wand'];
   for (const netz of wand.children) netz.material = material;
+  // Pfosten-Riegel-Fassade: Profile wie Fensterrahmen, Glas wie Fensterglas (auch Hover und Auswahl)
+  const pfostenRiegel = wand.userData.pfostenRiegelGruppe;
+  if (pfostenRiegel) {
+    const zusatz = hover === 'auswahl' ? 'Auswahl' : hover ? 'Hover' : '';
+    for (const netz of pfostenRiegel.children) {
+      netz.material = MATERIAL[netz.userData.rolle === 'rahmen' ? `rahmen${zusatz}` : `fenster${zusatz}`];
+    }
+  }
 }
 
 // ---------- Stützen ----------
@@ -313,12 +320,16 @@ function umrissBestimmen(wand, lage) {
     const { u, v } = inWand(lage, p);
     (s < 0 ? minus : plus).push([u, v]);
   }
+  // Mitgezählt werden alle Flächen parallel zur Wand – auch die Trennflächen zwischen den Schichten,
+  // wenn eine Wand aus mehreren Schichten besteht (ArchiCAD „Komplexe Elemente aufteilen“)
   let flaecheSeiten = 0, flaecheGesamt = 0;
+  const n = new THREE.Vector3();
   for (const dreieck of weltDreiecke(wand)) {
-    const f = dreiecksflaeche(dreieck);
+    const [a, b, c] = dreieck;
+    n.crossVectors(b.clone().sub(a), c.clone().sub(a));
+    const f = n.length() / 2;
     flaecheGesamt += f;
-    const s = seite(dreieck[0]);
-    if (s !== 0 && seite(dreieck[1]) === s && seite(dreieck[2]) === s) flaecheSeiten += f;
+    if (f > 1e-9 && Math.abs(n.dot(lage.quer)) > 0.999 * 2 * f) flaecheSeiten += f;
   }
   if (flaecheSeiten < flaecheGesamt * 0.5 || minus.length < 3 || plus.length < 3) return null;
 
@@ -439,6 +450,8 @@ function istGlastuer(oe) {
 // Alle Fenster in Außenwänden werden neu gezeichnet (Rahmen + Glas, ohne Sprossen), auch bei 100 %.
 // massJeFenster: Fenster-Nummer aus der IFC (expressID) → { breite, hoehe } in cm (Schalter „Einzelne Fenster“);
 // ein eigenes Maß gilt vor dem Prozentwert der Seite.
+// Außenwände mit userData.pfostenRiegel = { breit, hoch } (Anzahl Felder) werden zur Pfosten-Riegel-Fassade:
+// Fenster und Türen darin verschwinden, die ganze Wand ist verglast.
 export function fensterAnpassen(waende, oeffnungen, groesseJeRichtung, massJeFenster = new Map()) {
   const neu = new Map(); // Öffnung → { wand, r } oder null (= zu). Nicht enthalten = unverändert.
   for (const oe of oeffnungen) {
@@ -447,6 +460,13 @@ export function fensterAnpassen(waende, oeffnungen, groesseJeRichtung, massJeFen
     oe.userData.himmelsrichtung = undefined;
     oe.userData.aktuell = undefined; // aktuelles Rechteck für die Kennwerte (null = zu)
     oe.userData.soll = undefined; // gewünschte Größe in Metern, bevor Wandrand und Nachbarn sie begrenzen
+    // Sitzt die Öffnung in einer Pfosten-Riegel-Wand, zählt sie nicht mehr (die ganze Wand ist Glas)
+    const glaswand = oe.userData.waende.find((w) => w.userData.aussen && w.userData.pfostenRiegel);
+    oe.userData.inPfostenRiegel = !!glaswand;
+    if (glaswand) {
+      if (glaswand.userData.umriss) oe.visible = false; // nur ausblenden, wenn die Glaswand wirklich gebaut wird
+      continue;
+    }
     if (oe.userData.art !== 'fenster') continue;
 
     // Maßgebend ist die Außenwand, in der das Fenster sitzt
@@ -471,8 +491,23 @@ export function fensterAnpassen(waende, oeffnungen, groesseJeRichtung, massJeFen
     else oe.visible = false;
   }
 
+  // Bauteile, die in einer Pfosten-Riegel-Wand stecken, werden mit ihr ausgeblendet (s. anbauteileZuordnen)
+  const wirdGlaswand = (wand) => wand.userData.aussen && wand.userData.pfostenRiegel && wand.userData.umriss;
+  const verdeckt = new Set();
   for (const wand of waende) {
+    for (const teil of wand.userData.anbauteile ?? []) {
+      teil.visible = true;
+      if (wirdGlaswand(wand)) verdeckt.add(teil);
+    }
+  }
+  for (const wand of waende) {
+    pfostenRiegelEntfernen(wand);
     scheibeEntfernen(wand);
+    if (verdeckt.has(wand)) continue; // steckt in einer Glaswand: wird nicht selbst gebaut, bleibt ausgeblendet
+    if (wirdGlaswand(wand)) {
+      pfostenRiegelBauen(wand);
+      continue;
+    }
     const betroffen = wand.userData.umriss && wand.userData.oeffnungen?.some((oe) => neu.has(oe));
     if (!betroffen) continue;
     const loecher = [];
@@ -688,6 +723,129 @@ function scheibeEntfernen(wand) {
   for (const netz of wand.children) netz.visible = true;
 }
 
+// ---------- Pfosten-Riegel-Fassade ----------
+
+// Die Wand wird durch Glas mit Pfosten (senkrecht) und Riegeln (waagerecht) ersetzt.
+// Umriss = Außenseite der Wand (auch Giebel). Rundherum ein Rahmenprofil, innen die Felder gleichmäßig verteilt:
+// felder.breit × felder.hoch je Wand. Die Profile sitzen bündig mit der Außenseite der Wand, das Glas in ihrer Mitte.
+// Die Original-Wand aus der IFC wird so lange ausgeblendet.
+function pfostenRiegelBauen(wand) {
+  const { lage, umriss, aussenSeite, pfostenRiegel: felder } = wand.userData;
+  const ecken = aussenSeite < 0 ? umriss.minus : umriss.plus; // konvex, gegen den Uhrzeigersinn
+  const halb = lage.dicke / 2;
+  const tiefe = Math.min(PROFIL_TIEFE, lage.dicke);
+  const wMitte = aussenSeite * (halb - tiefe / 2);
+
+  // Eigene Gruppe in Wand-Koordinaten: x = entlang der Wand, y = Höhe, z = quer
+  const gruppe = new THREE.Group();
+  gruppe.matrixAutoUpdate = false;
+  gruppe.matrix.makeBasis(lage.laengs, new THREE.Vector3(0, 1, 0), lage.quer).setPosition(lage.mitte);
+
+  // Ein Profil von (u0, v0) nach (u1, v1); an den Enden je eine halbe Profilbreite länger, damit die Ecken geschlossen sind
+  const profil = (u0, v0, u1, v1) => {
+    const laenge = Math.hypot(u1 - u0, v1 - v0);
+    if (laenge < 0.01) return;
+    const netz = new THREE.Mesh(new THREE.BoxGeometry(laenge + PROFIL_BREITE, PROFIL_BREITE, tiefe), MATERIAL.rahmen);
+    netz.userData.rolle = 'rahmen'; // für wandFaerben()
+    netz.position.set((u0 + u1) / 2, (v0 + v1) / 2, wMitte);
+    netz.rotation.z = Math.atan2(v1 - v0, u1 - u0);
+    kantenlinienHinzufuegen(netz);
+    gruppe.add(netz);
+  };
+
+  // Rahmen: jede Umrisskante, um eine halbe Profilbreite nach innen gerückt
+  const n = ecken.length;
+  for (let i = 0; i < n; i++) {
+    const [au, av] = ecken[i], [bu, bv] = ecken[(i + 1) % n];
+    const laenge = Math.hypot(bu - au, bv - av);
+    if (laenge < 0.01) continue;
+    const nu = -(bv - av) / laenge * PROFIL_BREITE / 2, nv = (bu - au) / laenge * PROFIL_BREITE / 2; // nach innen
+    profil(au + nu, av + nv, bu + nu, bv + nv);
+  }
+
+  // Schnitt einer senkrechten (u fest) bzw. waagerechten Linie (v fest) mit dem Umriss: [von, bis] oder null
+  const schnitt = (fest, achse) => {
+    const werte = [];
+    for (let i = 0; i < n; i++) {
+      const a = ecken[i], b = ecken[(i + 1) % n];
+      const a0 = a[achse], b0 = b[achse];
+      if ((a0 - fest) * (b0 - fest) > 0 || a0 === b0) continue;
+      const t = (fest - a0) / (b0 - a0);
+      werte.push(a[1 - achse] + t * (b[1 - achse] - a[1 - achse]));
+    }
+    return werte.length >= 2 ? [Math.min(...werte), Math.max(...werte)] : null;
+  };
+  const uWerte = ecken.map((e) => e[0]), vWerte = ecken.map((e) => e[1]);
+  const uMin = Math.min(...uWerte), uMax = Math.max(...uWerte);
+  const vMin = Math.min(...vWerte), vMax = Math.max(...vWerte);
+  const kuerzen = PROFIL_BREITE / 2; // innere Profile enden in der Mitte des Rahmens
+  // Pfosten
+  for (let i = 1; i < felder.breit; i++) {
+    const u = uMin + (i / felder.breit) * (uMax - uMin);
+    const s = schnitt(u, 0);
+    if (s && s[1] - s[0] > 2 * PROFIL_BREITE) profil(u, s[0] + kuerzen, u, s[1] - kuerzen);
+  }
+  // Riegel: die oberste Reihe ist ein Oberlicht, halb so hoch wie die anderen Reihen (Wunsch der Nutzerin)
+  const reihe = (vMax - vMin) / (felder.hoch - 0.5);
+  for (let j = 1; j < felder.hoch; j++) {
+    const v = vMin + j * reihe;
+    const s = schnitt(v, 1);
+    if (s && s[1] - s[0] > 2 * PROFIL_BREITE) profil(s[0] + kuerzen, v, s[1] - kuerzen, v);
+  }
+
+  // Glas: eine Fläche im ganzen Umriss
+  const kontur = ecken.map(([u, v]) => new THREE.Vector2(u, v));
+  const glasForm = new THREE.ShapeGeometry(new THREE.Shape(kontur));
+  const glas = new THREE.Mesh(glasForm, MATERIAL.fenster);
+  glas.userData.rolle = 'glas';
+  glas.position.z = wMitte;
+  gruppe.add(glas);
+
+  for (const netz of wand.children) netz.visible = false;
+  for (const teil of wand.userData.anbauteile ?? []) teil.visible = false;
+  wand.add(gruppe);
+  wand.userData.pfostenRiegelGruppe = gruppe;
+}
+
+// Bauteile, die in einer Wand stecken oder direkt an ihr sitzen (bis 30 cm vor oder hinter der Wand):
+// sonstige Bauteile (z. B. Stürze, Lamellen) und kleinere Wände (z. B. Wandstücke über den Fenstern,
+// die innere Schale einer mehrschaligen Wand). Sie verschwinden mit der Wand, wenn sie zur Pfosten-Riegel-Fassade wird,
+// sonst würden sie vor dem Glas schweben bzw. selbst als kleiner Gitterkasten gebaut. Ergebnis je Wand in userData.anbauteile.
+export function anbauteileZuordnen(gruppe, waende) {
+  const flaeche = (wand) => (wand.userData.lage ? wand.userData.lage.laenge * (wand.userData.lage.yMax - wand.userData.lage.yMin) : 0);
+  const kandidaten = gruppe.children.filter((b) => b.userData.art === 'rest' || b.userData.art === 'wand');
+  const kugel = new THREE.Sphere();
+  for (const wand of waende) wand.userData.anbauteile = [];
+  for (const teil of kandidaten) {
+    const punkte = weltPunkte(teil); // echte Eckpunkte (das Gebäude kann im Plan gedreht sein)
+    if (punkte.length === 0) continue;
+    kugel.setFromPoints(punkte);
+    for (const wand of waende) {
+      const lage = wand.userData.lage;
+      if (!lage || wand === teil) continue;
+      if (teil.userData.art === 'wand' && flaeche(teil) >= flaeche(wand)) continue; // nur kleinere Wände
+      // Schnelle Vorprüfung: zu weit weg?
+      if (Math.hypot(kugel.center.x - lage.mitte.x, kugel.center.z - lage.mitte.z) > lage.laenge / 2 + kugel.radius) continue;
+      const halb = lage.dicke / 2;
+      const steckt = punkte.every((p) => {
+        const { u, v, w } = inWand(lage, p);
+        return Math.abs(u) < lage.laenge / 2 + 0.05 && Math.abs(w) < halb + 0.3 && v > lage.yMin - 0.05 && v < lage.yMax + 0.05;
+      });
+      if (steckt) wand.userData.anbauteile.push(teil);
+    }
+  }
+}
+
+// Pfosten-Riegel-Fassade wieder entfernen und die Original-Wand aus der IFC zeigen
+function pfostenRiegelEntfernen(wand) {
+  const gruppe = wand.userData.pfostenRiegelGruppe;
+  if (gruppe) {
+    wand.remove(gruppe);
+    gruppe.traverse((teil) => teil.geometry?.dispose());
+    wand.userData.pfostenRiegelGruppe = null;
+  }
+  for (const netz of wand.children) netz.visible = true;
+}
 
 // ---------- Kennwerte ----------
 
@@ -703,14 +861,18 @@ export function kennwerteBerechnen(waende, oeffnungen) {
     if (!wand.userData.aussen || !richtung) continue;
     const { lage, umriss, aussenSeite } = wand.userData;
     // Gebogene oder L-förmige Wände (ohne Umriss): Länge × Höhe als Näherung
-    kennwerte[richtung].fassade += umriss
+    const flaeche = umriss
       ? vieleckFlaeche(aussenSeite < 0 ? umriss.minus : umriss.plus)
       : lage.laenge * (lage.yMax - lage.yMin);
+    kennwerte[richtung].fassade += flaeche;
+    // Pfosten-Riegel-Fassade: die ganze Wand zählt als Fenster
+    if (wand.userData.pfostenRiegel) kennwerte[richtung].fenster += flaeche;
   }
 
   for (const oe of oeffnungen) {
     const istFenster = oe.userData.art === 'fenster';
     if (!istFenster && !oe.userData.glastuer) continue;
+    if (oe.userData.inPfostenRiegel) continue; // schon in der Glaswand mitgezählt
     const wand = oe.userData.waende.find((w) => w.userData.aussen);
     const richtung = wand?.userData.himmelsrichtung;
     if (!richtung) continue;

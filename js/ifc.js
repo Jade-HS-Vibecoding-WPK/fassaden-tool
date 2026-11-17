@@ -1,7 +1,7 @@
 // IFC-Datei lesen und in 3D-Bauteile umwandeln
 import * as THREE from 'three';
 import * as WebIFC from 'web-ifc';
-import { MATERIAL, kantenlinienHinzufuegen } from './darstellung.js?v=15';
+import { MATERIAL, kantenlinienHinzufuegen } from './darstellung.js?v=16';
 
 // Bauteil-Arten, die die App unterscheidet
 const ARTEN = {
@@ -40,15 +40,23 @@ export async function ifcLaden(datei) {
 
   try {
     const dachTeile = dachTeileFinden(api, modellID);
+    const teilVon = schichtenFinden(api, modellID);
+    const bauteile = new Map(); // expressID → Bauteil (Schichten landen im Bauteil, zu dem sie gehören)
     api.StreamAllMeshes(modellID, (ifcTeil) => {
-      const art = dachTeile.has(ifcTeil.expressID) ? 'dach'
-        : ARTEN[api.GetLineType(modellID, ifcTeil.expressID)] ?? 'rest';
-      anzahl[art]++;
-
-      // Ein Bauteil kann aus mehreren Stücken bestehen
-      const bauteil = new THREE.Group();
-      bauteil.userData = { expressID: ifcTeil.expressID, art };
-      if (art === 'wand') waende.set(ifcTeil.expressID, bauteil);
+      // Schicht einer Wand (ArchiCAD „Komplexe Elemente aufteilen“): gehört zur Wand
+      const id = teilVon.get(ifcTeil.expressID) ?? ifcTeil.expressID;
+      let bauteil = bauteile.get(id);
+      if (!bauteil) {
+        const art = dachTeile.has(id) ? 'dach' : ARTEN[api.GetLineType(modellID, id)] ?? 'rest';
+        anzahl[art]++;
+        // Ein Bauteil kann aus mehreren Stücken bestehen
+        bauteil = new THREE.Group();
+        bauteil.userData = { expressID: id, art };
+        if (art === 'wand') waende.set(id, bauteil);
+        bauteile.set(id, bauteil);
+        gruppe.add(bauteil);
+      }
+      const art = bauteil.userData.art;
 
       const stuecke = ifcTeil.geometries;
       for (let i = 0; i < stuecke.size(); i++) {
@@ -57,6 +65,7 @@ export async function ifcLaden(datei) {
         const punkte = api.GetVertexArray(geo.GetVertexData(), geo.GetVertexDataSize());
         const dreiecke = api.GetIndexArray(geo.GetIndexData(), geo.GetIndexDataSize());
         geo.delete();
+        if (punkte.length === 0 || dreiecke.length === 0) continue; // leere Form (z. B. Wand, deren Form in den Schichten steckt)
 
         // web-ifc liefert pro Punkt 6 Zahlen: x, y, z und die Richtung der Fläche
         const verschraenkt = new THREE.InterleavedBuffer(punkte, 6);
@@ -72,7 +81,6 @@ export async function ifcLaden(datei) {
         if (art !== 'gelaende') kantenlinienHinzufuegen(netz); // Gelände ohne Linien, sonst zu unruhig
         bauteil.add(netz);
       }
-      gruppe.add(bauteil);
     });
     istExternLesen(api, modellID, waende);
   } finally {
@@ -102,6 +110,23 @@ function dachTeileFinden(api, modellID) {
     for (const teil of rel.RelatedObjects ?? []) dachTeile.add(teil.value);
   }
   return dachTeile;
+}
+
+// ArchiCAD kann mehrschichtige Wände beim Export in ihre Schichten zerlegen („Komplexe Elemente aufteilen“).
+// Die Wand selbst hat dann keine Form, die steckt in den Schichten (IfcBuildingElementPart).
+// Ergebnis: Schicht-Nummer → Nummer der Wand, zu der sie gehört.
+function schichtenFinden(api, modellID) {
+  const teilVon = new Map();
+  const zugehoerig = api.GetLineIDsWithType(modellID, WebIFC.IFCRELAGGREGATES);
+  for (let i = 0; i < zugehoerig.size(); i++) {
+    const rel = api.GetLine(modellID, zugehoerig.get(i));
+    const ganzes = rel.RelatingObject?.value;
+    if (ganzes === undefined || ARTEN[api.GetLineType(modellID, ganzes)] !== 'wand') continue;
+    for (const teil of rel.RelatedObjects ?? []) {
+      if (api.GetLineType(modellID, teil.value) === WebIFC.IFCBUILDINGELEMENTPART) teilVon.set(teil.value, ganzes);
+    }
+  }
+  return teilVon;
 }
 
 // Liest für jede Wand die Eigenschaft „IsExternal“ (Außenbauteil ja/nein) aus Pset_WallCommon.

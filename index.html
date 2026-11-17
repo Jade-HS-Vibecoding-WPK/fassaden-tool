@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Fassaden-Tool</title>
-  <link rel="stylesheet" href="style.css?v=15">
+  <link rel="stylesheet" href="style.css?v=16">
   <!-- Bibliotheken aus dem Internet: three.js (3D) und web-ifc (IFC lesen) -->
   <script type="importmap">
   {
@@ -16,7 +16,7 @@
   }
   </script>
   <!-- ?v=… erzwingt nach Änderungen die neue Fassung (sonst hält der Browser alte Dateien fest) -->
-  <script type="module" src="js/app.js?v=15"></script>
+  <script type="module" src="js/app.js?v=17f"></script>
 </head>
 <body>
   <div class="app">
@@ -52,7 +52,8 @@
         <label class="schalter"><input type="checkbox" id="materialAlleGleich" autocomplete="off"> Alle Seiten gleich</label>
         <div class="materialwahl" id="materialwahl"></div>
         <details class="erklaerung"><summary class="nur-ecke" title="Erklärung aufklappen" aria-label="Erklärung"></summary>
-          <p class="hinweis">Material je Himmelsrichtung. Norden ist im Plan oben. Die Stützen haben ein eigenes Material.</p>
+          <p class="hinweis">Material je Himmelsrichtung. Norden ist im Plan oben. Die Stützen haben ein eigenes Material.
+          Pfosten-Riegel verglast die ganze Wand, die Felder gelten je Wand.</p>
         </details>
         <div class="einzelne">
           <label class="schalter"><input type="checkbox" id="einzelneWaende" autocomplete="off"> Einzelne Wände</label>

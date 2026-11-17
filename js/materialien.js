@@ -3,7 +3,7 @@
 // jeder Strich scharf, aber stellenweise fehlen Striche oder hören früher auf. Die Kacheln sind groß
 // (mehrere Meter), damit man nicht sieht, wie sich das Muster wiederholt.
 import * as THREE from 'three';
-import { flaeche } from './darstellung.js?v=15';
+import { flaeche } from './darstellung.js?v=16';
 
 export const MATERIALIEN = [
   { id: 'klinker-rot', name: 'Klinker rot', farbe: '#98534a', muster: 'klinker' },
@@ -16,7 +16,12 @@ export const MATERIALIEN = [
   { id: 'platten-anthrazit', name: 'Fassadenplatten anthrazit', farbe: '#63676b', muster: 'platten' },
   { id: 'platten-silber', name: 'Fassadenplatten silbergrau', farbe: '#aaaeb0', muster: 'platten' },
   { id: 'glas', name: 'Glas blaugrau', farbe: '#8c9eab', muster: 'glas' },
+  // Wird als echte Glasfassade mit Pfosten und Riegeln gebaut (fassade.js); das Muster ist nur Vorschaubild
+  // und Ersatz für Wände, die sich nicht nachbauen lassen. Nicht für Stützen.
+  { id: 'pfosten-riegel', name: 'Pfosten-Riegel', farbe: '#8c9eab', muster: 'pfostenRiegel', pfostenRiegel: true },
 ];
+
+export const PFOSTEN_RIEGEL = 'pfosten-riegel';
 
 export const START_MATERIAL = 'klinker-rot';
 
@@ -122,6 +127,20 @@ const MUSTER = {
       z.wolken(0.03);
     },
   },
+  // Pfosten-Riegel: Glasfelder 1,25 × 1,50 m mit 5 cm breiten Profilen in der Farbe des Dachs
+  pfostenRiegel: {
+    breite: 2.5, hoehe: 3, pixelProMeter: 128, vorschau: 2,
+    zeichnen(z) {
+      for (let y = 0; y < z.hoehe - 0.001; y += 1.5) {
+        for (let x = 0; x < z.breite - 0.001; x += 1.25) {
+          z.verlauf(x, y, 1.25, 1.5, aufhellen(z.farbe, 0.07), abdunkeln(z.farbe, 0.96));
+        }
+      }
+      const profil = '#3a3d42'; // wie PROFILFARBE in darstellung.js
+      for (let x = 0; x < z.breite - 0.001; x += 1.25) z.flaeche(x - 0.025, 0, 0.05, z.hoehe, profil);
+      for (let y = 0; y < z.hoehe - 0.001; y += 1.5) z.flaeche(0, y - 0.025, z.breite, 0.05, profil);
+    },
+  },
 };
 
 // Zeichenstift für eine Kachel. Rechnet in Metern und wiederholt alles über den Rand hinaus,
@@ -223,12 +242,14 @@ function kachel(id) {
   return kacheln.get(id);
 }
 
-// Kleines Vorschaubild für die Seitenleiste: Ausschnitt von 0,8 × 0,8 m
+// Kleines Vorschaubild für die Seitenleiste: Ausschnitt von 0,8 × 0,8 m (Pfosten-Riegel größer, damit man das Raster sieht)
 export function musterBild(id) {
-  const px = MUSTER[eintragZu(id).muster].pixelProMeter;
+  const muster = MUSTER[eintragZu(id).muster];
+  const px = muster.pixelProMeter, groesse = muster.vorschau ?? 0.8;
+  const start = muster.vorschau ? 0.4 : 0; // Pfosten-Riegel: Profilkreuz in der Mitte des Bildes
   const bild = document.createElement('canvas');
   bild.width = bild.height = 52;
-  bild.getContext('2d').drawImage(kachel(id), 0, 0, 0.8 * px, 0.8 * px, 0, 0, 52, 52);
+  bild.getContext('2d').drawImage(kachel(id), start * px, start * px, groesse * px, groesse * px, 0, 0, 52, 52);
   return bild.toDataURL();
 }
 

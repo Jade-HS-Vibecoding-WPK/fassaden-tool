@@ -14,14 +14,17 @@ export function flaeche(farbe, extra = {}) {
   });
 }
 
-// Rohmodell hellgrau-weiß wie ein Arbeitsmodell, Dach ruhiges Dunkelgrau.
+// Dach, Fensterrahmen und Pfosten/Riegel haben dieselbe, recht dunkle Farbe (Anthrazit, Wunsch der Nutzerin)
+export const PROFILFARBE = 0x3a3d42;
+
+// Rohmodell hellgrau-weiß wie ein Arbeitsmodell, Dach dunkel.
 // Die Außenwände bekommen ihre Fassadenmaterialien aus materialien.js.
 export const MATERIAL = {
   rest: flaeche(0xeeeeec),
   wand: flaeche(0xeeeeec),
   wandHover: flaeche(0xc9d3e4),
   fenster: flaeche(0xa9b8c8, { transparent: true, opacity: 0.55, depthWrite: false }),
-  rahmen: flaeche(0x5f6266), // neu gezeichnete Fensterrahmen, deckend im Grau des Dachs
+  rahmen: flaeche(PROFILFARBE), // neu gezeichnete Fensterrahmen und Pfosten/Riegel, deckend in der Farbe des Dachs
   // Schalter „Einzelne Fenster“: Maus über dem Fenster (heller Schimmer) bzw. ausgewählt (deutlich blau)
   fensterHover: flaeche(0xc9d3e4, { transparent: true, opacity: 0.75, depthWrite: false }),
   rahmenHover: flaeche(0x7d8ca6),
@@ -29,7 +32,7 @@ export const MATERIAL = {
   rahmenAuswahl: flaeche(0x1f3a68),
   tuer: flaeche(0xd6d6d3),
   stuetze: flaeche(0xeeeeec), // bis das Material aus materialien.js gesetzt ist
-  dach: flaeche(0x5f6266),
+  dach: flaeche(PROFILFARBE),
   gelaende: flaeche(0xf1efea),
 };
 

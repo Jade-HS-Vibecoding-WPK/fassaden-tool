@@ -1,8 +1,8 @@
 // Bedienoberfläche: Datei wählen oder hineinziehen, Modell anzeigen, Fassade gestalten
 import { Szene } from './szene.js?v=15';
-import { ifcLaden } from './ifc.js?v=15';
-import { aussenwaendeErkennen, wandFaerben, oeffnungenZuordnen, fensterAnpassen, stuetzenVorbereiten, stuetzeFaerben, kennwerteBerechnen, hauptrichtungBestimmen, fensterFaerben } from './fassade.js?v=15';
-import { MATERIALIEN, START_MATERIAL, musterBild } from './materialien.js?v=15';
+import { ifcLaden } from './ifc.js?v=17';
+import { aussenwaendeErkennen, wandFaerben, oeffnungenZuordnen, fensterAnpassen, stuetzenVorbereiten, stuetzeFaerben, kennwerteBerechnen, hauptrichtungBestimmen, fensterFaerben, anbauteileZuordnen } from './fassade.js?v=17e';
+import { MATERIALIEN, START_MATERIAL, PFOSTEN_RIEGEL, musterBild } from './materialien.js?v=16';
 import { variantenLesen, varianteSpeichern, varianteLoeschen } from './varianten.js';
 import { pdfErstellen, pdfDateiname } from './pdf.js?v=11';
 
@@ -67,6 +67,36 @@ let einzelneWaende = false;
 const materialJeWand = new Map(); // Wand-Nummer aus der IFC (expressID) → eigenes Material
 const auswahl = new Set(); // gerade ausgewählte Wände (nur bei eingeschaltetem Schalter)
 
+// Pfosten-Riegel-Fassade: Anzahl der Felder je Wand (breit × hoch), einstellbar je Seite, für „Alle“
+// und für einzelne Wände mit eigenem Material Pfosten-Riegel
+const START_FELDER = { breit: 8, hoch: 3 };
+const felderJeRichtung = {};
+for (const richtung of Object.keys(RICHTUNGSNAMEN)) felderJeRichtung[richtung] = { ...START_FELDER };
+let felderAlle = null; // wird beim ersten Einschalten von „Alle Seiten gleich“ mit den Feldern der Nordseite belegt
+const felderJeWand = new Map(); // Wand-Nummer → { breit, hoch }
+
+function geltendeFelder() {
+  if (!materialAlleGleich) return felderJeRichtung;
+  const alle = felderAlle ?? felderJeRichtung.N;
+  return { N: alle, O: alle, S: alle, W: alle };
+}
+
+// Material, das eine Wand gerade wirklich hat (eigenes oder das ihrer Seite)
+function materialDerWand(wand) {
+  return materialJeWand.get(wand.userData.expressID) ?? geltendeMaterialien()[wand.userData.himmelsrichtung ?? 'S'];
+}
+
+// Jeder Außenwand mit Pfosten-Riegel ihre Felder mitgeben (userData.pfostenRiegel), alle anderen: null
+function pfostenRiegelSetzen() {
+  const felder = geltendeFelder();
+  for (const wand of waende) {
+    const id = wand.userData.expressID;
+    wand.userData.pfostenRiegel = wand.userData.aussen && materialDerWand(wand) === PFOSTEN_RIEGEL
+      ? (materialJeWand.has(id) ? felderJeWand.get(id) ?? START_FELDER : felder[wand.userData.himmelsrichtung ?? 'S'])
+      : null;
+  }
+}
+
 // Schalter „Einzelne Fenster“: einzelnen Fenstern ein eigenes Maß in cm geben (gilt vor dem Prozentwert der Seite)
 let einzelneFenster = false;
 const massJeFenster = new Map(); // Fenster-Nummer aus der IFC (expressID) → { breite, hoehe } in cm
@@ -86,6 +116,7 @@ function allesFaerben() {
 
 // Fenster neu einpassen (z. B. nach Reglerbewegung oder wenn eine Wand umgeschaltet wurde)
 function fensterAktualisieren() {
+  pfostenRiegelSetzen();
   fensterAnpassen(waende, oeffnungen, geltendeFenster(), massJeFenster);
   // Fenster, die nicht mehr verstellbar sind (z. B. Wand auf „innen“ geschaltet), fallen aus der Auswahl
   for (const oe of [...fensterAuswahl]) if (!oe.userData.himmelsrichtung) fensterAuswahl.delete(oe);
@@ -193,10 +224,48 @@ function aussenwaendeAnzeigen() {
   $('anzahlStuetzen').textContent = stuetzen.length === 1 ? '1 Stütze' : `${stuetzen.length} Stützen`;
 }
 
-// Eine Zeile der Materialwahl: Name, Musterbild, Auswahlliste
-// schluessel: N/O/S/W oder 'Alle'; lesen/schreiben: woher das Material kommt und wohin es geht
+// Zwei Zahlenfelder „Felder … breit × … hoch“ für die Pfosten-Riegel-Fassade.
+// lesen(): Liste der Felder-Objekte, die verstellt werden (bei mehreren gewählten Wänden mehrere);
+// bei verschiedenen Werten bleibt das Feld leer („versch.“). Übernommen wird beim Bestätigen.
+function felderzeileAufbauen(lesen) {
+  const zeile = document.createElement('div');
+  zeile.className = 'felderzeile';
+  zeile.append(textElement('span', 'Felder'));
+  const anzeigen = [];
+  for (const [mass, beschriftung, hoechstens] of [['breit', 'breit', 40], ['hoch', 'hoch', 20]]) {
+    const label = document.createElement('label');
+    const feld = document.createElement('input');
+    Object.assign(feld, { type: 'number', min: 1, max: hoechstens, step: 1, className: 'eingabe', autocomplete: 'off' });
+    feld.setAttribute('aria-label', `Anzahl der Felder ${beschriftung}`);
+    anzeigen.push(() => {
+      if (document.activeElement === feld) return; // beim Tippen nicht dazwischenfunken
+      const werte = new Set(lesen().map((f) => f[mass]));
+      feld.value = werte.size === 1 ? [...werte][0] : '';
+      feld.placeholder = werte.size > 1 ? 'versch.' : '';
+    });
+    feld.addEventListener('change', () => {
+      const wert = Math.round(Number(feld.value));
+      if (feld.value.trim() !== '' && Number.isFinite(wert)) {
+        for (const felder of lesen()) felder[mass] = Math.min(hoechstens, Math.max(1, wert));
+      }
+      feld.blur();
+      zeile.anzeigen();
+      fensterAktualisieren();
+    });
+    feld.addEventListener('keydown', (ereignis) => { if (ereignis.key === 'Enter') feld.blur(); });
+    label.append(feld, ` ${beschriftung}`);
+    zeile.append(label);
+  }
+  zeile.anzeigen = () => anzeigen.forEach((f) => f());
+  return zeile;
+}
+
+// Eine Zeile der Materialwahl: Name, Musterbild, Auswahlliste; bei Pfosten-Riegel darunter die Felder
+// schluessel: N/O/S/W, 'Alle' oder 'Stuetzen'; lesen/schreiben: woher das Material kommt und wohin es geht;
+// felder(): die Felder dieser Zeile (nicht bei den Stützen)
 const materialZeilen = {};
-function materialzeileAufbauen(schluessel, name, lesen, schreiben) {
+function materialzeileAufbauen(schluessel, name, lesen, schreiben, felder = null) {
+  const block = document.createElement('div');
   const zeile = document.createElement('label');
   zeile.className = schluessel === 'Stuetzen' ? 'materialzeile stuetzen' : 'materialzeile';
 
@@ -210,30 +279,39 @@ function materialzeileAufbauen(schluessel, name, lesen, schreiben) {
   muster.className = 'muster';
 
   const liste = document.createElement('select');
-  for (const m of MATERIALIEN) liste.add(new Option(m.name, m.id));
+  for (const m of MATERIALIEN) if (felder || !m.pfostenRiegel) liste.add(new Option(m.name, m.id));
+  const felderzeile = felder ? felderzeileAufbauen(() => [felder()]) : null;
 
   // Liste und Musterbild auf den gespeicherten Wert setzen
   const anzeigen = () => {
     liste.value = lesen();
     muster.style.backgroundImage = `url(${musterBild(liste.value)})`;
+    if (felderzeile) {
+      felderzeile.hidden = liste.value !== PFOSTEN_RIEGEL;
+      felderzeile.anzeigen();
+    }
   };
   liste.addEventListener('change', () => {
     schreiben(liste.value);
     anzeigen();
-    allesFaerben();
+    fensterAktualisieren(); // Pfosten-Riegel baut die Wände neu, sonst nur neu einfärben
     einzelwahlAnzeigen(); // Musterbild der Auswahl kann sich mitändern („wie die Seite“)
   });
-  anzeigen();
 
   zeile.append(titel, muster, liste);
-  $('materialwahl').append(zeile);
-  materialZeilen[schluessel] = { zeile, anzeigen };
+  block.append(zeile);
+  if (felderzeile) block.append(felderzeile);
+  $('materialwahl').append(block);
+  materialZeilen[schluessel] = { zeile: block, anzeigen };
+  anzeigen();
 }
 
 function materialwahlAufbauen() {
-  materialzeileAufbauen('Alle', 'Alle', () => materialAlle ?? materialJeRichtung.N, (wert) => { materialAlle = wert; });
+  materialzeileAufbauen('Alle', 'Alle', () => materialAlle ?? materialJeRichtung.N, (wert) => { materialAlle = wert; },
+    () => felderAlle ?? felderJeRichtung.N);
   for (const [richtung, name] of Object.entries(RICHTUNGSNAMEN)) {
-    materialzeileAufbauen(richtung, name, () => materialJeRichtung[richtung], (wert) => { materialJeRichtung[richtung] = wert; });
+    materialzeileAufbauen(richtung, name, () => materialJeRichtung[richtung], (wert) => { materialJeRichtung[richtung] = wert; },
+      () => felderJeRichtung[richtung]);
   }
   materialzeileAufbauen('Stuetzen', 'Stützen', () => materialStuetzen, (wert) => { materialStuetzen = wert; });
   materialZeilen.Stuetzen.zeile.hidden = true; // erscheint erst, wenn ein Modell mit Stützen geladen ist
@@ -251,9 +329,10 @@ function materialwahlUmschalten() {
 $('materialAlleGleich').addEventListener('change', (ereignis) => {
   materialAlleGleich = ereignis.target.checked;
   if (materialAlleGleich && materialAlle === null) materialAlle = materialJeRichtung.N;
+  if (materialAlleGleich && felderAlle === null) felderAlle = { ...felderJeRichtung.N }; // Kopie, sonst verstellt „Alle“ die Nordseite mit
   materialZeilen.Alle.anzeigen();
   materialwahlUmschalten();
-  allesFaerben();
+  fensterAktualisieren();
   einzelwahlAnzeigen();
 });
 materialwahlAufbauen();
@@ -269,6 +348,11 @@ verschiedenEintrag.disabled = true;
 $('einzelMaterial').add(verschiedenEintrag);
 
 const wandText = (anzahl) => (anzahl === 1 ? '1 Wand' : `${anzahl} Wände`);
+
+// Felder der gewählten Wände (nur sichtbar, wenn alle gewählten Wände eigenes Material Pfosten-Riegel haben)
+const einzelFelder = felderzeileAufbauen(() =>
+  [...auswahl].map((w) => felderJeWand.get(w.userData.expressID)).filter(Boolean));
+$('einzelZeile').after(einzelFelder);
 
 function einzelwahlAnzeigen() {
   $('einzelwahl').hidden = !einzelneWaende;
@@ -286,6 +370,9 @@ function einzelwahlAnzeigen() {
   $('einzelMaterial').value = eintraege.size === 1 ? [...eintraege][0] : VERSCHIEDEN;
   // Musterbild: das Material, das die Wände gerade wirklich haben (leer, wenn verschieden)
   $('einzelMuster').style.backgroundImage = geltend.size === 1 ? `url(${musterBild([...geltend][0])})` : 'none';
+  // Felder nur, wenn alle gewählten Wände selbst Pfosten-Riegel haben
+  einzelFelder.hidden = auswahl.size === 0 || eintraege.size !== 1 || [...eintraege][0] !== PFOSTEN_RIEGEL;
+  einzelFelder.anzeigen();
 
   const anzahlEigene = waende.filter((w) => materialJeWand.has(w.userData.expressID)).length;
   $('einzelZuruecksetzen').hidden = anzahlEigene === 0;
@@ -295,11 +382,16 @@ function einzelwahlAnzeigen() {
 $('einzelMaterial').addEventListener('change', () => {
   const wert = $('einzelMaterial').value;
   for (const wand of auswahl) {
-    if (wert === WIE_DIE_SEITE) materialJeWand.delete(wand.userData.expressID);
-    else materialJeWand.set(wand.userData.expressID, wert);
+    const id = wand.userData.expressID;
+    // Pfosten-Riegel: die Wand startet mit den Feldern ihrer Seite (Kopie), sonst braucht sie keine eigenen
+    if (wert === PFOSTEN_RIEGEL && !felderJeWand.has(id)) {
+      felderJeWand.set(id, { ...geltendeFelder()[wand.userData.himmelsrichtung ?? 'S'] });
+    } else if (wert !== PFOSTEN_RIEGEL) felderJeWand.delete(id);
+    if (wert === WIE_DIE_SEITE) materialJeWand.delete(id);
+    else materialJeWand.set(id, wert);
   }
   einzelwahlAnzeigen();
-  allesFaerben();
+  fensterAktualisieren();
 });
 
 $('einzelneWaende').addEventListener('change', (ereignis) => {
@@ -313,8 +405,9 @@ $('einzelneWaende').addEventListener('change', (ereignis) => {
 
 $('einzelZuruecksetzen').addEventListener('click', () => {
   materialJeWand.clear();
+  felderJeWand.clear();
   einzelwahlAnzeigen();
-  allesFaerben();
+  fensterAktualisieren();
 });
 
 // Eine Zeile der Fensterwahl: Name mit Anzahl der Fenster, Regler für Breite und Höhe
@@ -362,7 +455,12 @@ function fensterzeileAufbauen(schluessel, name, groesse) {
 
   zeile.append(titel, regler);
   $('fensterwahl').append(zeile);
-  fensterZeilen[schluessel] = { zeile, anzeigen: () => anzeigen.forEach((f) => f()) };
+  // Gesperrt (Seite hat Pfosten-Riegel): Regler grau und nicht bedienbar
+  const sperren = (gesperrt) => {
+    zeile.classList.toggle('gesperrt', gesperrt);
+    for (const schieber of regler.querySelectorAll('input')) schieber.disabled = gesperrt;
+  };
+  fensterZeilen[schluessel] = { zeile, anzeigen: () => anzeigen.forEach((f) => f()), sperren };
   fensterZeilen[schluessel].anzeigen();
 }
 
@@ -399,12 +497,18 @@ $('fensterZuruecksetzen').addEventListener('click', () => {
 
 function fensterAnzeigen() {
   $('bereichFenster').hidden = waende.length === 0;
+  // Seiten mit Pfosten-Riegel sind ganz verglast: dort gibt es keine Fenster zum Verstellen
+  const materialien = geltendeMaterialien();
+  const glasseite = (richtung) => materialien[richtung] === PFOSTEN_RIEGEL;
   for (const richtung of Object.keys(RICHTUNGSNAMEN)) {
     const anzahl = oeffnungen.filter((oe) => oe.userData.himmelsrichtung === richtung).length;
-    $(`fensterAnzahl${richtung}`).textContent = `${anzahl} Fenster`;
+    $(`fensterAnzahl${richtung}`).textContent = glasseite(richtung) ? 'Pfosten-Riegel' : `${anzahl} Fenster`;
+    fensterZeilen[richtung].sperren(glasseite(richtung));
   }
   const alle = oeffnungen.filter((oe) => oe.userData.himmelsrichtung in RICHTUNGSNAMEN).length;
-  $('fensterAnzahlAlle').textContent = `${alle} Fenster`;
+  const alleGlas = Object.keys(RICHTUNGSNAMEN).every(glasseite);
+  $('fensterAnzahlAlle').textContent = alleGlas ? 'Pfosten-Riegel' : `${alle} Fenster`;
+  fensterZeilen.Alle.sperren(alleGlas);
   // Knopf nur zeigen, wenn irgendwo (auch im Hintergrund) nicht 100 % eingestellt ist
   const groessen = [...Object.values(fensterJeRichtung), ...(fensterAlle ? [fensterAlle] : [])];
   $('fensterZuruecksetzen').hidden = groessen.every((g) => g.breite === 100 && g.hoehe === 100);
@@ -557,6 +661,8 @@ function einstellungenSammeln() {
     materialJeWand: [...materialJeWand],
     // Fenster mit eigenem Maß: [Fenster-Nummer, { breite, hoehe } in cm]
     massJeFenster: [...massJeFenster],
+    // Pfosten-Riegel: Felder je Seite, für „Alle“ und für einzelne Wände [Wand-Nummer, { breit, hoch }]
+    felderJeRichtung, felderAlle, felderJeWand: [...felderJeWand],
   });
 }
 
@@ -614,6 +720,13 @@ function varianteLaden(variante) {
   massJeFenster.clear();
   for (const [id, mass] of e.massJeFenster ?? []) massJeFenster.set(id, { ...mass });
   fensterAuswahl.clear();
+  // Felder der Pfosten-Riegel-Fassade (ältere Varianten haben keine: Startwerte)
+  for (const richtung of Object.keys(RICHTUNGSNAMEN)) {
+    felderJeRichtung[richtung] = { ...(e.felderJeRichtung?.[richtung] ?? START_FELDER) };
+  }
+  felderAlle = e.felderAlle ? { ...e.felderAlle } : materialAlleGleich ? { ...felderJeRichtung.N } : null;
+  felderJeWand.clear();
+  for (const [id, felder] of e.felderJeWand ?? []) felderJeWand.set(id, { ...felder });
 
   $('materialAlleGleich').checked = materialAlleGleich;
   $('fensterAlleGleich').checked = fensterAlleGleich;
@@ -837,16 +950,22 @@ function vergleichOeffnen() {
     const e = v.einstellungen;
     return e.fensterAlleGleich ? e.fensterAlle : e.fensterJeRichtung[richtung];
   };
-  const materialFeld = (id) => {
+  // Felder der Pfosten-Riegel-Fassade einer Seite (ältere Varianten: Startwerte)
+  const felderVon = (v, richtung) => {
+    const e = v.einstellungen;
+    return (e.materialAlleGleich ? e.felderAlle ?? e.felderJeRichtung?.N : e.felderJeRichtung?.[richtung]) ?? START_FELDER;
+  };
+  const materialFeld = (id, felder = null) => {
     const muster = document.createElement('span');
     muster.className = 'muster';
     muster.style.backgroundImage = `url(${musterBild(id)})`;
-    return [muster, textElement('span', materialName(id))];
+    const text = id === PFOSTEN_RIEGEL && felder ? `${materialName(id)} ${felder.breit} × ${felder.hoch} Felder` : materialName(id);
+    return [muster, textElement('span', text)];
   };
 
   zwischentitel('Fassade');
   for (const [richtung, name] of Object.entries(RICHTUNGSNAMEN)) {
-    zeile(name, (v) => materialFeld(materialVon(v, richtung)), 'material');
+    zeile(name, (v) => materialFeld(materialVon(v, richtung), felderVon(v, richtung)), 'material');
   }
   if (stuetzen.length > 0) zeile('Stützen', (v) => materialFeld(v.einstellungen.materialStuetzen), 'material');
   // Einzelne Wände mit eigenem Material: Anzahl je Material (nur, wenn eine der Varianten welche hat)
@@ -865,6 +984,7 @@ function vergleichOeffnen() {
   zwischentitel('Fenster');
   for (const [richtung, name] of Object.entries(RICHTUNGSNAMEN)) {
     zeile(name, (v) => {
+      if (materialVon(v, richtung) === PFOSTEN_RIEGEL) return textElement('span', 'ganz verglast (Pfosten-Riegel)');
       const { breite, hoehe } = fensterVon(v, richtung);
       return textElement('span', breite === 0 || hoehe === 0 ? 'zu (0 %)' : `Breite ${breite} % · Höhe ${hoehe} %`);
     });
@@ -978,11 +1098,13 @@ async function dateiOeffnen(datei) {
     const { gruppe, anzahl } = await ifcLaden(datei);
     waende = aussenwaendeErkennen(gruppe);
     oeffnungen = oeffnungenZuordnen(gruppe, waende);
+    anbauteileZuordnen(gruppe, waende);
     stuetzen = stuetzenVorbereiten(gruppe);
     // Eigenes Material einzelner Wände gehört zum alten Modell
     materialJeWand.clear();
     auswahl.clear();
     einzelwahlAnzeigen();
+    felderJeWand.clear();
     // Ebenso das eigene Maß einzelner Fenster
     massJeFenster.clear();
     fensterAuswahl.clear();

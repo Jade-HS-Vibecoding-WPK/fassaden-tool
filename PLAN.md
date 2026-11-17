@@ -31,7 +31,7 @@ nebeneinander vergleicht und als PDF mitnimmt.
 - [x] 2. Schritt: einzelnes Fenster anklicken, Breite/Höhe in cm ändern
 
 **2. Pfosten-Riegel**
-- [ ] Pfosten-Riegel-Fassade als eigenes Material für eine ganze Seite;
+- [x] Pfosten-Riegel-Fassade als eigenes Material für eine ganze Seite;
       Anzahl der Felder einstellbar (z. B. 8 breit × 3 hoch), Pfosten und Riegel werden gleichmäßig verteilt
 
 **3. Sonne & Standort**
@@ -111,7 +111,7 @@ Erledigte Sitzungen abhaken, die nächste offene Nummer ist dran.
 - [x] 11. Kurze Anleitung beim ersten Öffnen + IFC-Export-Hinweise → **Must komplett** (17.11.)
 - [x] 12. Should 1a: einzelne Wand → anderes Material (17.11.)
 - [x] 13. Should 1b: einzelnes Fenster → Maße ändern (17.11.)
-- [ ] 14. Should 2: Pfosten-Riegel-Fassade
+- [x] 14. Should 2: Pfosten-Riegel-Fassade (17.11.)
 
 **Do 19.11. – bis 12 Uhr fertig**
 - [ ] 15. Should 3a: Sonnenstand und Schatten
@@ -128,7 +128,7 @@ Erledigte Sitzungen abhaken, die nächste offene Nummer ist dran.
 Wenn es eng wird, zuerst streichen: 19 (PDF-Einzelseiten), dann 16 (Ortssuche).
 Was bis Do 10:30 nicht fertig ist, wandert zu Could.
 
-## Stand (17.11.2026, nach Sitzung 13)
+## Stand (17.11.2026, nach Sitzung 14)
 - CLAUDE.md und PLAN.md angelegt, Plan mit der Nutzerin abgestimmt.
 - Test-IFC liegt in `testdaten/` (Einfamilienhaus, Revit 2023, IFC2x3: 192 Wände, 57 Fenster, 49 Türen).
   Quelle: Bundesingenieurkammer, Seite „BIM-Praxisbeispiele“ (Download zum Betrachten angeboten).
@@ -399,6 +399,54 @@ Was bis Do 10:30 nicht fertig ist, wandert zu Could.
   `index.html` im Zwischenspeicher – falls der Schalter fehlt: Strg+Umschalt+R. Mit echter Maus nur kurz ausprobiert.
   **Geändert (Wunsch der Nutzerin):** In der ausklappbaren Erklärung zu „Einzelne Fenster“ steht kein „0 = Fenster zu“ mehr.
 
+- Sitzung 14 (17.11.): Pfosten-Riegel-Fassade. Neues Material „Pfosten-Riegel“ in der Liste jeder Himmelsrichtung, bei „Alle“
+  und bei „Einzelne Wände“ (nicht bei den Stützen). Darunter erscheint die Zeile „Felder [8] breit [3] hoch“ (1–40 × 1–20,
+  übernommen beim Bestätigen); die Felder gelten je Wand. Für „Alle“ und jede einzelne Wand gibt es eigene Felder
+  (eine einzelne Wand startet mit den Feldern ihrer Seite; bei mehreren gewählten Wänden mit Verschiedenem steht „versch.“).
+  So wird gebaut: Die Außenwand wird ausgeblendet und durch Glas im Umriss ihrer Außenseite ersetzt (auch Giebel),
+  ringsum ein Rahmenprofil entlang jeder Umrisskante, innen Pfosten und Riegel gleichmäßig verteilt.
+  Profile 5 cm breit, 15 cm tief (höchstens Wanddicke), bündig mit der Außenseite der Wand; Glas in der Mitte der Profile.
+  Fenster **und Türen** in dieser Wand verschwinden. Riegel werden über die ganze Wandhöhe verteilt (auch in den Giebel).
+  Fenster-Regler einer Pfosten-Riegel-Seite sind grau und gesperrt, statt „n Fenster“ steht „Pfosten-Riegel“
+  (bei „Alle“ nur, wenn alle vier Seiten Pfosten-Riegel haben). Kennwerte: die ganze Wandfläche zählt als Fenster,
+  Öffnungen darin zählen nicht noch einmal. Hover und Auswahl färben Glas und Profile wie bei den Fenstern.
+  **Farbe (Wunsch der Nutzerin):** Dach, Fensterrahmen und Pfosten/Riegel jetzt gemeinsam Anthrazit #3a3d42 (`PROFILFARBE` in `darstellung.js`).
+  Gespeichert mit der Variante (Felder je Seite, „Alle“, je Wand), „Laden“ stellt es wieder her; ältere Varianten: 8 × 3.
+  Vergleich: Material z. B. „Pfosten-Riegel 4 × 2 Felder“, bei den Fenstern „ganz verglast (Pfosten-Riegel)“.
+  Getestet mit `Test-ArchiCAD.ifc`: Süd 8 × 3 → 4 × 2 (Süd 14,8 m² Fassade = 14,8 m² Fenster, 100 %), „Alle Seiten gleich“ an/aus,
+  alle Seiten Pfosten-Riegel, Westgiebel per Mausklick einzeln 3 × 3 (folgt dem Giebel), Speichern → Zurücksetzen → Laden
+  (Kennwerte und Felder wieder gleich), Vergleich, gespeichertes Bild ohne blaue Auswahl. Testvariante wieder gelöscht.
+  Einfamilienhaus (Revit): alle Seiten Pfosten-Riegel in 0,17 s, keine Fehler.
+  Geändert: `fassade.js`, `materialien.js`, `darstellung.js`, `app.js`, `index.html`, `style.css`.
+  Versionsnummern: `app.js`, `ifc.js`, `fassade.js`, `materialien.js`, `darstellung.js`, `style.css` alle auf `v=16`.
+  Probleme: Gebogene/L-förmige Wände bekommen nur ein Muster (Glas mit gezeichnetem Raster), zählen aber auch als Fenster.
+  Bei mehrschaligen Wänden blieb die innere Schale zunächst stehen (behoben, s. u. „Gitterkästen weg“).
+  Riegel liegen je Wand auf eigener Höhe (bei verschieden hohen Nachbarwänden derselben Seite nicht auf einer Linie).
+  Hinter der Glaswand sieht man Deckenkanten und Innenraum (wie ein Arbeitsmodell). Mit echter Maus nur ein Klick getestet.
+  **Geändert nach Test (Wunsch der Nutzerin):**
+  (1) **Oberlicht:** Die oberste Feldreihe jeder Wand ist halb so hoch wie die anderen („Felder hoch“ zählt sie mit,
+  bei 1 gibt es kein Oberlicht). Bei Giebelwänden liegt das Oberlicht in der Giebelspitze.
+  (2) **Gitterkästen weg:** Im Einfamilienhaus (Westseite) wurden kurze, 37 cm hohe Wandstücke über den Fenstern
+  (13 cm, liegen in der Dicke der Außenwand) selbst zu kleinen Pfosten-Riegel-Kästen. Neu (`anbauteileZuordnen` in `fassade.js`):
+  Kleinere Wände und sonstige Bauteile, die ganz in einer Wand stecken oder bis 30 cm davor/dahinter sitzen
+  (geprüft an den echten Eckpunkten, weil Gebäude gedreht sein können), verschwinden mit ihr, wenn sie zur Glaswand wird.
+  Dadurch verschwindet auch die innere Schale mehrschaliger Wände mit. Kennwerte bleiben gleich (die Wandstücke zählen
+  wie bisher zur Fassadenfläche). Einfamilienhaus West: 8 Wandstücke + 4 weitere Wände und 8 sonstige Bauteile ausgeblendet.
+  Getestet mit beiden IFCs, keine Fehler. Versionsnummern: `fassade.js?v=17c` (in `app.js`), `app.js?v=17d` (in `index.html`).
+  **Fehler behoben (17.11., neue Test-IFC der Nutzerin):** Eine neue ArchiCAD-IFC (IFC4 Reference View, 16 Wände, 26 Fenster,
+  alle Wände „außen“; Kopie als `testdaten/Test-Neu.ifc`) zeigte „0 von 16 Wänden sind Außenwände“.
+  Ursache: Export-Option „Komplexe Elemente aufteilen: An“. Die Wand selbst hat dann keine Form, die steckt in ihren
+  Schichten (je Wand 5 × IfcBuildingElementPart); die App sah leere Wände und hielt die Schichten für „weitere Bauteile“.
+  Jetzt: `ifc.js` setzt die Schichten wieder zur Wand zusammen (nur Schichten von Wänden; Schichten von Decken bleiben, wie sie sind),
+  leere Formen werden übersprungen. `fassade.js`: Eine Wand gilt als nachbaubar, wenn mindestens die Hälfte ihrer Fläche
+  parallel zur Wand liegt – auch die Trennflächen zwischen den Schichten zählen (vorher nur Vorder- und Rückseite).
+  Ergebnis neue IFC: 16 von 16 Außenwänden, alle nachbaubar, alle 26 Fenster verstellbar, Pfosten-Riegel und Holz klappen.
+  Gegenprobe: `Test-ArchiCAD.ifc` (4 von 14, 4 nachbaubar, 83,1 m² / 15,5 m²) und Einfamilienhaus (89 von 192, 87 nachbaubar,
+  831,5 m² / 139,0 m²) genau wie vorher. Keine Fehler.
+  Versionsnummern: `ifc.js?v=17`, `fassade.js?v=17e` (in `app.js`), `app.js?v=17f` (in `index.html`).
+  Hinweis: Die Wand-Nummern sind jetzt die der ganzen Wand (nicht der Schichten) – bei Modellen mit Schichten
+  waren vorher ohnehin keine Varianten mit Wand-Klicks möglich.
+
 ## Design-Vision (Entwurf 17.11., nach Sitzung 13 – noch nicht gebaut, Zeitpunkt offen)
 Mit der Nutzerin als Testseite entworfen und abgestimmt („erstmal so festhalten“). Umbau später in einer eigenen Sitzung.
 - **Stil:** Glassmorphism – halbtransparente Glaskarten mit Unschärfe vor einem dunklen, farbigen Verlauf,
@@ -423,6 +471,17 @@ Mit der Nutzerin als Testseite entworfen und abgestimmt („erstmal so festhalte
   kein Unterschied. Nur auf diesem Rechner gemessen; über dem 3D-Bild nur wenige, kleine Glas-Elemente verwenden.
 
 ## Nächste Schritte
+- **Sitzung 14 (erledigt, s. o.; Entscheidung 17.11., vor dem Bauen):** Pfosten-Riegel-Fassade als neues Material „Pfosten-Riegel“
+  in der Materialliste je Himmelsrichtung (auch bei „Alle Seiten gleich“). Glas mit dunkelgrauen Pfosten und Riegeln
+  (Farbe der Fensterrahmen, ca. 5 cm breit). Darunter zwei Zahlenfelder **Felder breit × hoch** (Start 8 × 3),
+  Pfosten und Riegel gleichmäßig verteilt.
+  **Ganze Wand = Fenster:** alte Fenster der Seite verschwinden, Fenster-Regler dieser Seite gesperrt,
+  Kennwerte zählen die ganze Wandfläche als Fensterfläche.
+  **Felder-Anzahl gilt je Wand** (kurze Wände haben schmalere Felder).
+  **Auch für einzelne Wände** wählbar (Liste bei „Einzelne Wände“ aus Sitzung 12).
+  Wird mit der Variante gespeichert und geladen, Vergleich zeigt es, Bilder/PDF automatisch.
+  **Farbe (Wunsch der Nutzerin):** Dach, Pfosten/Riegel und Fensterrahmen in **derselben, recht dunklen Farbe**
+  (Vorschlag Anthrazit #3a3d42 statt bisher #5f6266, nach dem Test ggf. nachstellen).
 - **Sitzung 13 (erledigt, s. o.; Entscheidung 17.11., vor dem Bauen):** Einzelnes Fenster → Maße ändern.
   Im Bereich „4 Fenster“ ein Schalter **„Einzelne Fenster“** (wie „Einzelne Wände“; ist der eine an, geht der andere aus).
   An: Fenster anklicken, **Umschalt + Klick** nimmt weitere dazu, gewählte Fenster blau getönt.
