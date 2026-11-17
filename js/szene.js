@@ -8,6 +8,15 @@ function istSichtbar(teil) {
   return true;
 }
 
+// Bild als Text (data:image/jpeg;base64,…) in eine kompakte Bilddatei (Blob) umwandeln
+function alsBlob(datenAdresse) {
+  const [kopf, inhalt] = datenAdresse.split(',');
+  const zeichen = atob(inhalt);
+  const bytes = new Uint8Array(zeichen.length);
+  for (let i = 0; i < zeichen.length; i++) bytes[i] = zeichen.charCodeAt(i);
+  return new Blob([bytes], { type: kopf.slice(5, kopf.indexOf(';')) });
+}
+
 export class Szene {
   constructor(behaelter) {
     this.behaelter = behaelter;
@@ -111,13 +120,19 @@ export class Szene {
     this.kameraEinpassen();
   }
 
-  // Kamera auf das Gebäude (Wände und Dach) ausrichten, nicht auf das oft riesige Gelände
-  kameraEinpassen() {
+  // Umriss des Gebäudes (Wände und Dach), nicht des oft riesigen Geländes
+  gebaeudeBox() {
     const box = new THREE.Box3();
     for (const bauteil of this.modell.children) {
       if (['wand', 'dach'].includes(bauteil.userData.art)) box.expandByObject(bauteil);
     }
     if (box.isEmpty()) box.setFromObject(this.modell);
+    return box;
+  }
+
+  // Kamera auf das Gebäude ausrichten
+  kameraEinpassen() {
+    const box = this.gebaeudeBox();
     if (box.isEmpty()) return;
     const mitte = box.getCenter(new THREE.Vector3());
     const radius = box.getSize(new THREE.Vector3()).length() / 2;
@@ -131,5 +146,110 @@ export class Szene {
     this.kamera.updateProjectionMatrix();
     this.steuerung.target.copy(mitte);
     this.steuerung.update();
+  }
+
+  // Eckpunkte der sichtbaren Gebäudeteile (ohne Gelände und Sonstiges), höchstens ca. 20 000 Stück
+  sichtbarePunkte() {
+    const netze = [];
+    for (const bauteil of this.modell.children) {
+      if (!['wand', 'dach', 'stuetze', 'fenster', 'tuer'].includes(bauteil.userData.art)) continue;
+      bauteil.traverse((teil) => { if (teil.isMesh && istSichtbar(teil)) netze.push(teil); });
+    }
+    const gesamt = netze.reduce((summe, netz) => summe + netz.geometry.attributes.position.count, 0);
+    const schritt = Math.max(1, Math.ceil(gesamt / 20000));
+    const punkte = [];
+    for (const netz of netze) {
+      netz.updateWorldMatrix(true, false);
+      const lage = netz.geometry.attributes.position;
+      for (let i = 0; i < lage.count; i += schritt) {
+        punkte.push(new THREE.Vector3().fromBufferAttribute(lage, i).applyMatrix4(netz.matrixWorld));
+      }
+    }
+    if (punkte.length === 0) { // Notfall: Ecken der Gebäudebox
+      const box = this.gebaeudeBox();
+      for (const x of [box.min.x, box.max.x]) for (const y of [box.min.y, box.max.y]) for (const z of [box.min.z, box.max.z]) {
+        punkte.push(new THREE.Vector3(x, y, z));
+      }
+    }
+    return punkte;
+  }
+
+  // 5 Bilder aus fester Kamera, unabhängig von der aktuellen Blickrichtung:
+  // Perspektive (schräg von oben aus Südosten) und die Ansichten Nord/Ost/Süd/West als Parallelprojektion.
+  // Liefert { perspektive, N, O, S, W } als JPEG-Bilder (Blob).
+  async bilderAufnehmen(breite = 1500, hoehe = 1000) {
+    const box = this.gebaeudeBox();
+    const mitte = box.getCenter(new THREE.Vector3());
+    const groesse = box.getSize(new THREE.Vector3());
+    const seitenverhaeltnis = breite / hoehe;
+    const rand = 1.12; // etwas Luft ums Gebäude
+
+    // Perspektive: Abstand und Bildmitte so wählen, dass die sichtbaren Bauteile knapp ins Bild passen
+    const perspektive = new THREE.PerspectiveCamera(this.kamera.fov, seitenverhaeltnis, 0.1, 5000);
+    const richtung = new THREE.Vector3(1, 0.7, 1).normalize();
+    const punkte = this.sichtbarePunkte();
+    const ziel = mitte.clone();
+    let abstand = groesse.length() * 2;
+    for (let versuch = 0; versuch < 5; versuch++) {
+      perspektive.position.copy(ziel).addScaledVector(richtung, abstand);
+      perspektive.lookAt(ziel);
+      perspektive.near = abstand / 100;
+      perspektive.far = abstand * 10;
+      perspektive.updateProjectionMatrix();
+      perspektive.updateMatrixWorld();
+      // Ausdehnung im Bild (-1 … 1 = Bildrand) messen
+      const bild = new THREE.Box2();
+      const p = new THREE.Vector3();
+      for (const punkt of punkte) bild.expandByPoint(p.copy(punkt).project(perspektive));
+      // Ziel zur Mitte der Ausdehnung verschieben, dann Abstand anpassen
+      const versatz = bild.getCenter(new THREE.Vector2());
+      const halbH = Math.tan(THREE.MathUtils.degToRad(perspektive.fov / 2)) * abstand;
+      ziel.addScaledVector(new THREE.Vector3().setFromMatrixColumn(perspektive.matrixWorld, 0), versatz.x * halbH * seitenverhaeltnis);
+      ziel.addScaledVector(new THREE.Vector3().setFromMatrixColumn(perspektive.matrixWorld, 1), versatz.y * halbH);
+      const ausdehnung = bild.getSize(new THREE.Vector2());
+      abstand *= (Math.max(ausdehnung.x, ausdehnung.y) / 2) * rand;
+    }
+    perspektive.position.copy(ziel).addScaledVector(richtung, abstand);
+    perspektive.lookAt(ziel);
+    perspektive.near = abstand / 100;
+    perspektive.far = abstand * 10;
+    perspektive.updateProjectionMatrix();
+
+    // Ansichten: Blick waagerecht auf die jeweilige Seite (Norden = -Z = Plan-oben)
+    const ANSICHTEN = { N: [0, 0, -1], O: [1, 0, 0], S: [0, 0, 1], W: [-1, 0, 0] };
+    const ansichtKamera = ([x, , z]) => {
+      const bildBreite = (x === 0 ? groesse.x : groesse.z) * rand;
+      const bildHoehe = groesse.y * rand;
+      // Bildausschnitt aufs Seitenverhältnis bringen, ohne etwas abzuschneiden
+      const halbB = Math.max(bildBreite, bildHoehe * seitenverhaeltnis) / 2;
+      const halbH = halbB / seitenverhaeltnis;
+      const tiefe = groesse.length();
+      const kamera = new THREE.OrthographicCamera(-halbB, halbB, halbH, -halbH, 0.1, tiefe * 3);
+      kamera.position.copy(mitte).add(new THREE.Vector3(x, 0, z).multiplyScalar(tiefe));
+      kamera.lookAt(mitte);
+      kamera.updateProjectionMatrix();
+      return kamera;
+    };
+
+    // Zeichenfläche kurz auf Bildgröße stellen, danach zurück
+    const alteGroesse = this.renderer.getSize(new THREE.Vector2());
+    const alteDichte = this.renderer.getPixelRatio();
+    this.renderer.setPixelRatio(1);
+    this.renderer.setSize(breite, hoehe, false);
+
+    const bilder = {};
+    try {
+      const kameras = { perspektive, ...Object.fromEntries(Object.entries(ANSICHTEN).map(([r, v]) => [r, ansichtKamera(v)])) };
+      for (const [name, kamera] of Object.entries(kameras)) {
+        this.renderer.render(this.szene, kamera);
+        // Bild sofort abholen, solange es noch auf der Zeichenfläche liegt
+        // (toDataURL statt toBlob: toBlob braucht in manchen Browsern ca. 1 s pro Bild)
+        bilder[name] = alsBlob(this.renderer.domElement.toDataURL('image/jpeg', 0.85));
+      }
+    } finally {
+      this.renderer.setPixelRatio(alteDichte);
+      this.renderer.setSize(alteGroesse.x, alteGroesse.y, false);
+    }
+    return bilder;
   }
 }

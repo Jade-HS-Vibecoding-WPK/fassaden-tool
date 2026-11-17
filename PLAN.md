@@ -59,7 +59,7 @@ nebeneinander vergleicht und als PDF mitnimmt.
 - **Fassade:** Die App liest die Außenwände aus der IFC und baut sie als eigene „Scheiben“ nach.
   So kann sie Material und Fensterlöcher frei ändern und die Flächen genau ausrechnen.
 - **Materialien:** werden als Muster im echten Maßstab gezeichnet (z. B. Klinker 24 × 7,1 cm).
-- **Varianten:** werden im Browser-Speicher dieses Rechners abgelegt.
+- **Varianten:** werden im Browser-Speicher dieses Rechners abgelegt (IndexedDB, fasst auch die Bilder).
 - **Gerät:** gebaut für Laptop/Desktop, nicht für Handy oder Tablet.
 - **Nutzer*innen:** du und deine Kommiliton*innen, deshalb muss die App ohne Erklärung verständlich sein.
 - **Fensterflächenanteil:** Fensterfläche ÷ Fassadenfläche der jeweiligen Seite (Rohbaumaße).
@@ -100,7 +100,7 @@ Erledigte Sitzungen abhaken, die nächste offene Nummer ist dran.
 - [x] 6c. Fenster: Schalter „Alle Seiten gleich“ (wie 6b, Wunsch der Nutzerin) (16.11.)
 - [x] 6d. Stützen: ein Material für alle Stützen (Wunsch der Nutzerin) (16.11.)
 - [x] 7. Kennwerte (Fassadenfläche, Fensterfläche, Fensterflächenanteil) (16.11.)
-- [ ] 8. Varianten speichern, mit 5 Bildern (Perspektive + N/O/S/W)
+- [x] 8. Varianten speichern, mit 5 Bildern (Perspektive + N/O/S/W) (16.11.)
 - [ ] 9. Variantenvergleich nebeneinander
 - [ ] 10. PDF-Übersichtsseite A3 quer
 - [ ] 11. Kurze Anleitung beim ersten Öffnen + IFC-Export-Hinweise → **Must komplett**
@@ -123,7 +123,7 @@ Erledigte Sitzungen abhaken, die nächste offene Nummer ist dran.
 Wenn es eng wird, zuerst streichen: 19 (PDF-Einzelseiten), dann 16 (Ortssuche).
 Was bis Do 10:30 nicht fertig ist, wandert zu Could.
 
-## Stand (16.11.2026, nach Sitzung 7)
+## Stand (16.11.2026, nach Sitzung 8)
 - CLAUDE.md und PLAN.md angelegt, Plan mit der Nutzerin abgestimmt.
 - Test-IFC liegt in `testdaten/` (Einfamilienhaus, Revit 2023, IFC2x3: 192 Wände, 57 Fenster, 49 Türen).
   Quelle: Bundesingenieurkammer, Seite „BIM-Praxisbeispiele“ (Download zum Betrachten angeboten).
@@ -225,9 +225,29 @@ Was bis Do 10:30 nicht fertig ist, wandert zu Could.
   (ca. 54 % Glas) zählen als Glastür, wenn sie in einer Wand sitzen, die als Außenwand gilt.
   Mehrschalige Wände: Gelten beide Schalen als außen, wird die Fläche doppelt gezählt (Schale per Klick abschalten).
 
+- Sitzung 8 (16.11.): Neuer Bereich „6 Varianten“: Namensfeld (leer = „Variante 1, 2 …“), Hauptbutton
+  „Variante speichern“, darunter die Liste (neueste oben) mit Vorschaubild, Name, Datum, Fensteranteil
+  und den Textknöpfen „Laden“ / „Löschen“ (mit Sicherheitsfrage). Neue Datei `js/varianten.js`.
+  Gespeichert werden: alle Einstellungen (Material je Seite, Stützen, beide Schalter „Alle Seiten gleich“ samt
+  Werten im Hintergrund, Fenster je Seite, Wand-Klicks als Liste der umgeschalteten Wände), die Kennwerte und 5 Bilder.
+  **Entscheidungen (mit der Nutzerin):** Ansichten N/O/S/W als Parallelprojektion (wie eine gezeichnete Ansicht),
+  Perspektive schräg von oben aus Südosten; beides aus fester Kamera, unabhängig vom aktuellen Blick.
+  „Laden“ stellt alle Einstellungen wieder her. Varianten gehören zur IFC-Datei (Dateiname + Anzahl Wände).
+  Speicher: IndexedDB statt localStorage (localStorage hätte nur für ca. 10 Varianten gereicht).
+  Bilder: 1500 × 1000 Pixel, JPEG, ohne blauen Hover-Schimmer. Die Perspektive passt sich den sichtbaren Bauteilen an
+  (Haus mittig, füllt ca. 90 % der Bildhöhe), die Ansichten der Gebäudebox (Wände + Dach).
+  Getestet: `Test-ArchiCAD.ifc` speichern, verstellen, laden → Kennwerte, Material, Regler, Schalter und
+  Wand-Klick (4 → 3 Außenwände) wieder genau wie gespeichert; bleibt nach Neuladen der Seite erhalten; Löschen klappt.
+  Einfamilienhaus (Revit): Speichern 0,5 s, ca. 470 KB pro Variante (Platz für sehr viele Varianten). Keine Fehler.
+  Geändert: `szene.js`, `app.js`, `index.html`, `style.css`, neu `varianten.js`.
+  Probleme: `toBlob` brauchte im Test-Browser ca. 1 s pro Bild, deshalb jetzt `toDataURL` (ca. 20 ms).
+  In den Ansichten erscheinen Gelände/Modellplatte und Treppen vor der Fassade mit (wie in einer echten Ansicht).
+  Varianten erkennen „ihr“ Modell am Dateinamen: Wird die IFC umbenannt, ist die Liste leer;
+  wird sie unter gleichem Namen neu exportiert, können die Wand-Klicks auf andere Wände fallen (Wand-Nummern ändern sich).
+  Die Varianten gibt es nur in diesem Browser auf diesem Rechner (Arbeitsdatei sichern = Could).
+
 ## Nächste Schritte
-- Sitzung 8: Varianten speichern (Name + 5 Bilder: Perspektive + N/O/S/W), mit allen Einstellungen
-  (Material, Fenster, Schalter, Stützen, Wand-Klicks) und den Kennwerten.
+- Sitzung 9: Variantenvergleich nebeneinander (Bilder + Materialien + Kennwerte).
 - **Entscheidung (16.11., vor Sitzung 7):** Neuer Bereich „5 Kennwerte“ als Tabelle Nord/Ost/Süd/West + Gesamt,
   rechnet sofort neu bei jeder Änderung. Fassadenfläche = Außenseite der Außenwände (Rohbaumaß, Öffnungen mitgezählt).
   Fensterfläche = Fensteröffnungen (Rohbaumaß). **Glastüren zählen als Fenster** (Wunsch der Nutzerin),

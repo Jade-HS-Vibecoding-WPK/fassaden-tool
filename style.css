@@ -80,6 +80,26 @@ h2 span { color: var(--akzent); }
 .kennwerte td:first-child { text-align: left; }
 .kennwerte tr.gesamt td { font-weight: 600; border-top-color: var(--text); }
 
+/* Varianten: Name, Hauptbutton, Liste mit Vorschaubild */
+.eingabe {
+  font: inherit; font-size: 13px; color: var(--text); width: 100%;
+  border: 1px solid var(--linie); border-radius: 0; padding: 8px 10px; margin-bottom: 8px;
+}
+.eingabe:hover, .eingabe:focus { border-color: var(--text); outline: none; }
+.knopf.haupt { width: 100%; background: var(--akzent); border-color: var(--akzent); color: #fff; }
+.knopf.haupt:hover { background: #2b4d86; }
+.knopf.haupt:disabled { opacity: .6; cursor: wait; }
+.variantenliste { list-style: none; margin: 16px 0 0; padding: 0; }
+.variantenliste li {
+  display: grid; grid-template-columns: 84px 1fr; gap: 12px; align-items: start;
+  padding: 10px 0; border-top: 1px solid var(--linie); font-size: 13px;
+}
+.variantenliste img { width: 84px; aspect-ratio: 3 / 2; object-fit: cover; border: 1px solid var(--linie); display: block; }
+.variantenliste strong { display: block; font-weight: 600; overflow-wrap: anywhere; }
+.variantenliste small { display: block; font-size: 11px; color: var(--leise); margin-top: 2px; }
+.variantenliste span { display: flex; gap: 14px; }
+.variantenliste .textknopf { margin-top: 6px; }
+
 .hinweis { font-size: 12px; color: var(--leise); margin: 8px 0 0; line-height: 1.45; }
 .status { font-size: 13px; line-height: 1.5; margin: 16px 0 0; white-space: pre-line; }
 .status::first-line { font-weight: 600; }

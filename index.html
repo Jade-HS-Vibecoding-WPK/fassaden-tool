@@ -65,6 +65,16 @@
         <p class="hinweis">Flächen in m², Rohbaumaße. Fassade = Außenseite der Außenwände mit allen Öffnungen.
           Fenster = Fensteröffnungen und Glastüren. Anteil = Fenster ÷ Fassade.</p>
       </section>
+
+      <section id="bereichVarianten" hidden>
+        <h2><span>6</span> Varianten</h2>
+        <input type="text" class="eingabe" id="variantenName" maxlength="60" autocomplete="off" aria-label="Name der Variante">
+        <button class="knopf haupt" id="varianteSpeichern">Variante speichern</button>
+        <p class="hinweis">Speichert alle Einstellungen, die Kennwerte und 5 Bilder: Perspektive und die Ansichten
+          Nord, Ost, Süd, West. Die Varianten bleiben nur in diesem Browser auf diesem Rechner.</p>
+        <p class="status" id="variantenStatus"></p>
+        <ul class="variantenliste" id="variantenListe"></ul>
+      </section>
     </aside>
 
     <main class="ansicht" id="ansicht">

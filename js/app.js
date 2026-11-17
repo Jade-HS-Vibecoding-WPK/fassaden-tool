@@ -3,6 +3,7 @@ import { Szene } from './szene.js';
 import { ifcLaden } from './ifc.js';
 import { aussenwaendeErkennen, wandFaerben, oeffnungenZuordnen, fensterAnpassen, stuetzenVorbereiten, stuetzeFaerben, kennwerteBerechnen } from './fassade.js';
 import { MATERIALIEN, START_MATERIAL, musterBild } from './materialien.js';
+import { variantenLesen, varianteSpeichern, varianteLoeschen } from './varianten.js';
 
 const $ = (id) => document.getElementById(id);
 const ansicht = $('ansicht');
@@ -11,6 +12,7 @@ const szene = new Szene(ansicht);
 let waende = []; // alle Wände des geladenen Modells
 let oeffnungen = []; // alle Fenster und Türen
 let stuetzen = []; // alle Stützen
+let modellKennung = null; // Dateiname + Anzahl Wände: zu welchem Modell eine Variante gehört
 
 // Gewähltes Fassadenmaterial je Himmelsrichtung
 const RICHTUNGSNAMEN = { N: 'Nord', O: 'Ost', S: 'Süd', W: 'West' };
@@ -58,15 +60,22 @@ function fensterAktualisieren() {
 
 // Tabelle „Kennwerte“: Fassadenfläche, Fensterfläche und Fensterflächenanteil je Seite und gesamt
 const quadratmeter = (wert) => wert.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+// Kennwerte je Seite (N/O/S/W) plus „gesamt“
+function kennwerteMitGesamt() {
+  const kennwerte = kennwerteBerechnen(waende, oeffnungen);
+  kennwerte.gesamt = { fassade: 0, fenster: 0 };
+  for (const richtung of Object.keys(RICHTUNGSNAMEN)) {
+    kennwerte.gesamt.fassade += kennwerte[richtung].fassade;
+    kennwerte.gesamt.fenster += kennwerte[richtung].fenster;
+  }
+  return kennwerte;
+}
+
 function kennwerteAnzeigen() {
   $('bereichKennwerte').hidden = waende.length === 0;
-  const kennwerte = kennwerteBerechnen(waende, oeffnungen);  const gesamt = { fassade: 0, fenster: 0 };
-  const zeilen = Object.entries(RICHTUNGSNAMEN).map(([richtung, name]) => {
-    gesamt.fassade += kennwerte[richtung].fassade;
-    gesamt.fenster += kennwerte[richtung].fenster;
-    return [name, kennwerte[richtung]];
-  });
-  zeilen.push(['Gesamt', gesamt]);
+  const kennwerte = kennwerteMitGesamt();
+  const zeilen = Object.entries(RICHTUNGSNAMEN).map(([richtung, name]) => [name, kennwerte[richtung]]);
+  zeilen.push(['Gesamt', kennwerte.gesamt]);
 
   const tabelle = $('kennwerteTabelle');
   tabelle.replaceChildren();
@@ -271,6 +280,122 @@ function fensterAnzeigen() {
   $('fensterZuruecksetzen').hidden = groessen.every((g) => g.breite === 100 && g.hoehe === 100);
 }
 
+// ---------- Varianten: speichern, auflisten, laden, löschen ----------
+
+// Alle Einstellungen als reine Daten (Kopien, damit spätere Änderungen die Variante nicht verstellen)
+function einstellungenSammeln() {
+  return structuredClone({
+    materialJeRichtung, materialStuetzen, materialAlleGleich, materialAlle,
+    fensterJeRichtung, fensterAlleGleich, fensterAlle,
+    // nur die Wände, die per Klick anders sind als die automatische Erkennung
+    wandUmgeschaltet: waende.filter((w) => w.userData.aussen !== w.userData.aussenAuto).map((w) => w.userData.expressID),
+  });
+}
+
+$('varianteSpeichern').addEventListener('click', async () => {
+  const knopf = $('varianteSpeichern');
+  const name = $('variantenName').value.trim() || $('variantenName').placeholder || 'Variante';
+  knopf.disabled = true;
+  variantenStatus('Bilder werden aufgenommen …');
+  try {
+    // Ohne blauen Hover-Schimmer fotografieren
+    szene.hoverBauteil = null;
+    allesFaerben();
+    const bilder = await szene.bilderAufnehmen();
+    await varianteSpeichern({
+      modell: modellKennung, name, datum: Date.now(),
+      einstellungen: einstellungenSammeln(), kennwerte: kennwerteMitGesamt(), bilder,
+    });
+    $('variantenName').value = '';
+    variantenStatus(`„${name}“ ist gespeichert.`);
+    await variantenAnzeigen();
+  } catch (fehler) {
+    console.error(fehler);
+    variantenStatus(`Die Variante konnte nicht gespeichert werden: ${fehler.message}`, true);
+  } finally {
+    knopf.disabled = false;
+  }
+});
+
+// Gespeicherte Einstellungen wieder in die Bedienung und ins 3D-Modell übernehmen
+function varianteLaden(variante) {
+  const e = variante.einstellungen;
+  Object.assign(materialJeRichtung, e.materialJeRichtung);
+  materialStuetzen = e.materialStuetzen;
+  materialAlleGleich = e.materialAlleGleich;
+  materialAlle = e.materialAlle;
+  for (const richtung of Object.keys(RICHTUNGSNAMEN)) fensterJeRichtung[richtung] = { ...e.fensterJeRichtung[richtung] };
+  fensterAlleGleich = e.fensterAlleGleich;
+  fensterAlle = e.fensterAlle ? { ...e.fensterAlle } : null;
+  const umgeschaltet = new Set(e.wandUmgeschaltet);
+  for (const wand of waende) {
+    wand.userData.aussen = umgeschaltet.has(wand.userData.expressID) ? !wand.userData.aussenAuto : wand.userData.aussenAuto;
+  }
+
+  $('materialAlleGleich').checked = materialAlleGleich;
+  $('fensterAlleGleich').checked = fensterAlleGleich;
+  for (const { anzeigen } of Object.values(materialZeilen)) anzeigen();
+  for (const { anzeigen } of Object.values(fensterZeilen)) anzeigen();
+  materialwahlUmschalten();
+  fensterwahlUmschalten();
+  fensterAktualisieren();
+  aussenwaendeAnzeigen();
+  variantenStatus(`„${variante.name}“ ist geladen.`);
+}
+
+let bildAdressen = []; // Vorschaubilder der Liste, werden beim Neuzeichnen freigegeben
+async function variantenAnzeigen() {
+  $('bereichVarianten').hidden = waende.length === 0;
+  const varianten = await variantenLesen(modellKennung);
+  $('variantenName').placeholder = `Variante ${varianten.length + 1}`;
+
+  for (const adresse of bildAdressen) URL.revokeObjectURL(adresse);
+  bildAdressen = [];
+  const liste = $('variantenListe');
+  liste.replaceChildren();
+  for (const variante of varianten) {
+    const eintrag = document.createElement('li');
+    const bild = document.createElement('img');
+    bild.src = URL.createObjectURL(variante.bilder.perspektive);
+    bild.alt = '';
+    bildAdressen.push(bild.src);
+
+    const text = document.createElement('div');
+    const name = document.createElement('strong');
+    name.textContent = variante.name; // textContent: Namen werden nie als HTML gelesen
+    const angaben = document.createElement('small');
+    const { fassade, fenster } = variante.kennwerte.gesamt;
+    const datum = new Date(variante.datum).toLocaleString('de-DE', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' });
+    angaben.textContent = `${datum} · Fensteranteil ${fassade > 0 ? Math.round((fenster / fassade) * 100) : '–'} %`;
+
+    const knoepfe = document.createElement('span');
+    const laden = document.createElement('button');
+    laden.className = 'textknopf';
+    laden.textContent = 'Laden';
+    laden.addEventListener('click', () => varianteLaden(variante));
+    const loeschen = document.createElement('button');
+    loeschen.className = 'textknopf';
+    loeschen.textContent = 'Löschen';
+    loeschen.addEventListener('click', async () => {
+      if (!confirm(`Variante „${variante.name}“ wirklich löschen? Das lässt sich nicht rückgängig machen.`)) return;
+      await varianteLoeschen(variante.id);
+      variantenStatus(`„${variante.name}“ ist gelöscht.`);
+      await variantenAnzeigen();
+    });
+    knoepfe.append(laden, loeschen);
+
+    text.append(name, angaben, knoepfe);
+    eintrag.append(bild, text);
+    liste.append(eintrag);
+  }
+}
+
+function variantenStatus(text, istFehler = false) {
+  const status = $('variantenStatus');
+  status.textContent = text;
+  status.classList.toggle('fehler', istFehler);
+}
+
 $('datei').addEventListener('change', (ereignis) => {
   const datei = ereignis.target.files[0];
   if (datei) dateiOeffnen(datei);
@@ -305,6 +430,8 @@ async function dateiOeffnen(datei) {
     szene.zeigeModell(gruppe);
     fensterAktualisieren();
     aussenwaendeAnzeigen();
+    modellKennung = `${datei.name} · ${anzahl.wand} Wände`;
+    variantenAnzeigen();
     $('leerHinweis').hidden = true;
     $('legende').hidden = false;
     statusZeigen(

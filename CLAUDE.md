@@ -22,8 +22,9 @@ Entsteht in der Vibecoding KI-Werkstatt (Jade Hochschule, 16.–20.11.2026). Abg
 - Code-Namen und Kommentare auf Deutsch.
 
 # Aufbau
-- `js/app.js` – Bedienoberfläche, Zustand, Varianten (Browser-Speicher localStorage)
-- `js/szene.js` – 3D-Szene, Kamera, Ansichten, Screenshot
+- `js/app.js` – Bedienoberfläche, Zustand, Varianten speichern/laden
+- `js/szene.js` – 3D-Szene, Kamera, 5 Bilder aus fester Kamera (Perspektive + Ansichten N/O/S/W)
+- `js/varianten.js` – Varianten im Browser-Speicher (IndexedDB, nicht localStorage: mehr Platz für die Bilder)
 - `js/ifc.js` – IFC-Datei in 3D-Bauteile umwandeln (Wände, Fenster, Türen, Rest)
 - `js/fassade.js` – Außenwände erkennen, Fassade mit Fensteröffnungen neu bauen, Flächen berechnen
 - `js/darstellung.js` – Zeichenstil: Farben der Bauteile (Rohmodell, Dach, Fenster …) und Kantenlinien
@@ -34,6 +35,7 @@ Entsteht in der Vibecoding KI-Werkstatt (Jade Hochschule, 16.–20.11.2026). Abg
 - PDF-Export des Variantenvergleichs ist Must.
 - Außenwand = IFC-Eigenschaft „IsExternal“ ist nicht „nein“ UND die Wand liegt am Gebäuderand (Sichtprüfung),
   weil Revit „IsExternal“ oft bei allen Wänden auf „ja“ setzt. Korrektur per Klick.
+- Varianten gehören zur IFC-Datei (Dateiname + Anzahl Wände); die Liste zeigt nur die des geladenen Modells.
 - Oberfläche schlank: nur zeigen, was schon funktioniert; jeder Bereich kommt in seiner Sitzung dazu.
 
 # Gestaltung
