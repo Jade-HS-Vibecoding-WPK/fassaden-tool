@@ -77,6 +77,20 @@ h2 span { color: var(--akzent); }
 .felderzeile .eingabe::placeholder { font-size: 11px; }
 .muster { width: 26px; height: 26px; border: 1px solid var(--linie); background-size: cover; background-position: center; }
 
+/* Farbtöne (Sitzung 18): je benutztem Material eine Zeile mit kleinen Farbpunkten */
+.farbtoene { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--linie); display: grid; gap: 8px; }
+.farbtoene h3 { margin: 0; font-size: 11px; font-weight: 400; color: var(--leise); }
+.farbtonzeile { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; font-size: 12px; }
+.farbtonzeile small { display: block; font-size: 11px; color: var(--leise); }
+.farbpunkte { display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; }
+.farbpunkt {
+  width: 16px; height: 16px; padding: 0; border-radius: 50%; cursor: pointer;
+  border: 1px solid rgba(0, 0, 0, .18);
+}
+.farbpunkt:hover { box-shadow: 0 0 0 2px #fff, 0 0 0 3px var(--leise); }
+.farbpunkt[aria-pressed="true"] { box-shadow: 0 0 0 2px #fff, 0 0 0 3px #1f3a68; }
+.farbpunkt:focus-visible { outline: 2px solid #1f3a68; outline-offset: 3px; }
+
 /* Fenstergröße: je Himmelsrichtung zwei Regler */
 .fensterwahl { display: grid; gap: 12px; }
 .fensterzeile { display: grid; grid-template-columns: 58px 1fr; gap: 10px; font-size: 13px; }

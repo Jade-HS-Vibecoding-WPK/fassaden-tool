@@ -41,7 +41,7 @@ nebeneinander vergleicht und als PDF mitnimmt.
 
 **4. Darstellung & Extras**
 - [x] Darstellung umschaltbar auf „realistisch“: Texturen mit Klinkerfugen, Holzmaserung, Glasspiegelung
-- [ ] Eigene Farbe pro Material
+- [x] Eigene Farbe pro Material (Farbtöne zum Anklicken, Sitzung 18)
 - [ ] PDF zusätzlich mit einer eigenen Seite pro Variante – *darf notfalls zu Could*
 
 ## Could (wenn Zeit bleibt)
@@ -116,7 +116,9 @@ Erledigte Sitzungen abhaken, die oberste offene Zeile ist dran (die Nummern blei
 **Do 19.11. – bis 12 Uhr fertig**
 - [x] 17. Should 4a: Umschalter „realistisch“ (umgestellt 17.11., Wunsch der Nutzerin) (17.11.)
 - [x] 17b. Dachmaterial wählbar (Wunsch der Nutzerin 17.11.: dunkle Dächer stechen heraus) (17.11.)
-- [ ] 18. Should 4b: eigene Farbe pro Material ← **als Nächstes**
+- [x] 18. Should 4b: eigene Farbe pro Material (17.11.)
+- [ ] 18b. Zahl der Außenwände („89 von 192 Wänden sind Außenwände“) kleiner und weiter unten zeigen, z. B. bei „Bauteile ▸“
+      in Bereich 1 (Wunsch der Nutzerin 17.11.: eher unwichtig, steht zu weit oben) ← **als Nächstes**
 - [ ] 15. Should 3a: Sonnenstand und Schatten (nach hinten gestellt, Wunsch der Nutzerin 17.11.)
 - [ ] 16. Should 3b: Standort per Ortssuche (darf notfalls wegfallen)
 - [ ] 19. Should 4c: PDF-Einzelseiten (fällt als Erstes weg, wenn es eng wird)
@@ -129,7 +131,7 @@ Erledigte Sitzungen abhaken, die oberste offene Zeile ist dran (die Nummern blei
 Wenn es eng wird, zuerst streichen: 19 (PDF-Einzelseiten), dann 16 (Ortssuche).
 Was bis Do 10:30 nicht fertig ist, wandert zu Could.
 
-## Stand (17.11.2026, nach Sitzung 17b)
+## Stand (17.11.2026, nach Sitzung 18)
 - CLAUDE.md und PLAN.md angelegt, Plan mit der Nutzerin abgestimmt.
 - Test-IFC liegt in `testdaten/` (Einfamilienhaus, Revit 2023, IFC2x3: 192 Wände, 57 Fenster, 49 Türen).
   Quelle: Bundesingenieurkammer, Seite „BIM-Praxisbeispiele“ (Download zum Betrachten angeboten).
@@ -508,6 +510,34 @@ Was bis Do 10:30 nicht fertig ist, wandert zu Could.
   **Außerdem (Wunsch der Nutzerin):** „Holz natur“ heißt jetzt **„Lärche“** (übliches Fassadenholz) und ist heller (#bfa88b statt #a6927e).
   Die interne Kennung bleibt `holz-natur`, gespeicherte Varianten zeigen den neuen Namen. Versionsnummern jetzt `v=19e`
   (`materialien.js`, `fassade.js`, `realistisch.js`, `szene.js`, `app.js`).
+- Sitzung 18 (17.11.): Eigene Farbe pro Material. Im Bereich „3 Fassade“ unter der Materialwahl (dünne Trennlinie) der Block
+  **„Farbtöne“**: je Material, das gerade benutzt wird (Seiten, einzelne Wände, Stützen, Dach), **eine** Zeile mit Name,
+  gewähltem Ton und kleinen runden Farbpunkten (gewählter Punkt dunkelblau umrandet, Tooltip = Name des Tons).
+  Ein Klick färbt das Material überall sofort um, auch in „realistisch“; die Musterbilder der Materialzeilen ändern sich mit.
+  Fugen, Bretter, Struktur werden aus der neuen Farbe abgeleitet, das Fugenbild bleibt gleich. Dachkanten: beim Startton
+  die abgestimmte Kantenfarbe, sonst etwas dunkler als die Fläche. Materialien ohne Töne (Gründach, Pfosten-Riegel) erscheinen nicht.
+  **Klinker:** ein Material „Klinker“ (Kennung bleibt `klinker-rot`), Töne rot (Start), anthrazit, hell weiß-bunt, braunviolett, schwarz.
+  Alle Töne: Liste `FARBTOENE` in `materialien.js` (Werte siehe „Nächste Schritte“ → Sitzung 18).
+  Gespeichert mit der Variante (`farbtoene`: nur abweichende Töne), „Laden“ stellt sie wieder her; ältere Varianten: Starttöne.
+  Ältere Varianten mit „Klinker anthrazit“ werden beim Laden zu Klinker + Ton anthrazit (`alteKennungenUmstellen` in `app.js`).
+  Vergleich: Name mit Ton, z. B. „Klinker · anthrazit“, „Schlicht hell · dunkel“, Musterbild im Ton der Variante.
+  Getestet mit `Test-ArchiCAD.ifc`: Klinker braunviolett/weiß-bunt, Dach dunkel (Zeichnung und realistisch), Speichern → Laden,
+  nachgestellte alte Variante mit Süd = Klinker anthrazit, Vergleich mit 3 Varianten. Testvarianten wieder gelöscht. Keine Fehler.
+  Geändert: `materialien.js`, `app.js`, `index.html`, `style.css`. Versionsnummern alle `v=20`
+  (`materialien.js` in `app.js`, `fassade.js`, `realistisch.js`; `fassade.js`, `realistisch.js`, `szene.js`, `app.js`, `style.css`).
+  Probleme: Weil der Ton je Material überall gilt, kann man nicht mehr Nord rot und Süd anthrazit klinkern
+  (bewusst so entschieden). Eine **alte** Variante mit beiden Klinkern zeigt im Vergleich weiter beide Farben (richtig),
+  „Laden“ macht aber allen Klinker anthrazit. Mit echter Maus nur kurz geklickt (Test über Skript).
+  **Geändert nach Test (Wunsch der Nutzerin): auch Holz, Putz und Fassadenplatten zusammengelegt.** Materialliste jetzt:
+  Klinker, Holzfassade, Sichtbeton, Putz, Fassadenplatten, Glas, Pfosten-Riegel. Kennungen bleiben `holz-natur`, `putz-altweiss`,
+  `platten-anthrazit`; `holz-vergraut`, `putz-sand`, `platten-silber` stehen in `ALTE_KENNUNGEN` und werden beim Laden
+  zu Material + Ton (vergraut, sand, silbergrau). „Glas blaugrau“ heißt jetzt „Glas“ (Ton blaugrau). Namen zeigen den Ton
+  immer mit, z. B. „Holzfassade · Lärche“, „Putz · ocker“. Die Dachmaterialien (Ziegel, Stehfalz) bleiben vorerst getrennt.
+  Getestet: Einfamilienhaus, alte „Variante 1“ (Holz, Putz sand, Platten, Klinker anthrazit) lädt als Holzfassade, Putz · sand,
+  Fassadenplatten, Klinker · anthrazit. Keine Fehler. Versionsnummern `v=20b` (`materialien.js`, `fassade.js`, `realistisch.js`,
+  `szene.js`, `app.js`). Gleiche Grenze wie beim Klinker: alte Varianten mit z. B. Putz altweiß **und** Putz sand bekommen beim Laden einen Ton.
+  **Außerdem (Wunsch der Nutzerin):** Farbpunkte nach Helligkeit sortiert, hell links → dunkel rechts (nur die Anzeige,
+  `helligkeit` in `app.js`). Versionsnummer `app.js?v=20c`.
 
 ## Design-Vision (Entwurf 17.11., nach Sitzung 13 – noch nicht gebaut, Zeitpunkt offen)
 Mit der Nutzerin als Testseite entworfen und abgestimmt („erstmal so festhalten“). Umbau später in einer eigenen Sitzung.
@@ -533,6 +563,35 @@ Mit der Nutzerin als Testseite entworfen und abgestimmt („erstmal so festhalte
   kein Unterschied. Nur auf diesem Rechner gemessen; über dem 3D-Bild nur wenige, kleine Glas-Elemente verwenden.
 
 ## Nächste Schritte
+- **Sitzung 18 (Entscheidung 17.11., vor dem Bauen):** Eigene Farbe pro Material.
+  **Gilt je Material, überall:** Ändert man die Farbe z. B. von „Putz sand“, ändern sich alle Seiten, einzelnen Wände
+  und Stützen mit diesem Material mit. Fugen und Struktur werden automatisch aus der neuen Farbe abgeleitet (etwas dunkler).
+  **Auswahl: wenige Vorschläge** – je Material 5–6 gedeckte, ruhige Farbtöne zum Anklicken (passend zum Zeichenstil),
+  dazu „Originalfarbe“. Keine freie Farbwahl.
+  **Auch für:** einzelne Wände und Stützen (über ihr Material) sowie das **Dach** (eigene Vorschläge je Dachmaterial).
+  **Pfosten-Riegel-Profile und Fensterrahmen bleiben anthrazit.**
+  Wird mit der Variante gespeichert und geladen (ältere Varianten: Originalfarben); Vergleich zeigt den Farbton,
+  Bilder/PDF automatisch. Gilt auch in „realistisch“.
+  **Klinker (Nachtrag 17.11., Farben aus einem Verblendklinker-Prospekt der Nutzerin abgelesen, etwas beruhigt):**
+  „Klinker rot“ und „Klinker anthrazit“ werden **ein Material „Klinker“**, die Farbe wählt man über die Vorschläge:
+  rot #92564b (Start, bisheriges Klinker rot), anthrazit #77726d (bisher, bleibt laut Nutzerin), hell weiß-bunt #d0c6ba,
+  braunviolett #5b4744, schwarz #45413d.
+  Ältere Varianten mit „Klinker anthrazit“ werden beim Laden zu Klinker + anthrazit.
+  **Zeichenstil bleibt:** nur die Grundfarbe wechselt, Fugen weiter dunkler gezeichnet, kein stärkerer „Bunt“-Effekt.
+  Nur beim Klinker wird zusammengelegt; die anderen Materialien behalten ihre Namen und bekommen eigene Vorschläge.
+  **Endgültige Vorschläge (17.11., Bilder der Nutzerin gemessen + von Claude ergänzt):**
+  Regel der Nutzerin: **Töne, die sich zu sehr ähneln, fallen raus.** Gestrichen deshalb: Klinker rot-bunt (≈ rot),
+  braun-bunt (≈ braunviolett), rot genarbt (≈ rot); Holz Lärche honig (≈ Lärche); Fassadenplatten schiefergrau (≈ anthrazit);
+  Sichtbeton kühlgrau (≈ hell); Glas neutral (≈ blaugrau); Ziegel naturrot (≈ rot); Stehfalz zinkgrau (≈ hellgrau).
+  - Holz: Lärche #bfa88b, vergraut #9c978d (beide bisher), hell rötlich #c9b19f, dunkelgrau #5f5c58 (aus Bildern),
+    Eiche geölt #8a7260, schwarz lasiert #3f3d3b. Muster bleibt senkrechte Bretter.
+  - Fassadenplatten: anthrazit #63676b, silbergrau #aaaeb0 (bisher), weiß #dcdbd6, bronze #7c6b58, cortenbraun #7a5444, olivgrau #6f7264.
+  - Sichtbeton: warmgrau #b3b0aa (bisher), hell #cfcec8 (aus Bild), sandfarben #c3b9a8, dunkel #8d8b87.
+  - Putz: altweiß #e2ddd3, sand #cfc2a6 (bisher), weiß #ecebe6, hellgrau #c9c8c3, ocker #c4a77c, terrakotta #b5846e,
+    salbei #a9ae9a, taubenblau #9fa8ad.
+  - Glas: blaugrau #8c9eab (bisher), grünlich #8fa39d, bronze #8f857a, dunkel #5f6b72.
+  - Dach: Ziegel zusätzlich braun #634c42, schwarz engobiert #3e3c3a; Stehfalz zusätzlich kupferbraun #7b5a48;
+    Schlicht zusätzlich mittelgrau #8f8d88, dunkel #5a5956. Gründach ohne weitere Töne.
 - **Sitzung 17b (erledigt, s. o.; Entscheidung 17.11., vor dem Bauen):** Dachmaterial wählbar.
   **Bedienung:** eine Zeile **„Dach“** im Bereich „3 Fassade“ (wie „Stützen“), ein Material für alle Dachteile
   (IfcRoof bzw. Decken mit Typ „Dach“); einzelne Dachflächen nicht.

@@ -5,18 +5,18 @@
 import * as THREE from 'three';
 import { flaeche } from './darstellung.js?v=19';
 
+// ton: Farbton, mit dem das Material startet (aus FARBTOENE, Sitzung 18).
+// Je Muster nur noch ein Material, die Farbe kommt aus den Farbtönen (Sitzung 18, Wunsch der Nutzerin):
+// Klinker (rot + anthrazit), Holzfassade (Lärche + vergraut), Putz (altweiß + sand), Fassadenplatten (anthrazit + silbergrau).
+// Die Kennungen der ersten Fassung bleiben, damit alte Varianten passen; die weggefallenen siehe ALTE_KENNUNGEN.
+// tonImmerNennen: der Ton gehört zum Namen dazu („Klinker · rot“), auch beim Startton.
 export const MATERIALIEN = [
-  { id: 'klinker-rot', name: 'Klinker rot', farbe: '#92564b', muster: 'klinker' },
-  { id: 'klinker-anthrazit', name: 'Klinker anthrazit', farbe: '#77726d', muster: 'klinker' },
-  // Lärche: übliches Fassadenholz (unbehandelt, warm-hell); Kennung bleibt 'holz-natur', damit alte Varianten passen
-  { id: 'holz-natur', name: 'Lärche', farbe: '#bfa88b', muster: 'holz' },
-  { id: 'holz-vergraut', name: 'Holz vergraut', farbe: '#9c978d', muster: 'holz' },
-  { id: 'sichtbeton', name: 'Sichtbeton', farbe: '#b3b0aa', muster: 'beton' },
-  { id: 'putz-altweiss', name: 'Putz altweiß', farbe: '#e2ddd3', muster: 'putz' },
-  { id: 'putz-sand', name: 'Putz sand', farbe: '#cfc2a6', muster: 'putz' },
-  { id: 'platten-anthrazit', name: 'Fassadenplatten anthrazit', farbe: '#63676b', muster: 'platten' },
-  { id: 'platten-silber', name: 'Fassadenplatten silbergrau', farbe: '#aaaeb0', muster: 'platten' },
-  { id: 'glas', name: 'Glas blaugrau', farbe: '#8c9eab', muster: 'glas' },
+  { id: 'klinker-rot', name: 'Klinker', farbe: '#92564b', muster: 'klinker', ton: 'rot', tonImmerNennen: true },
+  { id: 'holz-natur', name: 'Holzfassade', farbe: '#bfa88b', muster: 'holz', ton: 'laerche', tonImmerNennen: true },
+  { id: 'sichtbeton', name: 'Sichtbeton', farbe: '#b3b0aa', muster: 'beton', ton: 'warmgrau' },
+  { id: 'putz-altweiss', name: 'Putz', farbe: '#e2ddd3', muster: 'putz', ton: 'altweiss', tonImmerNennen: true },
+  { id: 'platten-anthrazit', name: 'Fassadenplatten', farbe: '#63676b', muster: 'platten', ton: 'anthrazit', tonImmerNennen: true },
+  { id: 'glas', name: 'Glas', farbe: '#8c9eab', muster: 'glas', ton: 'blaugrau', tonImmerNennen: true },
   // Wird als echte Glasfassade mit Pfosten und Riegeln gebaut (fassade.js); das Muster ist nur Vorschaubild
   // und Ersatz für Wände, die sich nicht nachbauen lassen. Nicht für Stützen.
   { id: 'pfosten-riegel', name: 'Pfosten-Riegel', farbe: '#8c9eab', muster: 'pfostenRiegel', pfostenRiegel: true },
@@ -34,16 +34,155 @@ export const START_MATERIAL = 'klinker-rot';
 // Stehfalz ↔ Fassadenplatten (kühles Grau), Schlicht hell ↔ Sichtbeton.
 // kante: schlichte Farbe der schmalen Dachkanten (Ortgang, Traufkante), wie ein Ortgangblech.
 export const DACHMATERIALIEN = [
-  { id: 'dach-hell', name: 'Schlicht hell', farbe: '#b4b1ab', kante: '#9b9893', muster: 'abdichtung' },
-  { id: 'ziegel-rot', name: 'Ziegel rot', farbe: '#7d4e45', kante: '#66423b', muster: 'ziegel' },
-  { id: 'ziegel-anthrazit', name: 'Ziegel anthrazit', farbe: '#58554f', kante: '#4a4843', muster: 'ziegel' },
-  { id: 'stehfalz-hell', name: 'Stehfalz hellgrau', farbe: '#969a9c', kante: '#85898b', muster: 'stehfalz' },
-  { id: 'stehfalz-anthrazit', name: 'Stehfalz anthrazit', farbe: '#4f5357', kante: '#44474b', muster: 'stehfalz' },
+  { id: 'dach-hell', name: 'Schlicht hell', farbe: '#b4b1ab', kante: '#9b9893', muster: 'abdichtung', ton: 'hell' },
+  { id: 'ziegel-rot', name: 'Ziegel rot', farbe: '#7d4e45', kante: '#66423b', muster: 'ziegel', ton: 'rot' },
+  { id: 'ziegel-anthrazit', name: 'Ziegel anthrazit', farbe: '#58554f', kante: '#4a4843', muster: 'ziegel', ton: 'anthrazit' },
+  { id: 'stehfalz-hell', name: 'Stehfalz hellgrau', farbe: '#969a9c', kante: '#85898b', muster: 'stehfalz', ton: 'hellgrau' },
+  { id: 'stehfalz-anthrazit', name: 'Stehfalz anthrazit', farbe: '#4f5357', kante: '#44474b', muster: 'stehfalz', ton: 'anthrazit' },
   { id: 'gruendach', name: 'Gründach', farbe: '#6c705f', kante: '#6b6d6b', muster: 'gruendach' },
 ];
 
 // Startwert: ruhiges Hellgrau, damit das Dach nicht heraussticht (Wunsch der Nutzerin)
 export const START_DACH = 'dach-hell';
+
+// ---------- Farbtöne (Sitzung 18) ----------
+// Je Muster wenige gedeckte Töne zum Anklicken. Ein Farbton gilt für das Material überall (alle Seiten,
+// einzelne Wände, Stützen). Klinker-, Holz-, Platten- und Betontöne teils aus Katalogbildern der Nutzerin
+// abgelesen und etwas beruhigt, die übrigen ergänzt. Töne, die sich zu sehr ähneln, sind gestrichen (Wunsch der Nutzerin).
+export const FARBTOENE = {
+  klinker: [
+    { id: 'rot', name: 'rot', farbe: '#92564b' },
+    { id: 'anthrazit', name: 'anthrazit', farbe: '#77726d' },
+    { id: 'weiss-bunt', name: 'hell weiß-bunt', farbe: '#d0c6ba' },
+    { id: 'braunviolett', name: 'braunviolett', farbe: '#5b4744' },
+    { id: 'schwarz', name: 'schwarz', farbe: '#45413d' },
+  ],
+  holz: [
+    { id: 'laerche', name: 'Lärche', farbe: '#bfa88b' },
+    { id: 'vergraut', name: 'vergraut', farbe: '#9c978d' },
+    { id: 'hell-roetlich', name: 'hell rötlich', farbe: '#c9b19f' },
+    { id: 'dunkelgrau', name: 'dunkelgrau', farbe: '#5f5c58' },
+    { id: 'eiche', name: 'Eiche geölt', farbe: '#8a7260' },
+    { id: 'schwarz', name: 'schwarz lasiert', farbe: '#3f3d3b' },
+  ],
+  beton: [
+    { id: 'warmgrau', name: 'warmgrau', farbe: '#b3b0aa' },
+    { id: 'hell', name: 'hell', farbe: '#cfcec8' },
+    { id: 'sand', name: 'sandfarben', farbe: '#c3b9a8' },
+    { id: 'dunkel', name: 'dunkel', farbe: '#8d8b87' },
+  ],
+  putz: [
+    { id: 'altweiss', name: 'altweiß', farbe: '#e2ddd3' },
+    { id: 'sand', name: 'sand', farbe: '#cfc2a6' },
+    { id: 'weiss', name: 'weiß', farbe: '#ecebe6' },
+    { id: 'hellgrau', name: 'hellgrau', farbe: '#c9c8c3' },
+    { id: 'ocker', name: 'ocker', farbe: '#c4a77c' },
+    { id: 'terrakotta', name: 'terrakotta', farbe: '#b5846e' },
+    { id: 'salbei', name: 'salbei', farbe: '#a9ae9a' },
+    { id: 'taubenblau', name: 'taubenblau', farbe: '#9fa8ad' },
+  ],
+  platten: [
+    { id: 'anthrazit', name: 'anthrazit', farbe: '#63676b' },
+    { id: 'silbergrau', name: 'silbergrau', farbe: '#aaaeb0' },
+    { id: 'weiss', name: 'weiß', farbe: '#dcdbd6' },
+    { id: 'bronze', name: 'bronze', farbe: '#7c6b58' },
+    { id: 'corten', name: 'cortenbraun', farbe: '#7a5444' },
+    { id: 'oliv', name: 'olivgrau', farbe: '#6f7264' },
+  ],
+  glas: [
+    { id: 'blaugrau', name: 'blaugrau', farbe: '#8c9eab' },
+    { id: 'gruenlich', name: 'grünlich', farbe: '#8fa39d' },
+    { id: 'bronze', name: 'bronze', farbe: '#8f857a' },
+    { id: 'dunkel', name: 'dunkel', farbe: '#5f6b72' },
+  ],
+  abdichtung: [
+    { id: 'hell', name: 'hell', farbe: '#b4b1ab' },
+    { id: 'mittelgrau', name: 'mittelgrau', farbe: '#8f8d88' },
+    { id: 'dunkel', name: 'dunkel', farbe: '#5a5956' },
+  ],
+  ziegel: [
+    { id: 'rot', name: 'rot', farbe: '#7d4e45' },
+    { id: 'anthrazit', name: 'anthrazit', farbe: '#58554f' },
+    { id: 'braun', name: 'braun', farbe: '#634c42' },
+    { id: 'schwarz', name: 'schwarz engobiert', farbe: '#3e3c3a' },
+  ],
+  stehfalz: [
+    { id: 'hellgrau', name: 'hellgrau', farbe: '#969a9c' },
+    { id: 'anthrazit', name: 'anthrazit', farbe: '#4f5357' },
+    { id: 'kupferbraun', name: 'kupferbraun', farbe: '#7b5a48' },
+  ],
+};
+
+// Kennungen, die es nicht mehr gibt: alte Kennung → [Material, Farbton]
+export const ALTE_KENNUNGEN = {
+  'klinker-anthrazit': ['klinker-rot', 'anthrazit'],
+  'holz-vergraut': ['holz-natur', 'vergraut'],
+  'putz-sand': ['putz-altweiss', 'sand'],
+  'platten-silber': ['platten-anthrazit', 'silbergrau'],
+};
+
+// Gewählter Farbton je Material (nur, wenn er vom Startton abweicht)
+const gewaehlteToene = new Map();
+
+// Die Farbtöne, die ein Material anbietet (leer: keine Auswahl, z. B. Gründach, Pfosten-Riegel)
+export function farbtoeneVon(id) {
+  return FARBTOENE[eintragZu(id).muster] ?? [];
+}
+
+// Farbton eines Materials. toene: gespeicherte Farbtöne einer Variante ({ Material: Farbton });
+// ohne toene gilt die aktuelle Wahl in der App.
+export function farbtonVon(id, toene) {
+  const eintrag = eintragZu(id);
+  const gesetzt = toene ? toene[eintrag.id] : gewaehlteToene.get(eintrag.id);
+  const tonID = gesetzt ?? ALTE_KENNUNGEN[id]?.[1] ?? eintrag.ton;
+  return farbtoeneVon(id).find((t) => t.id === tonID) ?? null;
+}
+
+function farbeVon(id, toene) {
+  return farbtonVon(id, toene)?.farbe ?? eintragZu(id).farbe;
+}
+
+// Farbe der schmalen Dachkanten: beim Startton die abgestimmte Kantenfarbe, sonst etwas dunkler als die Fläche
+function kantenfarbeVon(id) {
+  const eintrag = eintragZu(id);
+  const ton = farbtonVon(id);
+  if (eintrag.kante && (!ton || ton.id === eintrag.ton)) return eintrag.kante;
+  return abdunkeln(farbeVon(id), 0.86);
+}
+
+// Name fürs Anzeigen, z. B. „Klinker · anthrazit“, „Putz altweiß · ocker“ (beim Startton nur der Name)
+export function materialText(id, toene) {
+  const eintrag = eintragZu(id);
+  const ton = farbtonVon(id, toene);
+  if (!ton || (ton.id === eintrag.ton && !eintrag.tonImmerNennen)) return eintrag.name;
+  return `${eintrag.name} · ${ton.name}`;
+}
+
+// Farbton für ein Material wählen; die 3D-Materialien werden sofort umgefärbt (gleiche Objekte, neues Musterbild)
+export function farbtonSetzen(id, tonID) {
+  const eintrag = eintragZu(id);
+  if (!tonID || tonID === eintrag.ton) gewaehlteToene.delete(eintrag.id);
+  else gewaehlteToene.set(eintrag.id, tonID);
+  for (const material of materialien.values()) {
+    if (material.userData.materialID === eintrag.id) material.map = textur(eintrag.id);
+  }
+  kantenMaterialien.get(eintrag.id)?.color.set(kantenfarbeVon(eintrag.id));
+  for (const echt of echtMaterialien.get(eintrag.id) ?? []) {
+    const { map, bump } = echtTexturenVon(eintrag);
+    echt.map = map;
+    echt.bumpMap = bump;
+  }
+}
+
+// Alle Farbtöne als reine Daten (zum Speichern mit der Variante) und wieder übernehmen
+export function farbtoeneSammeln() {
+  return Object.fromEntries(gewaehlteToene);
+}
+export function farbtoeneUebernehmen(toene = {}) {
+  for (const m of [...MATERIALIEN, ...DACHMATERIALIEN]) {
+    if (m.ton) farbtonSetzen(m.id, toene[m.id] ?? m.ton);
+  }
+}
 
 // Jedes Muster: Größe einer Kachel in Metern (wiederholt sich lückenlos), Auflösung und Zeichenanweisung.
 // Die Zeichenanweisung bekommt einen Stift z, der in Metern rechnet (siehe stiftAnlegen).
@@ -553,48 +692,57 @@ function stiftAnlegen(g, muster, farbe, zufall, hg = null) {
 }
 
 // Bild einer Kachel zeichnen (gleiche Zufallszahlen bei jedem Öffnen, damit das Muster gleich bleibt)
-function kachelZeichnen(eintrag) {
+// Zufallszahlen hängen nur am Material, nicht an der Farbe: ein anderer Farbton hat dasselbe Fugenbild
+function kachelZeichnen(eintrag, farbe) {
   const muster = MUSTER[eintrag.muster];
   const leinwand = document.createElement('canvas');
   leinwand.width = Math.round(muster.breite * muster.pixelProMeter);
   leinwand.height = Math.round(muster.hoehe * muster.pixelProMeter);
   const g = leinwand.getContext('2d', { willReadFrequently: true });
-  muster.zeichnen(stiftAnlegen(g, muster, eintrag.farbe, zufallszahlen(eintrag.id)));
+  muster.zeichnen(stiftAnlegen(g, muster, farbe, zufallszahlen(eintrag.id)));
   return leinwand;
 }
 
 function eintragZu(id) {
+  id = ALTE_KENNUNGEN[id]?.[0] ?? id;
   return MATERIALIEN.find((m) => m.id === id) ?? DACHMATERIALIEN.find((m) => m.id === id) ?? MATERIALIEN[0];
 }
 
+// Kachel je Material und Farbe (bleibt im Speicher, damit Zurückschalten sofort geht)
 const kacheln = new Map();
-function kachel(id) {
-  if (!kacheln.has(id)) kacheln.set(id, kachelZeichnen(eintragZu(id)));
-  return kacheln.get(id);
+function kachel(id, farbe = farbeVon(id)) {
+  const eintrag = eintragZu(id);
+  const schluessel = `${eintrag.id}|${farbe}`;
+  if (!kacheln.has(schluessel)) kacheln.set(schluessel, kachelZeichnen(eintrag, farbe));
+  return kacheln.get(schluessel);
 }
 
 // Kleines Vorschaubild für die Seitenleiste: Ausschnitt von 0,8 × 0,8 m (Pfosten-Riegel größer, damit man das Raster sieht)
-export function musterBild(id) {
+// toene: Farbtöne einer gespeicherten Variante (Vergleich), sonst die aktuelle Wahl
+export function musterBild(id, toene) {
   const muster = MUSTER[eintragZu(id).muster];
   const px = muster.pixelProMeter, groesse = muster.vorschau ?? 0.8;
   const start = muster.vorschau ? 0.4 : 0; // Pfosten-Riegel: Profilkreuz in der Mitte des Bildes
   const bild = document.createElement('canvas');
   bild.width = bild.height = 52;
-  bild.getContext('2d').drawImage(kachel(id), start * px, start * px, groesse * px, groesse * px, 0, 0, 52, 52);
+  bild.getContext('2d').drawImage(kachel(id, farbeVon(id, toene)), start * px, start * px, groesse * px, groesse * px, 0, 0, 52, 52);
   return bild.toDataURL();
 }
 
-// Textur einmal je Material, normal und hervorgehoben teilen sie sich
+// Textur einmal je Material und Farbe, normal und hervorgehoben teilen sie sich
 const texturen = new Map();
 function textur(id) {
-  if (texturen.has(id)) return texturen.get(id);
-  const muster = MUSTER[eintragZu(id).muster];
-  const t = new THREE.CanvasTexture(kachel(id));
+  const eintrag = eintragZu(id);
+  const farbe = farbeVon(id);
+  const schluessel = `${eintrag.id}|${farbe}`;
+  if (texturen.has(schluessel)) return texturen.get(schluessel);
+  const muster = MUSTER[eintrag.muster];
+  const t = new THREE.CanvasTexture(kachel(id, farbe));
   t.colorSpace = THREE.SRGBColorSpace;
   t.wrapS = t.wrapT = THREE.RepeatWrapping;
   t.repeat.set(1 / muster.breite, 1 / muster.hoehe); // Texturkoordinaten sind in Metern
   t.anisotropy = 8; // Muster bleibt auch schräg gesehen scharf
-  texturen.set(id, t);
+  texturen.set(schluessel, t);
   return t;
 }
 
@@ -622,14 +770,14 @@ export function fassadenMaterial(id, hover = false) {
 const kantenMaterialien = new Map();
 export function dachKantenMaterial(id) {
   const eintrag = eintragZu(id);
-  if (!kantenMaterialien.has(eintrag.id)) kantenMaterialien.set(eintrag.id, flaeche(eintrag.kante ?? abdunkeln(eintrag.farbe, 0.85)));
+  if (!kantenMaterialien.has(eintrag.id)) kantenMaterialien.set(eintrag.id, flaeche(kantenfarbeVon(eintrag.id)));
   return kantenMaterialien.get(eintrag.id);
 }
 
 // ---------- „realistisch“: Texturen und 3D-Materialien ----------
 
 // Farb- und Reliefbild einer realistischen Kachel
-function echtKachelZeichnen(eintrag) {
+function echtKachelZeichnen(eintrag, farbe) {
   const muster = ECHT[eintrag.muster];
   const neu = () => {
     const l = document.createElement('canvas');
@@ -640,7 +788,7 @@ function echtKachelZeichnen(eintrag) {
   const farbbild = neu(), reliefbild = neu();
   const g = farbbild.getContext('2d', { willReadFrequently: true });
   const hg = reliefbild.getContext('2d');
-  muster.zeichnen(stiftAnlegen(g, muster, eintrag.farbe, zufallszahlen(eintrag.id + ':echt'), hg));
+  muster.zeichnen(stiftAnlegen(g, muster, farbe, zufallszahlen(eintrag.id + ':echt'), hg));
   return { farbbild, reliefbild };
 }
 
@@ -655,16 +803,25 @@ function alsTextur(bild, muster, farbig) {
 
 // 3D-Material „realistisch“ zum Fassadenmaterial `original` (aus fassadenMaterial()).
 // Hervorhebung beim Überfahren/Auswählen (Tönung, Schimmer) wird übernommen.
+// Texturen je Material und Farbe
 const echtTexturen = new Map();
+function echtTexturenVon(eintrag) {
+  const muster = ECHT[eintrag.muster];
+  const farbe = farbeVon(eintrag.id);
+  const schluessel = `${eintrag.id}|${farbe}`;
+  if (!echtTexturen.has(schluessel)) {
+    const { farbbild, reliefbild } = echtKachelZeichnen(eintrag, farbe);
+    echtTexturen.set(schluessel, { map: alsTextur(farbbild, muster, true), bump: alsTextur(reliefbild, muster, false) });
+  }
+  return echtTexturen.get(schluessel);
+}
+// angelegte „realistische“ Materialien je Material, damit ein neuer Farbton sie umfärben kann
+const echtMaterialien = new Map();
 export function realistischesFassadenMaterial(original) {
   const eintrag = eintragZu(original.userData.materialID);
   const muster = ECHT[eintrag.muster];
-  if (!echtTexturen.has(eintrag.id)) {
-    const { farbbild, reliefbild } = echtKachelZeichnen(eintrag);
-    echtTexturen.set(eintrag.id, { map: alsTextur(farbbild, muster, true), bump: alsTextur(reliefbild, muster, false) });
-  }
-  const { map, bump } = echtTexturen.get(eintrag.id);
-  return new THREE.MeshStandardMaterial({
+  const { map, bump } = echtTexturenVon(eintrag);
+  const echt = new THREE.MeshStandardMaterial({
     map,
     bumpMap: bump,
     bumpScale: muster.relief ?? (muster.glas ? 0.3 : 1.5),
@@ -676,6 +833,9 @@ export function realistischesFassadenMaterial(original) {
     emissiveIntensity: original.emissiveIntensity,
     side: original.side,
   });
+  if (!echtMaterialien.has(eintrag.id)) echtMaterialien.set(eintrag.id, new Set());
+  echtMaterialien.get(eintrag.id).add(echt);
+  return echt;
 }
 
 // ---------- Hilfen für Farben und Zufall ----------

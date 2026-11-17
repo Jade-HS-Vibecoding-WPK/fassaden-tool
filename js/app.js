@@ -1,8 +1,11 @@
 // Bedienoberfläche: Datei wählen oder hineinziehen, Modell anzeigen, Fassade gestalten
-import { Szene } from './szene.js?v=19e';
+import { Szene } from './szene.js?v=20b';
 import { ifcLaden } from './ifc.js?v=19';
-import { aussenwaendeErkennen, wandFaerben, oeffnungenZuordnen, fensterAnpassen, stuetzenVorbereiten, stuetzeFaerben, dachVorbereiten, dachFaerben, kennwerteBerechnen, hauptrichtungBestimmen, fensterFaerben, anbauteileZuordnen } from './fassade.js?v=19e';
-import { MATERIALIEN, DACHMATERIALIEN, START_MATERIAL, START_DACH, PFOSTEN_RIEGEL, musterBild } from './materialien.js?v=19e';
+import { aussenwaendeErkennen, wandFaerben, oeffnungenZuordnen, fensterAnpassen, stuetzenVorbereiten, stuetzeFaerben, dachVorbereiten, dachFaerben, kennwerteBerechnen, hauptrichtungBestimmen, fensterFaerben, anbauteileZuordnen } from './fassade.js?v=20b';
+import {
+  MATERIALIEN, DACHMATERIALIEN, START_MATERIAL, START_DACH, PFOSTEN_RIEGEL, ALTE_KENNUNGEN, musterBild,
+  farbtoeneVon, farbtonVon, farbtonSetzen, farbtoeneSammeln, farbtoeneUebernehmen, materialText,
+} from './materialien.js?v=20b';
 import { variantenLesen, varianteSpeichern, varianteLoeschen } from './varianten.js';
 import { pdfErstellen, pdfDateiname } from './pdf.js?v=11';
 
@@ -129,6 +132,67 @@ function fensterAktualisieren() {
   fensterAnzeigen();
   fensterEinzelwahlAnzeigen();
   kennwerteAnzeigen();
+  farbtoeneAnzeigen();
+}
+
+// ---------- Farbtöne (Sitzung 18): je benutztem Material eine Zeile mit Farbpunkten ----------
+// Ein Farbton gilt für das Material überall (alle Seiten, einzelne Wände, Stützen), deshalb steht
+// jedes Material nur einmal da, egal wie oft es vorkommt.
+function benutzteMaterialien() {
+  const ids = new Set(Object.values(geltendeMaterialien()));
+  for (const id of materialJeWand.values()) ids.add(id);
+  if (stuetzen.length > 0) ids.add(materialStuetzen);
+  const reihenfolge = MATERIALIEN.map((m) => m.id).filter((id) => ids.has(id));
+  if (dachteile.length > 0) reihenfolge.push(materialDach);
+  return reihenfolge.filter((id) => farbtoeneVon(id).length > 0);
+}
+
+// Wahrgenommene Helligkeit einer Farbe wie „#92564b“ (0 = schwarz … 255 = weiß)
+function helligkeit(hex) {
+  const zahl = parseInt(hex.slice(1), 16);
+  return 0.299 * ((zahl >> 16) & 255) + 0.587 * ((zahl >> 8) & 255) + 0.114 * (zahl & 255);
+}
+
+function farbtoeneAnzeigen() {
+  const block = $('farbtoene');
+  if (block.contains(document.activeElement)) block.dataset.fokus = document.activeElement.dataset.schluessel ?? '';
+  block.replaceChildren(textElement('h3', 'Farbtöne'));
+  const ids = waende.length ? benutzteMaterialien() : [];
+  block.hidden = ids.length === 0;
+  for (const id of ids) {
+    const ton = farbtonVon(id);
+    const zeile = document.createElement('div');
+    zeile.className = 'farbtonzeile';
+    const titel = textElement('span', DACHMATERIALIEN.some((m) => m.id === id) ? `Dach: ${materialName(id)}` : materialName(id));
+    titel.append(textElement('small', ton.name));
+    const punkte = document.createElement('div');
+    punkte.className = 'farbpunkte';
+    // Punkte nach Helligkeit sortiert, hell links → dunkel rechts (Wunsch der Nutzerin)
+    for (const t of [...farbtoeneVon(id)].sort((a, b) => helligkeit(b.farbe) - helligkeit(a.farbe))) {
+      const punkt = document.createElement('button');
+      punkt.type = 'button';
+      punkt.className = 'farbpunkt';
+      punkt.style.background = t.farbe;
+      punkt.title = t.name;
+      punkt.dataset.schluessel = `${id}|${t.id}`;
+      punkt.setAttribute('aria-label', `${materialName(id)}: ${t.name}`);
+      punkt.setAttribute('aria-pressed', String(t.id === ton.id));
+      punkt.addEventListener('click', () => {
+        farbtonSetzen(id, t.id);
+        for (const { anzeigen } of Object.values(materialZeilen)) anzeigen(); // Musterbilder neu
+        einzelwahlAnzeigen();
+        farbtoeneAnzeigen();
+      });
+      punkte.append(punkt);
+    }
+    zeile.append(titel, punkte);
+    block.append(zeile);
+  }
+  // Tastatur: nach dem Neuzeichnen bleibt der Fokus auf demselben Punkt
+  if (block.dataset.fokus) {
+    block.querySelector(`[data-schluessel="${CSS.escape(block.dataset.fokus)}"]`)?.focus();
+    delete block.dataset.fokus;
+  }
 }
 
 // Tabelle „Kennwerte“: Fassadenfläche, Fensterfläche und Fensterflächenanteil je Seite und gesamt
@@ -673,7 +737,32 @@ function einstellungenSammeln() {
     massJeFenster: [...massJeFenster],
     // Pfosten-Riegel: Felder je Seite, für „Alle“ und für einzelne Wände [Wand-Nummer, { breit, hoch }]
     felderJeRichtung, felderAlle, felderJeWand: [...felderJeWand],
+    // Farbtöne je Material (nur die, die vom Startton abweichen), Sitzung 18
+    farbtoene: farbtoeneSammeln(),
   });
+}
+
+// Ältere Varianten: „Klinker anthrazit“, „Holz vergraut“, „Putz sand“, „Fassadenplatten silbergrau“ gibt es nicht mehr
+// als eigene Materialien (Sitzung 18).
+// Sie werden zum zusammengelegten Material mit dem passenden Farbton (z. B. Klinker + anthrazit;
+// der Ton gilt dann für das ganze Material der Variante).
+function alteKennungenUmstellen(e) {
+  const toene = { ...(e.farbtoene ?? {}) };
+  const neu = (id) => {
+    const alt = ALTE_KENNUNGEN[id];
+    if (!alt) return id;
+    toene[alt[0]] ??= alt[1];
+    return alt[0];
+  };
+  const richtungen = Object.fromEntries(Object.entries(e.materialJeRichtung).map(([r, id]) => [r, neu(id)]));
+  return {
+    ...e,
+    materialJeRichtung: richtungen,
+    materialAlle: e.materialAlle && neu(e.materialAlle),
+    materialStuetzen: neu(e.materialStuetzen),
+    materialJeWand: (e.materialJeWand ?? []).map(([w, id]) => [w, neu(id)]),
+    farbtoene: toene,
+  };
 }
 
 $('varianteSpeichern').addEventListener('click', async () => {
@@ -709,7 +798,8 @@ $('varianteSpeichern').addEventListener('click', async () => {
 
 // Gespeicherte Einstellungen wieder in die Bedienung und ins 3D-Modell übernehmen
 function varianteLaden(variante) {
-  const e = variante.einstellungen;
+  const e = alteKennungenUmstellen(variante.einstellungen);
+  farbtoeneUebernehmen(e.farbtoene); // ältere Varianten: Starttöne
   Object.assign(materialJeRichtung, e.materialJeRichtung);
   materialStuetzen = e.materialStuetzen;
   materialDach = e.materialDach ?? START_DACH; // ältere Varianten: schlicht hell
@@ -881,7 +971,13 @@ $('vergleichPdf').addEventListener('click', () => pdfSpeichern($('vergleichPdf')
 
 // ---------- Variantenvergleich: eine Spalte je Variante, gleiche Zeilen auf gleicher Höhe ----------
 
-const materialName = (id) => [...MATERIALIEN, ...DACHMATERIALIEN].find((m) => m.id === id)?.name ?? id;
+// Name des Materials ohne Farbton (alte Kennungen wie „klinker-anthrazit“ → „Klinker“)
+function materialName(id) {
+  const echteID = ALTE_KENNUNGEN[id]?.[0] ?? id;
+  return [...MATERIALIEN, ...DACHMATERIALIEN].find((m) => m.id === echteID)?.name ?? id;
+}
+// Gespeicherte Farbtöne einer Variante (ältere Varianten: keine = Starttöne)
+const toeneVon = (v) => v.einstellungen.farbtoene ?? {};
 const anteilText = ({ fassade, fenster }) => (fassade > 0 ? `${Math.round((fenster / fassade) * 100)} %` : '–');
 let vergleichAdressen = []; // Bildadressen des Vergleichs, werden beim Schließen freigegeben
 
@@ -966,20 +1062,21 @@ function vergleichOeffnen() {
     const e = v.einstellungen;
     return (e.materialAlleGleich ? e.felderAlle ?? e.felderJeRichtung?.N : e.felderJeRichtung?.[richtung]) ?? START_FELDER;
   };
-  const materialFeld = (id, felder = null) => {
+  // Musterbild und Name im Farbton der Variante (z. B. „Klinker · anthrazit“)
+  const materialFeld = (v, id, felder = null) => {
     const muster = document.createElement('span');
     muster.className = 'muster';
-    muster.style.backgroundImage = `url(${musterBild(id)})`;
-    const text = id === PFOSTEN_RIEGEL && felder ? `${materialName(id)} ${felder.breit} × ${felder.hoch} Felder` : materialName(id);
+    muster.style.backgroundImage = `url(${musterBild(id, toeneVon(v))})`;
+    const text = id === PFOSTEN_RIEGEL && felder ? `${materialName(id)} ${felder.breit} × ${felder.hoch} Felder` : materialText(id, toeneVon(v));
     return [muster, textElement('span', text)];
   };
 
   zwischentitel('Fassade');
   for (const [richtung, name] of Object.entries(RICHTUNGSNAMEN)) {
-    zeile(name, (v) => materialFeld(materialVon(v, richtung), felderVon(v, richtung)), 'material');
+    zeile(name, (v) => materialFeld(v, materialVon(v, richtung), felderVon(v, richtung)), 'material');
   }
-  if (stuetzen.length > 0) zeile('Stützen', (v) => materialFeld(v.einstellungen.materialStuetzen), 'material');
-  if (dachteile.length > 0) zeile('Dach', (v) => materialFeld(v.einstellungen.materialDach ?? START_DACH), 'material');
+  if (stuetzen.length > 0) zeile('Stützen', (v) => materialFeld(v, v.einstellungen.materialStuetzen), 'material');
+  if (dachteile.length > 0) zeile('Dach', (v) => materialFeld(v, v.einstellungen.materialDach ?? START_DACH), 'material');
   // Einzelne Wände mit eigenem Material: Anzahl je Material (nur, wenn eine der Varianten welche hat)
   if (varianten.some((v) => v.einstellungen.materialJeWand?.length)) {
     zeile('Einzelne Wände', (v) => {
@@ -989,7 +1086,7 @@ function vergleichOeffnen() {
       }
       if (anzahlJeMaterial.size === 0) return textElement('span', '–');
       return [...anzahlJeMaterial].map(([material, anzahl]) =>
-        textElement('span', `${wandText(anzahl)} ${materialName(material)}`));
+        textElement('span', `${wandText(anzahl)} ${materialText(material, toeneVon(v))}`));
     }, 'einzeln');
   }
 

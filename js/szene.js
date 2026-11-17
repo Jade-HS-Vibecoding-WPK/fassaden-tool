@@ -1,7 +1,7 @@
 // 3D-Szene: Bühne, Kamera, Licht und Maussteuerung
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { realistischesMaterial, himmelHintergrund, himmelUmgebung } from './realistisch.js?v=19e';
+import { realistischesMaterial, himmelHintergrund, himmelUmgebung } from './realistisch.js?v=20b';
 
 // Ist das Teil zu sehen? (es selbst und alle, zu denen es gehört)
 function istSichtbar(teil) {
