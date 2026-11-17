@@ -1,47 +1,155 @@
 /* Farben und Schrift an einer Stelle – hier lässt sich das Aussehen schnell ändern */
+
+/* Schrift Artifakt Element (Autodesk, kommt mit Revit): wird nur benutzt, wenn sie auf dem Rechner installiert ist.
+   Die Schriftdatei liegt bewusst nicht im Projekt (Lizenz Autodesk); ohne sie erscheint Helvetica/Arial. */
+@font-face { font-family: "Artifakt"; font-weight: 300; src: local("Artifakt Element Light"), local("ArtifaktElement-Light"); }
+@font-face { font-family: "Artifakt"; font-weight: 400; src: local("Artifakt Element"), local("Artifakt Element Regular"), local("ArtifaktElement-Regular"); }
+@font-face { font-family: "Artifakt"; font-weight: 600; src: local("Artifakt Element Medium"), local("ArtifaktElement-Medium"); }
+@font-face { font-family: "Artifakt"; font-weight: 700; src: local("Artifakt Element Bold"), local("ArtifaktElement-Bold"); }
+@font-face { font-family: "Artifakt"; font-weight: 800; src: local("Artifakt Element Heavy"), local("ArtifaktElement-Heavy"); }
+
+/* Grundfarben für helle Flächen (3D-Fenster, Anleitung, Vergleich): dunkelgraue Schrift, nie ganz schwarz */
 :root {
-  --text: #111111;
-  --leise: #6b6b6b;
-  --linie: #e2e2e2;
+  --text: #2c3445;
+  --leise: #6b7180;
+  --linie: #e2e3e8;
   --flaeche: #ffffff;
-  --akzent: #1f3a68;        /* Dunkelblau, die einzige Akzentfarbe */
+  --akzent: #1f3a68;        /* Dunkelblau, die einzige Akzentfarbe (Hauptbutton) */
   --akzent-hell: #e8edf5;
-  font-family: "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif;
+  --akzent-text: #1f3a68;   /* Akzent für Text und Linien: auf Glas heller, s. .glas */
+  --regler: #1f3a68;        /* Kästchen und Regler */
+  --feld: #ffffff;          /* Eingabefelder und Auswahllisten */
+  --feld-rand: var(--linie);
+  --feld-rand-aktiv: var(--text);
+  --ring: #ffffff;          /* Ring um gewählte Farbpunkte */
+  --schrift: "Artifakt", "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif;
+  font-family: var(--schrift);
   color: var(--text);
+}
+
+/* Auf Glas (Kopfleiste, Seitenleiste): fast weiße Schrift, helle Linien, helleres Blau */
+.glas {
+  --text: #eef2f8;
+  --leise: rgba(238, 242, 248, .62);
+  --linie: rgba(255, 255, 255, .14);
+  --akzent-text: #a9c3ee;
+  --regler: #8fb0e8;
+  --feld: rgba(255, 255, 255, .07);
+  --feld-rand: rgba(255, 255, 255, .2);
+  --feld-rand-aktiv: rgba(255, 255, 255, .55);
+  --ring: rgba(20, 26, 50, .9);
+  color: var(--text);
+  color-scheme: dark; /* Datum, Zahlenfelder, Bildlauf passend dunkel */
 }
 
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
-html, body { margin: 0; height: 100%; background: var(--flaeche); }
+html, body { margin: 0; height: 100%; }
+body { background: #13203f; font-weight: 400; overflow: hidden; }
 
-.app { display: grid; grid-template-columns: 320px 1fr; height: 100vh; }
+/* ---------- Hintergrund: dunkler Verlauf + weiche Farbflecken ---------- */
+.hintergrund {
+  position: fixed; inset: 0; z-index: -1; overflow: hidden;
+  background: linear-gradient(135deg, #13203f 0%, #241a46 50%, #0f3a33 100%);
+}
+.hintergrund i { position: absolute; border-radius: 50%; filter: blur(90px); opacity: .75; }
+.hintergrund i:nth-child(1) { width: 52vw; height: 52vw; left: -14vw; top: -18vw; background: #2f5fa8; }  /* Blau oben links */
+.hintergrund i:nth-child(2) { width: 44vw; height: 44vw; right: -12vw; top: -16vw; background: #6a3f9e; } /* Violett oben rechts */
+.hintergrund i:nth-child(3) { width: 48vw; height: 48vw; right: -14vw; bottom: -20vw; background: #12807a; } /* Petrol unten rechts */
+.hintergrund i:nth-child(4) { width: 44vw; height: 44vw; left: -14vw; bottom: -20vw; background: #1c5c39; }  /* dunkles Grün unten links */
+.hintergrund i:nth-child(5) { width: 30vw; height: 30vw; left: 35vw; top: 35vh; background: #1d6b52; opacity: .35; } /* Grünschimmer Mitte */
 
-/* ---------- Seitenleiste ---------- */
+/* ---------- Glas: sehr durchsichtig, Lichtreflex oben links, helle Oberkante ---------- */
+.glas {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, .20) 0%, rgba(255, 255, 255, .06) 38%, rgba(255, 255, 255, .03) 100%);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, .16);
+  border-top-color: rgba(255, 255, 255, .38);
+  border-radius: 22px;
+  box-shadow: 0 18px 40px rgba(5, 8, 25, .35), inset 0 1px 0 rgba(255, 255, 255, .12);
+}
+
+/* Aufbau: oben die Kopfleiste, darunter links die Seitenleiste und rechts das große 3D-Fenster */
+.app {
+  display: grid; grid-template-columns: 300px minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr);
+  gap: 14px; height: 100vh; padding: 14px;
+}
+
+/* ---------- Kopfleiste ---------- */
+.kopfleiste {
+  grid-column: 1 / -1; display: flex; align-items: center; gap: 22px;
+  padding: 10px 12px 10px 22px; border-radius: 22px; min-width: 0;
+}
+.marke { display: flex; align-items: baseline; gap: 14px; min-width: 0; flex: 0 1 auto; }
+.marke h1 { margin: 0; font-size: 19px; font-weight: 800; letter-spacing: -0.01em; white-space: nowrap; }
+.dateiname {
+  font-size: 12px; color: var(--leise); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px;
+}
+/* Schritte als Pillen; passen sie nicht hinein, lassen sie sich seitlich schieben (dünne Glas-Schiebeleiste) */
+.schrittleiste {
+  display: flex; gap: 4px; flex: 1 1 auto; min-width: 0; overflow-x: auto; justify-content: center;
+  padding: 4px; scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, .3) transparent;
+}
+.schrittleiste::-webkit-scrollbar { height: 5px; }
+.schrittleiste::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, .3); border-radius: 3px; }
+.schrittleiste button {
+  font: inherit; font-size: 14px; color: var(--leise); white-space: nowrap;
+  background: none; border: 1px solid transparent; border-radius: 999px; padding: 7px 18px; cursor: pointer;
+  transition: background .2s, color .2s;
+}
+.schrittleiste button:hover:not(:disabled) { color: var(--text); background: rgba(255, 255, 255, .08); }
+.schrittleiste button[aria-current="step"] {
+  color: #fff; background: rgba(255, 255, 255, .22); border-color: rgba(255, 255, 255, .35);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .25);
+}
+.schrittleiste button:disabled { opacity: .35; cursor: default; }
+.kopf-rechts { display: flex; align-items: center; gap: 16px; flex: none; }
+.kopf-rechts .textknopf { margin: 0; }
+
+/* Meldung zu den Varianten: kleine Glas-Pille unter dem Hauptbutton, verschwindet von selbst */
+.meldung {
+  position: fixed; left: calc(50% + 157px); top: 84px; transform: translateX(-50%); z-index: 5; margin: 0; max-width: 420px;
+  font-size: 13px; color: var(--text); background: rgba(255, 255, 255, .92);
+  padding: 8px 14px; border-radius: 14px; box-shadow: 0 8px 24px rgba(5, 8, 25, .3);
+}
+.meldung:empty { display: none; }
+.meldung.fehler { color: #a11d1d; }
+
+/* ---------- Seitenleiste: nur der aktuelle Schritt ---------- */
 .seitenleiste {
-  border-right: 1px solid var(--linie);
-  overflow-y: auto;
-  padding: 32px 28px 40px;
+  /* deckender als die Kopfleiste und farblich neutral, damit Materialfarben und Vorschaubilder echt wirken */
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, .14) 0%, rgba(255, 255, 255, .04) 38%, rgba(255, 255, 255, 0) 100%),
+    rgba(24, 27, 40, .72);
+  display: flex; flex-direction: column; min-height: 0;
+  overflow-y: auto; padding: 22px 22px 0;
+  scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, .28) transparent;
 }
-header h1 { font-size: 22px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.01em; }
-header p { margin: 0; color: var(--leise); font-size: 13px; }
+.seitenleiste::-webkit-scrollbar { width: 6px; }
+.seitenleiste::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, .28); border-radius: 3px; }
+/* Schritt umschalten: Bereiche anderer Schritte ausblenden */
+.seitenleiste[data-schritt="aussenwaende"] section:not([data-schritt="aussenwaende"]),
+.seitenleiste[data-schritt="fassade"] section:not([data-schritt="fassade"]),
+.seitenleiste[data-schritt="fenster"] section:not([data-schritt="fenster"]),
+.seitenleiste[data-schritt="varianten"] section:not([data-schritt="varianten"]) { display: none; }
+section { padding-bottom: 22px; }
 
-section { border-top: 1px solid var(--linie); margin-top: 28px; padding-top: 18px; }
-h2 {
-  font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em;
-  margin: 0 0 14px; display: flex; gap: 10px; align-items: center;
-}
-h2 span { color: var(--akzent); }
+h2 { font-size: 22px; font-weight: 800; margin: 0 0 18px; letter-spacing: -0.01em; }
+h2.zweiter { font-size: 15px; margin: 26px 0 8px; padding-top: 18px; border-top: 1px solid var(--linie); }
 
 .knopf {
   font: inherit; font-size: 13px;
-  border: 1px solid var(--text); background: #fff; color: var(--text);
-  padding: 9px 14px; cursor: pointer;
+  border: 1px solid var(--feld-rand-aktiv); background: var(--feld); color: var(--text);
+  padding: 9px 16px; border-radius: 999px; cursor: pointer;
   display: inline-flex; align-items: center; justify-content: center; white-space: nowrap;
 }
-.knopf:hover { background: var(--akzent-hell); }
+.knopf:hover { background: rgba(255, 255, 255, .16); }
+.anleitung .knopf:hover, .vergleich .knopf:hover { background: var(--akzent-hell); }
 
 .textknopf {
-  font: inherit; font-size: 12px; color: var(--akzent);
+  font: inherit; font-size: 12px; color: var(--akzent-text);
   background: none; border: none; padding: 0; margin-top: 12px;
   cursor: pointer; text-decoration: underline; text-underline-offset: 3px;
 }
@@ -49,7 +157,15 @@ h2 span { color: var(--akzent); }
 
 /* Schalter „Alle Seiten gleich“ */
 .schalter { display: flex; gap: 8px; align-items: center; font-size: 13px; margin-bottom: 14px; cursor: pointer; }
-.schalter input { margin: 0; width: 15px; height: 15px; accent-color: var(--akzent); cursor: pointer; }
+.schalter input { margin: 0; width: 15px; height: 15px; accent-color: var(--regler); cursor: pointer; }
+
+/* Auswahllisten und Eingabefelder: auf Glas halbdurchsichtig mit hellem Rand */
+select, .eingabe {
+  font: inherit; font-size: 13px; color: var(--text);
+  background: var(--feld); border: 1px solid var(--feld-rand); border-radius: 10px;
+}
+select:hover, select:focus, .eingabe:hover, .eingabe:focus { border-color: var(--feld-rand-aktiv); outline: none; }
+.glas option { background: #232a4a; color: #eef2f8; }
 
 /* Materialwahl: eine Zeile je Himmelsrichtung */
 .materialwahl { display: grid; gap: 10px; }
@@ -59,12 +175,7 @@ h2 span { color: var(--akzent); }
 /* Dach direkt unter den Stützen: keine zweite Trennlinie */
 .materialwahl > div:has(.stuetzen):not([hidden]) + div > .materialzeile.dach { padding-top: 0; border-top: none; }
 .materialzeile small { display: block; font-size: 11px; color: var(--leise); }
-.materialzeile select {
-  font: inherit; font-size: 13px; color: var(--text);
-  border: 1px solid var(--linie); border-radius: 0; background: #fff;
-  padding: 6px 8px; min-width: 0; cursor: pointer;
-}
-.materialzeile select:hover, .materialzeile select:focus { border-color: var(--text); outline: none; }
+.materialzeile select { padding: 6px 8px; min-width: 0; cursor: pointer; }
 /* Schalter „Einzelne Wände“: eigener Block unter der Materialwahl */
 .einzelne { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--linie); }
 .einzelne .schalter { margin-bottom: 10px; }
@@ -75,21 +186,33 @@ h2 span { color: var(--akzent); }
 .felderzeile label { display: flex; gap: 6px; align-items: center; }
 .felderzeile .eingabe { width: 54px; margin: 0; padding: 5px 6px; font-variant-numeric: tabular-nums; }
 .felderzeile .eingabe::placeholder { font-size: 11px; }
-.muster { width: 26px; height: 26px; border: 1px solid var(--linie); background-size: cover; background-position: center; }
+.muster {
+  width: 26px; height: 26px; border: 1px solid var(--feld-rand); border-radius: 6px;
+  background-size: cover; background-position: center;
+}
 
 /* Farbtöne (Sitzung 18): je benutztem Material eine Zeile mit kleinen Farbpunkten */
-.farbtoene { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--linie); display: grid; gap: 8px; }
+/* eigene deckende, neutral graue Unterlage (Wunsch der Nutzerin): Farbtöne wirken echt, nichts scheint durch.
+   Glas-Anklang nur noch über hellen Rand, Lichtreflex oben und weichen Schatten. */
+.farbtoene {
+  --ring: #43464d;
+  margin-top: 14px; padding: 10px 12px; display: grid; gap: 8px;
+  background: linear-gradient(135deg, #4d5058, #43464d 45%);
+  border: 1px solid rgba(255, 255, 255, .14); border-top-color: rgba(255, 255, 255, .3); border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(5, 8, 25, .3), inset 0 1px 0 rgba(255, 255, 255, .08);
+}
+.farbtoene .farbpunkt { border-color: rgba(255, 255, 255, .25); }
 .farbtoene h3 { margin: 0; font-size: 11px; font-weight: 400; color: var(--leise); }
 .farbtonzeile { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; font-size: 12px; }
 .farbtonzeile small { display: block; font-size: 11px; color: var(--leise); }
 .farbpunkte { display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; }
 .farbpunkt {
   width: 16px; height: 16px; padding: 0; border-radius: 50%; cursor: pointer;
-  border: 1px solid rgba(0, 0, 0, .18);
+  border: 1px solid rgba(255, 255, 255, .3);
 }
-.farbpunkt:hover { box-shadow: 0 0 0 2px #fff, 0 0 0 3px var(--leise); }
-.farbpunkt[aria-pressed="true"] { box-shadow: 0 0 0 2px #fff, 0 0 0 3px #1f3a68; }
-.farbpunkt:focus-visible { outline: 2px solid #1f3a68; outline-offset: 3px; }
+.farbpunkt:hover { box-shadow: 0 0 0 2px var(--ring), 0 0 0 3px var(--leise); }
+.farbpunkt[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--ring), 0 0 0 3.5px #fff; }
+.farbpunkt:focus-visible { outline: 2px solid var(--akzent-text); outline-offset: 3px; }
 
 /* Fenstergröße: je Himmelsrichtung zwei Regler */
 .fensterwahl { display: grid; gap: 12px; }
@@ -97,7 +220,7 @@ h2 span { color: var(--akzent); }
 .fensterzeile small { display: block; font-size: 11px; color: var(--leise); }
 .fensterzeile .regler { display: grid; gap: 2px; }
 .fensterzeile label { display: grid; grid-template-columns: 42px 1fr 40px; gap: 8px; align-items: center; font-size: 12px; }
-.fensterzeile input[type=range] { width: 100%; min-width: 0; margin: 0; accent-color: var(--akzent); cursor: pointer; }
+.fensterzeile input[type=range] { width: 100%; min-width: 0; margin: 0; accent-color: var(--regler); cursor: pointer; }
 .fensterzeile output { text-align: right; font-variant-numeric: tabular-nums; }
 /* Seite mit Pfosten-Riegel: Regler grau, nicht bedienbar */
 .fensterzeile.gesperrt .regler { opacity: .35; }
@@ -109,45 +232,49 @@ h2 span { color: var(--akzent); }
 .einzelne .hinweis#fensterEinzelGrenze { margin: 8px 0 0; }
 
 /* Perspektive: Blickrichtung und Blickhöhe */
-.blickwahl { display: grid; gap: 6px; margin-bottom: 14px; }
+.blickwahl { display: grid; gap: 6px; margin-bottom: 18px; }
 .blickwahl label { display: grid; grid-template-columns: 76px 1fr 40px; gap: 8px; align-items: center; font-size: 13px; }
-.blickwahl select {
-  grid-column: 2 / 4;
-  font: inherit; font-size: 13px; color: var(--text);
-  border: 1px solid var(--linie); border-radius: 0; background: #fff;
-  padding: 6px 8px; min-width: 0; cursor: pointer;
-}
-.blickwahl select:hover, .blickwahl select:focus { border-color: var(--text); outline: none; }
-.blickwahl input[type=range] { width: 100%; min-width: 0; margin: 0; accent-color: var(--akzent); cursor: pointer; }
+.blickwahl select { grid-column: 2 / 4; padding: 6px 8px; min-width: 0; cursor: pointer; }
+.blickwahl input[type=range] { width: 100%; min-width: 0; margin: 0; accent-color: var(--regler); cursor: pointer; }
 .blickwahl output { text-align: right; font-variant-numeric: tabular-nums; }
+.namenszeile { display: grid; gap: 6px; font-size: 13px; }
+.namenszeile .eingabe { margin: 0; }
+.namenszeile + .hinweis { margin: 6px 0 0; }
 
-/* Kennwerte: kleine Tabelle, Zahlen rechtsbündig */
-.kennwerte { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
-.kennwerte th { font-size: 11px; font-weight: 400; color: var(--leise); text-align: right; padding: 0 0 6px; }
-.kennwerte td { text-align: right; padding: 4px 0; border-top: 1px solid var(--linie); }
-.kennwerte td:first-child { text-align: left; }
-.kennwerte tr.gesamt td { font-weight: 600; border-top-color: var(--text); }
-
-/* Varianten: Name, Hauptbutton, Liste mit Vorschaubild */
-.eingabe {
-  font: inherit; font-size: 13px; color: var(--text); width: 100%;
-  border: 1px solid var(--linie); border-radius: 0; padding: 8px 10px; margin-bottom: 8px;
+/* Kennwerte: eine kleine Zeile unten in der Seitenleiste, Tabelle aufklappbar */
+/* Nicht festklebend: steht ganz unten nach dem Inhalt und schiebt nichts zu (Wunsch der Nutzerin, liegt nicht über dem Arbeitsbereich) */
+.kennzeile { margin: auto 0 0; padding: 12px 0 14px; border-top: 1px solid var(--linie); }
+.kennzeile summary {
+  list-style: none; cursor: pointer; user-select: none;
+  font-size: 11.5px; color: var(--leise); font-variant-numeric: tabular-nums;
 }
-.eingabe:hover, .eingabe:focus { border-color: var(--text); outline: none; }
-.knopf.haupt { width: 100%; background: var(--akzent); border-color: var(--akzent); color: #fff; }
+.kennzeile summary::-webkit-details-marker { display: none; }
+.kennzeile summary::after { content: " ▸"; }
+.kennzeile[open] summary::after { content: " ▾"; }
+.kennzeile summary:hover { color: var(--text); }
+.kennzeile .kennwerte { margin-top: 10px; }
+.kennwerte { width: 100%; border-collapse: collapse; font-size: 12px; font-variant-numeric: tabular-nums; }
+.kennwerte th { font-size: 11px; font-weight: 400; color: var(--leise); text-align: right; padding: 0 0 6px; }
+.kennwerte td { text-align: right; padding: 3px 0; border-top: 1px solid var(--linie); }
+.kennwerte td:first-child { text-align: left; }
+.kennwerte tr.gesamt td { font-weight: 700; border-top-color: var(--leise); }
+
+/* Varianten: Name, Liste mit Vorschaubild */
+.eingabe { width: 100%; padding: 8px 10px; margin-bottom: 8px; }
+.knopf.haupt { background: var(--akzent); border-color: var(--akzent); color: #fff; padding: 10px 20px; box-shadow: 0 4px 14px rgba(10, 20, 50, .35); }
 .knopf.haupt:hover { background: #2b4d86; }
 .knopf.haupt:disabled { opacity: .6; cursor: wait; }
-.variantenliste { list-style: none; margin: 16px 0 0; padding: 0; }
+.variantenliste { list-style: none; margin: 18px 0 0; padding: 0; }
 .variantenliste li {
   display: grid; grid-template-columns: 15px 84px 1fr; gap: 10px; align-items: start;
   padding: 10px 0; border-top: 1px solid var(--linie); font-size: 13px;
 }
-.variantenliste img { width: 84px; aspect-ratio: 3 / 2; object-fit: cover; border: 1px solid var(--linie); display: block; }
-.variantenliste strong { display: block; font-weight: 600; overflow-wrap: anywhere; }
+.variantenliste img { width: 84px; aspect-ratio: 3 / 2; object-fit: cover; border-radius: 6px; display: block; background: #fff; }
+.variantenliste strong { display: block; font-weight: 700; overflow-wrap: anywhere; }
 .variantenliste small { display: block; font-size: 11px; color: var(--leise); margin-top: 2px; }
 .variantenliste span { display: flex; gap: 14px; }
 .variantenliste .textknopf { margin-top: 6px; }
-.variantenliste .ankreuzen { margin: 2px 0 0; width: 15px; height: 15px; accent-color: var(--akzent); cursor: pointer; }
+.variantenliste .ankreuzen { margin: 2px 0 0; width: 15px; height: 15px; accent-color: var(--regler); cursor: pointer; }
 .variantenliste .ankreuzen:disabled { cursor: not-allowed; }
 .vergleichswahl { border-top: 1px solid var(--linie); padding-top: 4px; }
 .vergleichswahl .pdfwahl { margin-top: 12px; }
@@ -159,7 +286,7 @@ h2 span { color: var(--akzent); }
 .knopf:disabled { opacity: .6; cursor: wait; }
 
 .hinweis { font-size: 12px; color: var(--leise); margin: 8px 0 0; line-height: 1.45; }
-/* Ausklappbare Erklärtexte: kleiner Textknopf „Erklärung ▸“, Start zugeklappt */
+/* Ausklappbare Erklärtexte: kleine Ecke ▸, Start zugeklappt */
 .erklaerung { margin-top: 10px; }
 .erklaerung summary {
   display: inline-block; list-style: none; cursor: pointer;
@@ -168,43 +295,57 @@ h2 span { color: var(--akzent); }
 .erklaerung summary::-webkit-details-marker { display: none; }
 .erklaerung summary::after { content: " ▸"; }
 .erklaerung[open] summary::after { content: " ▾"; }
-.erklaerung summary:hover { color: var(--akzent); }
+.erklaerung summary:hover { color: var(--akzent-text); }
 .erklaerung .hinweis { margin-top: 4px; }
 /* Nur die kleine Ecke, ohne Wort: etwas größer, damit man sie gut trifft */
 .erklaerung summary.nur-ecke { font-size: 17px; line-height: 1; padding: 2px 8px 2px 0; }
 .erklaerung summary.nur-ecke::after { content: "▸"; }
 .erklaerung[open] summary.nur-ecke::after { content: "▾"; }
 
-.status { font-size: 13px; line-height: 1.5; margin: 16px 0 0; white-space: pre-line; }
-.status::first-line { font-weight: 600; }
+.status { font-size: 13px; line-height: 1.5; margin: 16px 0 0; white-space: pre-line; overflow-wrap: anywhere; }
+.status::first-line { font-weight: 700; }
 .status:empty { display: none; }
-.status.fehler { color: #a11d1d; }
+.status.fehler { color: #ffb4b4; }
 
-/* ---------- 3D-Ansicht ---------- */
-.ansicht { position: relative; overflow: hidden; min-height: 0; }
+/* ---------- 3D-Fenster: groß, fast weiß, runde Ecken ---------- */
+.ansicht {
+  position: relative; overflow: hidden; min-height: 0; border-radius: 22px;
+  background: rgba(255, 255, 255, .84);
+  border: 1px solid rgba(255, 255, 255, .5);
+  box-shadow: 0 18px 40px rgba(5, 8, 25, .35);
+}
 .ansicht canvas { display: block; width: 100%; height: 100%; }
 
-/* Anleitung: Startseite ohne Modell, mit Modell weiße Fläche über dem 3D-Fenster */
-.anleitung {
-  position: absolute; inset: 0; z-index: 2; background: var(--flaeche);
-  overflow-y: auto; display: flex; padding: 48px 40px;
+/* Kleine Glas-Elemente über dem 3D-Bild (hell, damit sie zum weißen Fenster passen; bewusst wenige) */
+.ansicht-glas, .ansichtwahl, .stilwahl, .sonnenknopf, .sonnen-mehr, .sonnenfeld, .legende {
+  background: rgba(255, 255, 255, .62);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, .9);
+  box-shadow: 0 4px 16px rgba(30, 40, 70, .14);
 }
-.anleitung-inhalt { max-width: 620px; margin: auto; width: 100%; }
+
+/* Anleitung: Startseite ohne Modell, mit Modell fast weiße Fläche über dem 3D-Fenster */
+.anleitung {
+  position: absolute; inset: 0; z-index: 2; background: rgba(255, 255, 255, .9);
+  overflow-y: auto; display: flex; padding: 48px 40px; font-weight: 300;
+}
+.anleitung-inhalt { max-width: 640px; margin: auto; width: 100%; }
 .anleitung-kopf { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; }
-.anleitung-kopf h2 { font-size: 22px; font-weight: 700; text-transform: none; letter-spacing: -0.01em; margin: 0; }
-.anleitung-einleitung { font-size: 14px; color: var(--leise); line-height: 1.5; margin: 10px 0 0; }
+.anleitung-kopf h2 { font-size: 30px; margin: 0; }
+.anleitung-einleitung { font-size: 15px; color: var(--leise); line-height: 1.5; margin: 10px 0 0; }
 .schritte { list-style: none; margin: 32px 0 0; padding: 0; border-top: 1px solid var(--linie); }
 .schritte li {
   display: grid; grid-template-columns: 36px 1fr; gap: 8px;
-  padding: 16px 0; border-bottom: 1px solid var(--linie); font-size: 14px;
+  padding: 16px 0; border-bottom: 1px solid var(--linie); font-size: 15px;
 }
-.schritte li > span { color: var(--akzent); font-weight: 600; }
+.schritte li > span { color: var(--akzent); font-weight: 800; }
+.schritte strong { font-weight: 800; }
 .schritte p { margin: 4px 0 0; color: var(--leise); font-size: 13px; line-height: 1.5; }
 
 .export { margin-top: 24px; }
 .export summary {
   display: inline-block; list-style: none; cursor: pointer; user-select: none;
-  font-size: 13px; color: var(--akzent);
+  font-size: 13px; color: var(--akzent-text); font-weight: 400;
 }
 .export summary::-webkit-details-marker { display: none; }
 .export summary::after { content: " ▸"; }
@@ -212,47 +353,43 @@ h2 span { color: var(--akzent); }
 .export summary:hover { text-decoration: underline; text-underline-offset: 3px; }
 .export-inhalt { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 16px; }
 .export h3 {
-  font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em;
+  font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em;
   margin: 0 0 8px; padding-bottom: 6px; border-bottom: 1px solid var(--linie);
 }
 .export ul { margin: 0; padding-left: 16px; font-size: 12px; line-height: 1.5; color: var(--text); }
 .export li + li { margin-top: 6px; }
 @media (max-width: 1000px) { .export-inhalt { grid-template-columns: 1fr; } }
 
-header .textknopf { margin-top: 10px; }
-
 .laden, .ablage { position: absolute; inset: 0; z-index: 3; display: grid; place-items: center; font-size: 15px; }
-.laden { background: rgba(255,255,255,.8); }
-.laden span { background: #fff; padding: 12px 18px; border: 1px solid var(--linie); }
+.laden { background: rgba(255, 255, 255, .8); }
+.laden span { background: #fff; padding: 12px 20px; border-radius: 999px; box-shadow: 0 6px 20px rgba(30, 40, 70, .15); }
 .ablage {
-  background: rgba(232,237,245,.85); border: 2px dashed var(--akzent);
-  pointer-events: none; color: var(--akzent); font-weight: 600;
+  background: rgba(232, 237, 245, .85); border: 2px dashed var(--akzent); border-radius: 22px;
+  pointer-events: none; color: var(--akzent); font-weight: 700;
 }
 
-/* Umschalter „Zeichnung | Realistisch“ oben rechts im 3D-Fenster */
-.stilwahl {
-  position: absolute; right: 16px; top: 12px; z-index: 1; display: flex;
-  background: rgba(255,255,255,.9); border: 1px solid var(--linie);
+/* Werkzeuge oben rechts im 3D-Fenster: Ansicht, Darstellung, Sonne untereinander */
+.werkzeuge {
+  position: absolute; right: 14px; top: 14px; z-index: 1;
+  display: flex; flex-direction: column; align-items: flex-end; gap: 8px;
 }
-.stilwahl button {
-  font: inherit; font-size: 12px; padding: 6px 12px; border: 0; background: none;
-  color: var(--leise); cursor: pointer;
-}
-.stilwahl button + button { border-left: 1px solid var(--linie); }
-.stilwahl button:hover { color: var(--akzent); }
-.stilwahl button[aria-pressed="true"] { background: var(--akzent); color: #fff; }
 
-/* Sonne und Schatten (Sitzung 15): Knopf unter „Zeichnung | Realistisch“, Feld darunter */
-/* zurückhaltend: zugeklappt nur ein kleiner Knopf, Einstellungen bei Bedarf aufklappbar */
-.sonnenwahl {
-  position: absolute; right: 16px; top: 50px; z-index: 1;
-  display: flex; flex-direction: column; align-items: flex-end; gap: 4px;
+/* Ansichtsknöpfe 3D / N / O / S / W und Umschalter „Zeichnung | Realistisch“: Glas-Pillen */
+.ansichtwahl, .stilwahl { display: flex; padding: 3px; gap: 2px; border-radius: 999px; }
+.ansichtwahl button, .stilwahl button {
+  font: inherit; font-size: 12px; padding: 5px 11px; border: 0; border-radius: 999px; background: none;
+  color: var(--leise); cursor: pointer; transition: background .2s, color .2s;
 }
+.ansichtwahl button { min-width: 30px; padding: 5px 8px; font-weight: 700; }
+.ansichtwahl button:hover, .stilwahl button:hover { color: var(--akzent); background: rgba(255, 255, 255, .7); }
+.ansichtwahl button[aria-pressed="true"], .stilwahl button[aria-pressed="true"] { background: var(--akzent); color: #fff; }
+
+/* Sonne und Schatten (Sitzung 15): runder Knopf, Einstellungen bei Bedarf aufklappbar */
+.sonnenwahl { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
 .sonnen-zeile { display: flex; align-items: center; gap: 4px; }
 /* Rundes Sonnensymbol: aus = graue Umrisslinie, an = gelbe Sonne mit leichtem Schein */
 .sonnenknopf {
-  width: 32px; height: 32px; padding: 5px; border-radius: 50%; cursor: pointer;
-  background: rgba(255,255,255,.9); border: 1px solid var(--linie);
+  width: 34px; height: 34px; padding: 6px; border-radius: 50%; cursor: pointer;
   transition: box-shadow .3s, background .3s;
 }
 .sonnenknopf svg { display: block; width: 100%; height: 100%; overflow: visible; }
@@ -265,18 +402,17 @@ header .textknopf { margin-top: 10px; }
 .sonnenknopf[aria-pressed="true"] .strahlen { stroke: #e9a51c; }
 /* kleiner Pfeil zum Aufklappen der Einstellungen */
 .sonnen-mehr {
-  font: inherit; font-size: 13px; line-height: 1; width: 20px; height: 20px; padding: 0; cursor: pointer;
-  background: rgba(255,255,255,.9); border: 1px solid var(--linie); border-radius: 50%; color: var(--leise);
+  font: inherit; font-size: 13px; line-height: 1; width: 22px; height: 22px; padding: 0; cursor: pointer;
+  border-radius: 50%; color: var(--leise);
 }
 .sonnen-mehr::after { content: "▾"; }
 .sonnen-mehr[aria-expanded="true"]::after { content: "▴"; }
-.sonnen-mehr:hover { color: var(--akzent); border-color: var(--akzent); }
+.sonnen-mehr:hover { color: var(--akzent); }
 .sonnenfeld {
-  width: 176px; padding: 7px; font-size: 11px;
-  background: rgba(255,255,255,.92); border: 1px solid var(--linie);
-  display: grid; gap: 5px;
+  width: 186px; padding: 9px; font-size: 11px; border-radius: 14px;
+  display: grid; gap: 6px;
 }
-.sonnenfeld .eingabe { margin: 0; padding: 2px 4px; font-size: 11px; font-variant-numeric: tabular-nums; }
+.sonnenfeld .eingabe { margin: 0; padding: 2px 6px; font-size: 11px; border-radius: 6px; background: rgba(255,255,255,.8); font-variant-numeric: tabular-nums; }
 /* Uhrzeit-Regler als Tagesverlauf: Himmelsfarbe je Stunde (--tag kommt aus app.js), Griff = kleine Sonne */
 .sonnenfeld input[type="range"] {
   -webkit-appearance: none; appearance: none; width: 100%; min-width: 0; height: 8px; margin: 0;
@@ -295,12 +431,12 @@ header .textknopf { margin-top: 10px; }
 .sonnenfeld input[type="range"].nacht::-moz-range-thumb { background: #dfe3ea; box-shadow: 0 0 0 1px #8a93a5; }
 .sonnenfeld output { color: var(--text); font-variant-numeric: tabular-nums; }
 .sonne-uhr { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 6px; }
-.sonne-tage { display: flex; border: 1px solid var(--linie); }
+.sonne-tage { display: flex; gap: 2px; }
 .sonne-tage button {
-  flex: 1; font: inherit; font-size: 11px; padding: 2px 0; border: 0; background: none; color: var(--leise); cursor: pointer;
+  flex: 1; font: inherit; font-size: 11px; padding: 2px 0; border: 0; border-radius: 999px;
+  background: none; color: var(--leise); cursor: pointer;
 }
-.sonne-tage button + button { border-left: 1px solid var(--linie); }
-.sonne-tage button:hover { color: var(--akzent); }
+.sonne-tage button:hover { color: var(--akzent); background: rgba(255,255,255,.7); }
 .sonne-tage button[aria-pressed="true"] { background: var(--akzent-hell); color: var(--akzent); }
 .sonne-ort { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
 .sonne-ort label { display: flex; align-items: center; gap: 2px; color: var(--leise); white-space: nowrap; }
@@ -308,13 +444,13 @@ header .textknopf { margin-top: 10px; }
 .sonne-ort .eingabe::-webkit-inner-spin-button, .sonne-ort .eingabe::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 .sonnenfeld .hinweis { margin: 0; font-size: 10.5px; line-height: 1.35; }
 
+/* Maus-Legende unten links als Glas-Pille */
 .legende {
-  position: absolute; left: 16px; bottom: 12px; margin: 0;
-  font-size: 12px; color: var(--leise);
-  background: rgba(255,255,255,.9); padding: 6px 10px; border: 1px solid var(--linie);
+  position: absolute; left: 14px; bottom: 14px; margin: 0;
+  font-size: 12px; color: var(--leise); padding: 6px 14px; border-radius: 999px;
 }
 
-/* ---------- Variantenvergleich ---------- */
+/* ---------- Variantenvergleich (bleibt weiß wie PDF und Bilder) ---------- */
 .vergleich {
   position: fixed; inset: 0; z-index: 10; background: var(--flaeche);
   display: grid; grid-template-rows: auto 1fr;
@@ -323,7 +459,7 @@ header .textknopf { margin-top: 10px; }
   display: flex; justify-content: space-between; align-items: center; gap: 24px;
   padding: 24px 40px 18px; border-bottom: 1px solid var(--linie);
 }
-.vergleich-kopf h2 { margin: 0; font-size: 14px; }
+.vergleich-kopf h2 { margin: 0; font-size: 18px; }
 .vergleich-kopf .hinweis { margin-top: 4px; }
 
 /* Raster: links die Beschriftung, dann eine Spalte je Variante */
@@ -338,11 +474,11 @@ header .textknopf { margin-top: 10px; }
   position: sticky; top: 0; z-index: 1; background: var(--flaeche);
   border-top: none; padding: 18px 0 10px; border-bottom: 1px solid var(--text);
 }
-.vergleich-raster .kopf strong { display: block; font-size: 15px; font-weight: 600; overflow-wrap: anywhere; }
+.vergleich-raster .kopf strong { display: block; font-size: 15px; font-weight: 700; overflow-wrap: anywhere; }
 .vergleich-raster .kopf small { display: block; font-size: 11px; color: var(--leise); margin-top: 2px; }
 .vergleich-raster .zwischentitel { grid-column: 1 / -1; padding: 22px 0 6px; }
 .vergleich-raster h3 {
-  margin: 0; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--akzent);
+  margin: 0; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: var(--akzent);
 }
 
 /* Bilder: Perspektive groß, Ansichten 2 × 2 */
@@ -353,7 +489,7 @@ header .textknopf { margin-top: 10px; }
 .vergleich-bild:hover, .vergleich-bild:focus-visible { border-color: var(--akzent); outline: none; }
 .vergleich-bild img { display: block; width: 100%; aspect-ratio: 3 / 2; object-fit: cover; }
 .vergleich-bild span {
-  position: absolute; left: 0; top: 0; font-size: 10px; font-weight: 600;
+  position: absolute; left: 0; top: 0; font-size: 10px; font-weight: 700;
   background: rgba(255,255,255,.9); padding: 2px 5px; color: var(--text); white-space: nowrap;
 }
 .vergleich-raster .ansichten { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
@@ -368,7 +504,7 @@ header .textknopf { margin-top: 10px; }
 .vergleich-raster .werte { display: grid; grid-template-columns: repeat(3, 1fr); font-variant-numeric: tabular-nums; }
 .vergleich-raster .werte span { text-align: right; }
 .vergleich-raster .spaltenkopf { font-size: 11px; color: var(--leise); }
-.vergleich-raster .gesamt { font-weight: 600; border-top-color: var(--text); }
+.vergleich-raster .gesamt { font-weight: 700; border-top-color: var(--text); }
 
 /* Großes Bild über dem Vergleich */
 .grossbild {

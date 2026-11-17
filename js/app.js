@@ -1,5 +1,5 @@
 // Bedienoberfläche: Datei wählen oder hineinziehen, Modell anzeigen, Fassade gestalten
-import { Szene } from './szene.js?v=22b';
+import { Szene } from './szene.js?v=23';
 import { ifcLaden } from './ifc.js?v=19';
 import { aussenwaendeErkennen, wandFaerben, oeffnungenZuordnen, fensterAnpassen, stuetzenVorbereiten, stuetzeFaerben, dachVorbereiten, dachFaerben, kennwerteBerechnen, hauptrichtungBestimmen, fensterFaerben, anbauteileZuordnen } from './fassade.js?v=20b';
 import {
@@ -215,6 +215,11 @@ function kennwerteAnzeigen() {
   const zeilen = Object.entries(RICHTUNGSNAMEN).map(([richtung, name]) => [name, kennwerte[richtung]]);
   zeilen.push(['Gesamt', kennwerte.gesamt]);
 
+  // Kurzfassung als eine Zeile unten in der Seitenleiste (Tabelle je Seite aufklappbar)
+  const { fassade: gF, fenster: gW } = kennwerte.gesamt;
+  $('kennwerteKurz').textContent =
+    `Fassade ${quadratmeter(gF)} m² · Fenster ${quadratmeter(gW)} m² · ${gF > 0 ? Math.round((gW / gF) * 100) : '–'} %`;
+
   const tabelle = $('kennwerteTabelle');
   tabelle.replaceChildren();
   for (const [name, { fassade, fenster }] of zeilen) {
@@ -276,8 +281,9 @@ $('erkennungZuruecksetzen').addEventListener('click', () => {
 
 function aussenwaendeAnzeigen() {
   const aussen = waende.filter((w) => w.userData.aussen).length;
-  // nebensächlich, deshalb klein und zugeklappt in Bereich 1 unter „Bauteile“ (Sitzung 18b, kein eigener Bereich mehr)
+  // steht im Schritt „Außenwände“ (Sitzung 15b)
   $('aussenZaehler').textContent = `${aussen} von ${waende.length} Wänden sind Außenwände`;
+  $('aussenBlock').hidden = waende.length === 0;
   $('erkennungZuruecksetzen').hidden = waende.every((w) => w.userData.aussen === w.userData.aussenAuto);
   $('bereichFassade').hidden = waende.length === 0;
 
@@ -867,6 +873,7 @@ const VERGLEICH_HOECHSTENS = 4; // so viele passen auch aufs PDF (A3 quer)
 
 async function variantenAnzeigen() {
   $('bereichVarianten').hidden = waende.length === 0;
+  $('varianteSpeichern').hidden = waende.length === 0;
   const varianten = await variantenLesen(modellKennung);
   gespeicherteVarianten = varianten;
   // Gelöschte Varianten (oder die eines anderen Modells) aus der Auswahl nehmen
@@ -1190,11 +1197,56 @@ function anleitungZeigen(sichtbar) {
 $('anleitungOeffnen').addEventListener('click', () => anleitungZeigen($('anleitung').hidden));
 $('anleitungSchliessen').addEventListener('click', () => anleitungZeigen(false));
 
+// Meldung unter dem Hauptbutton in der Kopfleiste; verschwindet nach ein paar Sekunden von selbst
+// („… wird aufgenommen“ bleibt, bis die nächste Meldung kommt; Fehler bleiben länger stehen)
+let meldungZeitgeber = 0;
 function variantenStatus(text, istFehler = false) {
   const status = $('variantenStatus');
   status.textContent = text;
   status.classList.toggle('fehler', istFehler);
+  clearTimeout(meldungZeitgeber);
+  if (text && !text.endsWith('…')) meldungZeitgeber = setTimeout(() => { status.textContent = ''; }, istFehler ? 12000 : 4000);
 }
+
+// ---------- Schritte in der Kopfleiste (Sitzung 15b) ----------
+// Die Seitenleiste zeigt nur den aktuellen Schritt. Beim Wechsel gehen „Einzelne Wände“ / „Einzelne Fenster“ aus,
+// damit ein Klick ins Modell nicht unbemerkt etwas auswählt, das man gerade nicht sieht.
+function schrittZeigen(schritt) {
+  $('seitenleiste').dataset.schritt = schritt;
+  $('seitenleiste').scrollTop = 0;
+  $('bereichKennwerte').open = false; // Kennwerte-Tabelle beim Wechsel wieder zuklappen
+  for (const knopf of $('schrittleiste').querySelectorAll('button')) {
+    if (knopf.dataset.schritt === schritt) {
+      knopf.setAttribute('aria-current', 'step');
+      knopf.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    } else knopf.removeAttribute('aria-current');
+  }
+  if (schritt !== 'fassade' && einzelneWaende) {
+    $('einzelneWaende').checked = false;
+    $('einzelneWaende').dispatchEvent(new Event('change'));
+  }
+  if (schritt !== 'fenster' && einzelneFenster) einzelneFensterSchalten(false);
+}
+for (const knopf of $('schrittleiste').querySelectorAll('button')) {
+  knopf.addEventListener('click', () => schrittZeigen(knopf.dataset.schritt));
+}
+
+// ---------- Ansichtsknöpfe 3D / N / O / S / W im 3D-Fenster (Sitzung 15b) ----------
+// 3D = der unter „Varianten“ eingestellte Blick; N/O/S/W = waagerecht und gerade auf die Fassade
+// (mit der Drehung des Gebäudes wie bei den gespeicherten Ansichten). Danach ist das Modell wieder frei drehbar.
+function ansichtKnoepfeMarkieren(gewaehlt = null) {
+  for (const k of $('ansichtwahl').querySelectorAll('button')) k.setAttribute('aria-pressed', String(k === gewaehlt));
+}
+for (const knopf of $('ansichtwahl').querySelectorAll('button')) {
+  knopf.addEventListener('click', () => {
+    const drehung = hauptrichtungBestimmen(waende);
+    if (knopf.dataset.ansicht === '3d') szene.blickZeigen(blick, drehung);
+    else szene.blickZeigen({ aus: Number(knopf.dataset.ansicht), hoehe: 0 }, drehung);
+    ansichtKnoepfeMarkieren(knopf);
+  });
+}
+// Sobald man selbst dreht, zoomt oder verschiebt, ist keine Ansicht mehr „gedrückt“
+szene.steuerung.addEventListener('start', () => ansichtKnoepfeMarkieren());
 
 $('datei').addEventListener('change', (ereignis) => {
   const datei = ereignis.target.files[0];
@@ -1249,6 +1301,15 @@ async function dateiOeffnen(datei) {
     $('legende').hidden = false;
     $('stilwahl').hidden = false;
     $('sonnenwahl').hidden = false;
+    $('ansichtwahl').hidden = false;
+    ansichtKnoepfeMarkieren();
+    // Kopfleiste: Dateiname und Schritte freigeben, los geht es mit „Fassade“ (Außenwände sind Nebensache)
+    $('kopfDatei').textContent = datei.name;
+    $('kopfDatei').title = datei.name;
+    for (const knopf of $('schrittleiste').querySelectorAll('button')) knopf.disabled = false;
+    schrittZeigen('fassade');
+    // Haus füllt das 3D-Fenster fast ganz: gleich mit dem eingestellten Blick der Perspektive starten
+    szene.blickZeigen(blick, hauptrichtungBestimmen(waende));
     statusZeigen(datei.name);
     // Bauteil-Anzahlen: nebensächlich, deshalb zugeklappt unter „Bauteile“
     $('bauteileText').textContent =

@@ -25,7 +25,9 @@ export class Szene {
     // Zeichenfläche (Renderer)
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
     this.renderer.setPixelRatio(window.devicePixelRatio);
-    this.renderer.setClearColor(0xffffff);
+    // 3D-Fenster fast weiß mit einem Hauch Kühle (Sitzung 15b); die gespeicherten Bilder bleiben reinweiß (s. bilderAufnehmen)
+    this.HINTERGRUND = 0xf4f5f8;
+    this.renderer.setClearColor(this.HINTERGRUND);
     // Schatten (Sitzung 15): weiche Kanten; berechnet wird nur, wenn die Sonne an ist
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     // Schatten hängen nicht vom Blick ab: nur neu berechnen, wenn sich Sonne oder Bauteile ändern (spart viel Rechenzeit)
@@ -456,6 +458,7 @@ export class Szene {
     const alteDichte = this.renderer.getPixelRatio();
     this.renderer.setPixelRatio(1);
     this.renderer.setSize(breite, hoehe, false);
+    this.renderer.setClearColor(0xffffff); // Bilder, Vergleich und PDF bleiben weiß
 
     const bilder = {};
     if (this.sonneScheint()) { // gerade neu gebaute Fenster und Wände werfen auch Schatten
@@ -471,6 +474,7 @@ export class Szene {
         bilder[name] = alsBlob(this.renderer.domElement.toDataURL('image/jpeg', 0.85));
       }
     } finally {
+      this.renderer.setClearColor(this.HINTERGRUND);
       this.renderer.setPixelRatio(alteDichte);
       this.renderer.setSize(alteGroesse.x, alteGroesse.y, false);
     }

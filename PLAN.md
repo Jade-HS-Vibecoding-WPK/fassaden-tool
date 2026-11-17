@@ -120,9 +120,9 @@ Erledigte Sitzungen abhaken, die oberste offene Zeile ist dran (die Nummern blei
 - [x] 18b. Zahl der Außenwände („89 von 192 Wänden sind Außenwände“) kleiner und weiter unten zeigen, z. B. bei „Bauteile ▸“
       in Bereich 1 (Wunsch der Nutzerin 17.11.: eher unwichtig, steht zu weit oben) (17.11.)
 - [x] 15. Should 3a: Sonnenstand und Schatten (nach hinten gestellt, Wunsch der Nutzerin 17.11.) (17.11.)
-- [ ] 15b. Neues Design umsetzen (Glassmorphism, s. „Design-Vision“) – vorgezogen, Wunsch der Nutzerin 17.11.:
-      „damit ich mir das Ganze besser vorstellen kann“ ← **als Nächstes**
-- [ ] 16. Should 3b: Standort per Ortssuche (darf notfalls wegfallen)
+- [x] 15b. Neues Design umsetzen (Glassmorphism, s. „Design-Vision“) – vorgezogen, Wunsch der Nutzerin 17.11.:
+      „damit ich mir das Ganze besser vorstellen kann“; mit Ansichtsknöpfen 3D/N/O/S/W (17.11.)
+- [ ] 16. Should 3b: Standort per Ortssuche (darf notfalls wegfallen) ← **als Nächstes**
 - [ ] 19. Should 4c: PDF-Einzelseiten (fällt als Erstes weg, wenn es eng wird)
 - [ ] 20. Ab ca. 10:30: Test mit eigener IFC, Fehler beheben
 - [ ] 21. Auf GitHub hochladen und über GitHub Pages veröffentlichen → **12 Uhr Freeze**
@@ -133,7 +133,7 @@ Erledigte Sitzungen abhaken, die oberste offene Zeile ist dran (die Nummern blei
 Wenn es eng wird, zuerst streichen: 19 (PDF-Einzelseiten), dann 16 (Ortssuche).
 Was bis Do 10:30 nicht fertig ist, wandert zu Could.
 
-## Stand (17.11.2026, nach Sitzung 15)
+## Stand (17.11.2026, nach Sitzung 15b)
 - CLAUDE.md und PLAN.md angelegt, Plan mit der Nutzerin abgestimmt.
 - Test-IFC liegt in `testdaten/` (Einfamilienhaus, Revit 2023, IFC2x3: 192 Wände, 57 Fenster, 49 Türen).
   Quelle: Bundesingenieurkammer, Seite „BIM-Praxisbeispiele“ (Download zum Betrachten angeboten).
@@ -594,7 +594,40 @@ Was bis Do 10:30 nicht fertig ist, wandert zu Could.
   **Entscheidung:** Sonnengelb (#f5b82e) ist die einzige Ausnahme von „eine Akzentfarbe“, nur für die Sonne.
   Getestet mit `Test-ArchiCAD.ifc` und Mausklicks (an, aufklappen). Keine Fehler. Versionsnummern `app.js?v=22d`, `style.css?v=22d`.
 
-## Design-Vision (Entwurf 17.11., nach Sitzung 13 – noch nicht gebaut, kommt in Sitzung 15b)
+- Sitzung 15b (17.11.): Neues Design (Glassmorphism) nach der Design-Vision unten. Nur Aussehen und Aufbau, die Funktionen bleiben gleich.
+  **Hintergrund:** dunkler Verlauf Nachtblau → Violett → Petrol mit weichen Farbflecken (Blau, Violett, Petrol, dunkles Grün, Grünschimmer).
+  **Kopfleiste aus Glas:** „Fassaden-Tool“, Dateiname, die Schritte **Außenwände · Fassade · Fenster · Varianten** als Pillen
+  (aktiver Schritt hell; ohne Modell gesperrt; im schmalen Fenster seitlich schiebbar), rechts „Anleitung“ und **„Variante speichern“** (Dunkelblau, rund).
+  **Seitenleiste aus Glas (300 px):** zeigt nur den aktuellen Schritt. „Außenwände“ = IFC laden + Zahl der Außenwände + Zurücksetzen + „Bauteile ▸“.
+  Nach dem Laden startet die App im Schritt „Außenwände“. Beim Wechsel des Schritts gehen „Einzelne Wände“ / „Einzelne Fenster“ aus
+  (sonst würde ein Klick ins Modell unbemerkt etwas auswählen). „Varianten“ = Blick, Namensfeld, Liste, Vergleich/PDF.
+  **Kennwerte:** eine kleine Zeile unten in der Seitenleiste („Fassade 83,1 m² · Fenster 15,5 m² · 19 %“), Tabelle je Seite mit ▸ aufklappbar.
+  **Meldungen** zu den Varianten (gespeichert, geladen, gelöscht) erscheinen als kleine weiße Pille oben im 3D-Fenster und verschwinden nach 4 s (Fehler nach 12 s).
+  **3D-Fenster:** runde Ecken, fast weiß (#f4f5f8); oben rechts untereinander die neuen **Ansichtsknöpfe 3D / N / O / S / W**,
+  „Zeichnung | Realistisch“ und die Sonne, unten links die Maus-Legende – alles kleine helle Glas-Pillen.
+  3D = eingestellter Blick aus „Varianten“, N/O/S/W = waagerecht und gerade auf die Fassade (dreht sich mit dem Gebäude wie die gespeicherten Ansichten);
+  danach frei drehbar, der Knopf ist dunkelblau, bis man selbst dreht. Nebenbei: Beim Öffnen einer IFC startet die Kamera jetzt mit dem eingestellten
+  Blick (Haus füllt das Fenster) statt mit dem alten festen Blick (Problem aus Sitzung 10b behoben).
+  **Schrift:** Artifakt Element über `local(...)` (Fließtext Regular auf Glas, Anleitung Light, Überschriften Heavy); ohne die Schrift Helvetica/Arial.
+  **Bleibt weiß:** gespeicherte Bilder (beim Fotografieren reinweiß, geprüft: Pixel 255/255/255), PDF, Variantenvergleich und großes Bild.
+  Getestet (Browser 1440 × 900 und 1000 × 700) mit `Test-ArchiCAD.ifc` und Einfamilienhaus: Schritte, Ansicht Ost, Speichern aus dem Schritt
+  „Varianten“, Meldung, Kennwerte aufklappen, Sonne an, Anleitung öffnen/Esc. Testvariante wieder gelöscht. Keine Fehler in der Konsole.
+  Geändert: `index.html`, `style.css`, `app.js`, `szene.js`. Versionsnummern `app.js?v=23b`, `szene.js?v=23`, `style.css?v=23b`.
+  Probleme: Ob die Schrift Artifakt bei dir richtig erscheint, hängt von ihrem Namen im System ab – bitte einmal ansehen.
+  Mit echter Maus nur teilweise getestet (Schritte, Ansichtsknöpfe, Speichern ja; Regler und Einzelauswahl über die alten Funktionen).
+  Variantenvergleich und PDF bewusst unverändert weiß (gelten als „Blatt“, nicht als Bedienung).
+  **Geändert nach Test (Wunsch der Nutzerin):** Schritt **„Außenwände“ steht ganz rechts** (Fassade · Fenster · Varianten · Außenwände),
+  nach dem Laden startet die App bei „Fassade“; ohne Modell ist „Außenwände“ aktiv, weil dort „IFC-Datei wählen“ sitzt.
+  **Kennwerte-Zeile klebt nicht mehr** unten über dem Arbeitsbereich: sie steht nach dem Inhalt, aufgeklappt schiebt sie nichts zu,
+  und beim Schrittwechsel klappt sie wieder zu. **Seitenleiste deckender** und farblich neutral (dunkles Grau statt nur Glas),
+  die **Farbtöne** haben zusätzlich eine eigene Unterlage, damit die Farben echt wirken.
+  **Nochmals geändert (Wunsch der Nutzerin, nach Versuchen hell/deckend und hell/durchsichtig):** Die Farbtöne-Unterlage ist
+  **deckend mittelgrau** (#43464d, neutral, nichts scheint durch), Glas-Anklang nur über hellen Rand, Lichtreflex oben links
+  und weichen Schatten; Schrift hell, gewählter Farbpunkt mit weißem Ring.
+  **Entscheidung:** Hinter Farben, die man beurteilen soll, keine durchscheinenden Flächen (verfälschen die Farbe).
+  Versionsnummern `app.js?v=23c`, `style.css?v=23f`.
+
+## Design-Vision (Entwurf 17.11., in Sitzung 15b umgesetzt)
 Mit der Nutzerin als Testseite entworfen und abgestimmt („erstmal so festhalten“). Umbau später in einer eigenen Sitzung.
 - **Stil:** Glassmorphism – halbtransparente Glaskarten mit Unschärfe vor einem dunklen, farbigen Verlauf,
   feine helle Ränder, weiche Schatten, viel Luft.
@@ -610,6 +643,8 @@ Mit der Nutzerin als Testseite entworfen und abgestimmt („erstmal so festhalte
   Passen die Schritte nicht hinein, lassen sie sich mit einer dünnen Glas-Schiebeleiste seitlich schieben.
   Links eine Glas-Seitenleiste nur mit dem aktuellen Schritt (Seitenleiste ca. 300 px, Schiebeleiste ebenfalls aus Glas).
   Im 3D-Fenster oben rechts kleine Glas-Knöpfe 3D / N / O / S / W, unten links die Maus-Legende als Glas-Pille.
+  **Entscheidung (17.11., vor Sitzung 15b):** Die Knöpfe 3D / N / O / S / W kommen in Sitzung 15b mit und funktionieren
+  (Klick dreht die Kamera auf die Perspektive bzw. gerade auf die Ansicht Nord/Ost/Süd/West, danach wieder frei drehbar).
 - **Kennwerte:** klein, als eine Zeile unten in der Seitenleiste (nicht zentral, Wunsch der Nutzerin).
 - **Schrift:** Artifakt Element (Autodesk): Fließtext **Light**, Überschriften **Heavy**, größer und schwer.
   Bei der Nutzerin installiert (kommt mit Revit). Schriftdatei **nicht** auf GitHub (Lizenz Autodesk); wer sie nicht hat,
