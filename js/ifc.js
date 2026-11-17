@@ -1,7 +1,7 @@
 // IFC-Datei lesen und in 3D-Bauteile umwandeln
 import * as THREE from 'three';
 import * as WebIFC from 'web-ifc';
-import { MATERIAL, kantenlinienHinzufuegen } from './darstellung.js?v=16';
+import { MATERIAL, kantenlinienHinzufuegen } from './darstellung.js?v=19';
 
 // Bauteil-Arten, die die App unterscheidet
 const ARTEN = {

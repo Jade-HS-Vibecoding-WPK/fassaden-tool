@@ -1,7 +1,7 @@
 // 3D-Szene: Bühne, Kamera, Licht und Maussteuerung
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { realistischesMaterial, himmelHintergrund, himmelUmgebung } from './realistisch.js?v=18';
+import { realistischesMaterial, himmelHintergrund, himmelUmgebung } from './realistisch.js?v=19e';
 
 // Ist das Teil zu sehen? (es selbst und alle, zu denen es gehört)
 function istSichtbar(teil) {
@@ -81,7 +81,11 @@ export class Szene {
     // Sonne tiefer und von Südwesten: Südseite hell, Ostseite im Schatten (deutliche Licht- und Schattenseiten)
     const sonnenLage = this.sonne.position.clone();
     this.sonne.position.set(-20, 30, 35);
-    this.grundlicht.intensity = 0.6;
+    this.grundlicht.intensity = 0.8;
+    // Himmelslicht von oben leicht kühl, vom Boden zurückgeworfenes Licht warm und dunkler (wie draußen)
+    this.grundlicht.color.set(0xdfe9f7);
+    this.grundlicht.groundColor.set(0x8c8270);
+    this.sonne.color.set(0xfff3e2); // Sonne leicht warm
     this.sonne.intensity = 2.8;
     // weiche Belichtung wie bei einer Kamera, damit helle Flächen nicht ausbrennen
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -94,6 +98,9 @@ export class Szene {
       this.szene.background = null;
       this.szene.environment = null;
       this.grundlicht.intensity = 2.2;
+      this.grundlicht.color.set(0xffffff);
+      this.grundlicht.groundColor.set(0xdddddd);
+      this.sonne.color.set(0xffffff);
       this.sonne.intensity = 1.6;
       this.sonne.position.copy(sonnenLage);
       this.renderer.toneMapping = THREE.NoToneMapping;

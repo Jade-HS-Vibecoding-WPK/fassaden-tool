@@ -15,7 +15,7 @@ nebeneinander vergleicht und als PDF mitnimmt.
 - [x] Kennwerte je Himmelsrichtung und gesamt: Fassadenfläche, Fensterfläche, Fensterflächenanteil
 - [ ] Darstellung mit klarem Unterschied zwischen Rohmodell und Entwurf:
       - Alles aus der IFC (Decken, Innenwände, nicht gestaltete Wände) hellgrau-weiß wie ein Arbeitsmodell
-      - Dächer in einem festen, ruhigen Dunkelgrau mit Zeichenlinien (nicht weiß)
+      - Dächer in einem festen, ruhigen Dunkelgrau mit Zeichenlinien (nicht weiß) – **seit Sitzung 17b wählbar, Start hellgrau**
       - Gestaltete Fassade „farbig + Zeichenlinien“: gedeckte, ruhige Materialfarben (nicht knallig), dunkle Kantenlinien
         und gezeichnete Struktur (Fugen, Bretter, Raster), wie eine kolorierte Architekturzeichnung –
         künstlerisch, nicht realistisch
@@ -115,8 +115,8 @@ Erledigte Sitzungen abhaken, die oberste offene Zeile ist dran (die Nummern blei
 
 **Do 19.11. – bis 12 Uhr fertig**
 - [x] 17. Should 4a: Umschalter „realistisch“ (umgestellt 17.11., Wunsch der Nutzerin) (17.11.)
-- [ ] 17b. Dachmaterial wählbar (Wunsch der Nutzerin 17.11.: dunkle Dächer stechen heraus) ← **als Nächstes**
-- [ ] 18. Should 4b: eigene Farbe pro Material
+- [x] 17b. Dachmaterial wählbar (Wunsch der Nutzerin 17.11.: dunkle Dächer stechen heraus) (17.11.)
+- [ ] 18. Should 4b: eigene Farbe pro Material ← **als Nächstes**
 - [ ] 15. Should 3a: Sonnenstand und Schatten (nach hinten gestellt, Wunsch der Nutzerin 17.11.)
 - [ ] 16. Should 3b: Standort per Ortssuche (darf notfalls wegfallen)
 - [ ] 19. Should 4c: PDF-Einzelseiten (fällt als Erstes weg, wenn es eng wird)
@@ -129,7 +129,7 @@ Erledigte Sitzungen abhaken, die oberste offene Zeile ist dran (die Nummern blei
 Wenn es eng wird, zuerst streichen: 19 (PDF-Einzelseiten), dann 16 (Ortssuche).
 Was bis Do 10:30 nicht fertig ist, wandert zu Could.
 
-## Stand (17.11.2026, nach Sitzung 17)
+## Stand (17.11.2026, nach Sitzung 17b)
 - CLAUDE.md und PLAN.md angelegt, Plan mit der Nutzerin abgestimmt.
 - Test-IFC liegt in `testdaten/` (Einfamilienhaus, Revit 2023, IFC2x3: 192 Wände, 57 Fenster, 49 Türen).
   Quelle: Bundesingenieurkammer, Seite „BIM-Praxisbeispiele“ (Download zum Betrachten angeboten).
@@ -464,6 +464,50 @@ Was bis Do 10:30 nicht fertig ist, wandert zu Could.
   `szene.js?v=18b`, `fassade.js?v=18`, `app.js?v=18b`, `style.css?v=18`.
   Hinweis: Beim Testen ist im eingebauten Browser von Claude eine Test-Variante „Variante 1“ zum Einfamilienhaus entstanden
   (nicht in deinem normalen Browser).
+- Sitzung 17b (17.11.): Dachmaterial wählbar. Im Bereich „3 Fassade“ unter „Stützen“ die Zeile **„Dach“** (Anzahl Dachteile,
+  Musterbild, Liste), ein Material für alle Dachteile; erscheint nur, wenn die IFC ein Dach hat. Trennlinie wie bei „Stützen“
+  (stehen beide da, nur eine Linie). 6 Dachmaterialien (eigene Liste `DACHMATERIALIEN` in `materialien.js`, nicht bei den Wänden):
+  **Schlicht hell** (Abdichtung, Start), Ziegel rot, Ziegel anthrazit, Stehfalz hellgrau, Stehfalz anthrazit, Gründach.
+  Muster im echten Maßstab: Ziegel 30 cm × Lattung 33,3 cm, Reihen versetzt, Schattenband unter jeder Reihe;
+  Stehfalz Bahnen 50 cm; Abdichtung Bahnenstöße alle 1 m ganz zart; Gründach Sedum-Flecken. Je eine Fassung für „realistisch“
+  (Ziegel mit Relief zur Unterkante, Stehfalz glänzend mit erhabenem Falz, Gründach rau).
+  So liegt das Muster (`dachVorbereiten` in `fassade.js`): je Dreieck nach seiner Neigung – geneigt: Reihen parallel zur Traufe,
+  Falze die Schräge hinunter (auch auf Walmflächen); flach: Draufsicht (Norden oben); senkrecht (Ortgang, Attika): wie eine Wand.
+  **Fensterrahmen und Pfosten/Riegel bleiben anthrazit**, unabhängig vom Dach.
+  Gespeichert mit der Variante, „Laden“ stellt es wieder her; ältere Varianten: „Schlicht hell“. Vergleich: neue Zeile „Dach“
+  unter „Stützen“ (nur, wenn das Modell ein Dach hat). Bilder/PDF zeigen es automatisch (Zeichenstil).
+  Das Dachmaterial bleibt beim Öffnen einer anderen IFC stehen (wie die Materialien der Seiten).
+  Getestet: Einfamilienhaus (14 Dachteile, Walmdach mit Gauben) alle Materialien, Zeichnung und realistisch, Speichern → Umstellen →
+  Laden, Vergleich mit älterer Variante; `Test-ArchiCAD.ifc` (8 Dachteile, Satteldach) mit Stützen- und Dachzeile. Testvariante wieder gelöscht. Keine Fehler.
+  Geändert: `materialien.js`, `fassade.js`, `darstellung.js`, `app.js`, `index.html`, `style.css`.
+  Versionsnummern: `darstellung.js?v=19` (in `ifc.js`, `fassade.js`, `materialien.js`, `realistisch.js`), `ifc.js?v=19`,
+  `materialien.js?v=19b` (in `app.js`, `fassade.js`, `realistisch.js`), `fassade.js`/`realistisch.js`/`szene.js`/`app.js` `v=19b`, `style.css?v=19`.
+  Probleme: Gründach und Ziegel liegen auch auf sehr steilen oder flachen Flächen (keine Prüfung, ob das baulich passt).
+  Auf Flachdächern zeigt Stehfalz nach Norden, nicht nach dem Gebäude ausgerichtet. Mit echter Maus nicht ausprobiert (Test über Skript).
+  **Geändert nach Test (Wunsch der Nutzerin):** (1) **Ortgang:** Am Ortgang liefen die Muster schräg. Jetzt werden schmale
+  Dachkanten (Ortgang, Traufkante, Attika-Rand) erkannt und ohne Muster in einer schlichten, etwas dunkleren Farbe gezeigt
+  (wie ein Ortgangblech; `kantenDreiecke` in `fassade.js`: Dreiecke je Ebene sortiert, Ebene schmaler als 60 cm = Kante,
+  Kanten als eigenes Netz `userData.dachKante`). (2) **Farben** dunkler und weniger gesättigt, passend zu den Fassaden:
+  Schlicht hell #b7b5af, Ziegel rot #7f5a51, Ziegel anthrazit #545453, Stehfalz hellgrau #9b9d9c, Stehfalz anthrazit #4b4d50,
+  Gründach #6c705f; je eine Kantenfarbe (`kante` in `DACHMATERIALIEN`).
+  Getestet: `Test-ArchiCAD.ifc` (Ortgang und Traufkante schlicht, Ziegelreihen sauber), Einfamilienhaus (Walmdach, Zeichnung und realistisch). Keine Fehler.
+  Versionsnummern: `materialien.js?v=19c` (in `app.js`, `fassade.js`, `realistisch.js`), `fassade.js`/`realistisch.js`/`szene.js`/`app.js` `v=19c`.
+  Probleme: Ein Dachteil, das nur aus schmalen Flächen besteht, bekommt weiter überall das Muster (bewusst, sonst wäre es ganz ohne Material).
+  Ältere gespeicherte Varianten behalten ihre Bilder mit den alten, helleren Dachfarben.
+  **Nochmals geändert (Wunsch der Nutzerin): Farben abgestimmt, „realistisch“ echter.**
+  Jedes Dachmaterial hat jetzt denselben Farbton wie sein Gegenstück in der Fassade, nur dunkler:
+  Klinker rot #92564b (vorher #98534a, etwas weniger grell) ↔ Ziegel rot #7d4e45; Klinker anthrazit ↔ Ziegel anthrazit #58554f (warmes Grau);
+  Fassadenplatten ↔ Stehfalz hellgrau #969a9c / anthrazit #4f5357 (kühles Grau); Sichtbeton ↔ Schlicht hell #b4b1ab.
+  Ziegel „realistisch“: Farbunterschied je Ziegel von ±10 % auf ±3 % (vorher zu bunt), dafür weiche großflächige Alterung;
+  Relief mit zwei flachen Mulden je Ziegel (Falzziegel), Schatten unter dem Ziegel darüber, schmaler Spalt zum Nachbarn, kräftigeres Relief.
+  Licht „realistisch“ (`szene.js`): Himmelslicht leicht kühl, vom Boden zurückgeworfenes Licht warm und dunkler, Sonne leicht warm.
+  **Schlagschatten bewusst nicht**: die kommen mit Sitzung 15 (Sonnenstand und Schatten).
+  Versionsnummern: `materialien.js?v=19d` (in `app.js`, `fassade.js`, `realistisch.js`), `fassade.js`/`realistisch.js`/`szene.js`/`app.js` `v=19d`.
+  Getestet mit dem Einfamilienhaus (Zeichnung und realistisch), keine Fehler.
+  Hinweis: Klinker rot ist eine Fassadenfarbe – ältere Varianten behalten ihre Bilder mit dem alten Rot.
+  **Außerdem (Wunsch der Nutzerin):** „Holz natur“ heißt jetzt **„Lärche“** (übliches Fassadenholz) und ist heller (#bfa88b statt #a6927e).
+  Die interne Kennung bleibt `holz-natur`, gespeicherte Varianten zeigen den neuen Namen. Versionsnummern jetzt `v=19e`
+  (`materialien.js`, `fassade.js`, `realistisch.js`, `szene.js`, `app.js`).
 
 ## Design-Vision (Entwurf 17.11., nach Sitzung 13 – noch nicht gebaut, Zeitpunkt offen)
 Mit der Nutzerin als Testseite entworfen und abgestimmt („erstmal so festhalten“). Umbau später in einer eigenen Sitzung.
@@ -489,7 +533,7 @@ Mit der Nutzerin als Testseite entworfen und abgestimmt („erstmal so festhalte
   kein Unterschied. Nur auf diesem Rechner gemessen; über dem 3D-Bild nur wenige, kleine Glas-Elemente verwenden.
 
 ## Nächste Schritte
-- **Sitzung 17b (Entscheidung 17.11., vor dem Bauen):** Dachmaterial wählbar.
+- **Sitzung 17b (erledigt, s. o.; Entscheidung 17.11., vor dem Bauen):** Dachmaterial wählbar.
   **Bedienung:** eine Zeile **„Dach“** im Bereich „3 Fassade“ (wie „Stützen“), ein Material für alle Dachteile
   (IfcRoof bzw. Decken mit Typ „Dach“); einzelne Dachflächen nicht.
   **Materialien:** Dachziegel (rot, anthrazit), Stehfalz/Metall (hellgrau, anthrazit), Gründach, schlicht hell / Abdichtung.

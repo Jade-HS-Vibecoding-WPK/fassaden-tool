@@ -3,12 +3,13 @@
 // jeder Strich scharf, aber stellenweise fehlen Striche oder hören früher auf. Die Kacheln sind groß
 // (mehrere Meter), damit man nicht sieht, wie sich das Muster wiederholt.
 import * as THREE from 'three';
-import { flaeche } from './darstellung.js?v=16';
+import { flaeche } from './darstellung.js?v=19';
 
 export const MATERIALIEN = [
-  { id: 'klinker-rot', name: 'Klinker rot', farbe: '#98534a', muster: 'klinker' },
+  { id: 'klinker-rot', name: 'Klinker rot', farbe: '#92564b', muster: 'klinker' },
   { id: 'klinker-anthrazit', name: 'Klinker anthrazit', farbe: '#77726d', muster: 'klinker' },
-  { id: 'holz-natur', name: 'Holz natur', farbe: '#a6927e', muster: 'holz' },
+  // Lärche: übliches Fassadenholz (unbehandelt, warm-hell); Kennung bleibt 'holz-natur', damit alte Varianten passen
+  { id: 'holz-natur', name: 'Lärche', farbe: '#bfa88b', muster: 'holz' },
   { id: 'holz-vergraut', name: 'Holz vergraut', farbe: '#9c978d', muster: 'holz' },
   { id: 'sichtbeton', name: 'Sichtbeton', farbe: '#b3b0aa', muster: 'beton' },
   { id: 'putz-altweiss', name: 'Putz altweiß', farbe: '#e2ddd3', muster: 'putz' },
@@ -24,6 +25,25 @@ export const MATERIALIEN = [
 export const PFOSTEN_RIEGEL = 'pfosten-riegel';
 
 export const START_MATERIAL = 'klinker-rot';
+
+// Dachmaterialien (Sitzung 17b): ein Material für alle Dachteile. Muster liegen so auf der Dachfläche,
+// dass Ziegelreihen waagerecht (parallel zur Traufe) und Falze die Schräge hinunter laufen (fassade.js).
+// Farben (zweimal geändert nach Test, Wunsch der Nutzerin): etwas dunkler und weniger gesättigt als die Fassaden,
+// je Paar im selben Farbton wie das passende Fassadenmaterial, nur dunkler:
+// Ziegel rot ↔ Klinker rot (Farbton ca. 10°), Ziegel anthrazit ↔ Klinker anthrazit (warmes Grau),
+// Stehfalz ↔ Fassadenplatten (kühles Grau), Schlicht hell ↔ Sichtbeton.
+// kante: schlichte Farbe der schmalen Dachkanten (Ortgang, Traufkante), wie ein Ortgangblech.
+export const DACHMATERIALIEN = [
+  { id: 'dach-hell', name: 'Schlicht hell', farbe: '#b4b1ab', kante: '#9b9893', muster: 'abdichtung' },
+  { id: 'ziegel-rot', name: 'Ziegel rot', farbe: '#7d4e45', kante: '#66423b', muster: 'ziegel' },
+  { id: 'ziegel-anthrazit', name: 'Ziegel anthrazit', farbe: '#58554f', kante: '#4a4843', muster: 'ziegel' },
+  { id: 'stehfalz-hell', name: 'Stehfalz hellgrau', farbe: '#969a9c', kante: '#85898b', muster: 'stehfalz' },
+  { id: 'stehfalz-anthrazit', name: 'Stehfalz anthrazit', farbe: '#4f5357', kante: '#44474b', muster: 'stehfalz' },
+  { id: 'gruendach', name: 'Gründach', farbe: '#6c705f', kante: '#6b6d6b', muster: 'gruendach' },
+];
+
+// Startwert: ruhiges Hellgrau, damit das Dach nicht heraussticht (Wunsch der Nutzerin)
+export const START_DACH = 'dach-hell';
 
 // Jedes Muster: Größe einer Kachel in Metern (wiederholt sich lückenlos), Auflösung und Zeichenanweisung.
 // Die Zeichenanweisung bekommt einen Stift z, der in Metern rechnet (siehe stiftAnlegen).
@@ -139,6 +159,68 @@ const MUSTER = {
       const profil = '#3a3d42'; // wie PROFILFARBE in darstellung.js
       for (let x = 0; x < z.breite - 0.001; x += 1.25) z.flaeche(x - 0.025, 0, 0.05, z.hoehe, profil);
       for (let y = 0; y < z.hoehe - 0.001; y += 1.5) z.flaeche(0, y - 0.025, z.breite, 0.05, profil);
+    },
+  },
+
+  // --- Dach ---
+  // Dachabdichtung / Kies: fast glatt, feine Körnung, Bahnenstöße alle 1 m nur ganz zart
+  abdichtung: {
+    breite: 4, hoehe: 4, pixelProMeter: 128,
+    zeichnen(z) {
+      z.flaeche(0, 0, z.breite, z.hoehe, z.farbe);
+      z.koernung(0.03, 20000);
+      z.wolken(0.025);
+      const stoss = abdunkeln(z.farbe, 0.85);
+      for (let x = 0; x < z.breite - 0.001; x += 1) z.strich(x, 0, x, z.hoehe, stoss, 1, 0.6, true);
+    },
+  },
+  // Falzziegel ca. 30 cm breit, Lattung 33,3 cm: Reihen waagerecht, Ziegel je Reihe gegeneinander versetzt
+  ziegel: {
+    breite: 3, hoehe: 3, pixelProMeter: 192,
+    zeichnen(z) {
+      const breit = 0.3, reihe = 1 / 3;
+      for (let y = 0; y < z.hoehe - 0.001; y += reihe) {
+        const versatz = Math.round(y / reihe) % 2 ? breit / 2 : 0;
+        for (let x = -versatz; x < z.breite; x += breit) z.flaeche(x, y, breit, reihe, abwandeln(z.farbe, 0.04, z.zufall));
+      }
+      const fuge = abdunkeln(z.farbe, 0.6);
+      for (let y = 0; y < z.hoehe - 0.001; y += reihe) {
+        const versatz = Math.round(y / reihe) % 2 ? breit / 2 : 0;
+        // Unterkante der Reihe: kräftig, mit schmalem Schattenband (Überdeckung)
+        z.flaeche(0, y, z.breite, 0.025, abdunkeln(z.farbe, 0.85));
+        for (let x = -versatz; x < z.breite; x += breit) {
+          z.strich(x, y, x + breit, y, fuge, 1.6);
+          z.strich(x, y, x, y + reihe, fuge, 1);
+        }
+      }
+    },
+  },
+  // Stehfalzdeckung: Bahnen 50 cm breit, Falze als durchgehende Linien die Schräge hinunter
+  stehfalz: {
+    breite: 4, hoehe: 4, pixelProMeter: 160,
+    zeichnen(z) {
+      const bahn = 0.5;
+      for (let x = 0; x < z.breite - 0.001; x += bahn) z.flaeche(x, 0, bahn, z.hoehe, abwandeln(z.farbe, 0.02, z.zufall));
+      const falz = abdunkeln(z.farbe, 0.62);
+      const licht = aufhellen(z.farbe, 0.25);
+      for (let x = 0; x < z.breite - 0.001; x += bahn) {
+        z.flaeche(x + 0.006, 0, 0.008, z.hoehe, licht);
+        z.strich(x, 0, x, z.hoehe, falz, 1.6, 0.9, true);
+      }
+    },
+  },
+  // Extensives Gründach: Sedum-Teppich, unregelmäßige hellere und dunklere Flecken
+  gruendach: {
+    breite: 3, hoehe: 3, pixelProMeter: 160,
+    zeichnen(z) {
+      z.flaeche(0, 0, z.breite, z.hoehe, z.farbe);
+      z.wolken(0.12, 2);
+      for (let i = 0; i < 2600; i++) {
+        const r = 0.01 + 0.025 * z.zufall();
+        const ton = z.zufall() < 0.5 ? abdunkeln(z.farbe, 0.8) : aufhellen(z.farbe, 0.18);
+        z.fleck(z.zufall() * z.breite, z.zufall() * z.hoehe, r, r, ton, 0.8);
+      }
+      z.koernung(0.06, 15000);
     },
   },
 };
@@ -261,6 +343,80 @@ const ECHT = {
       const profil = '#3a3d42';
       for (let x = 0; x < z.breite - 0.001; x += 1.25) { z.flaeche(x - 0.025, 0, 0.05, z.hoehe, profil); z.relief(x - 0.025, 0, 0.05, z.hoehe, 255); }
       for (let y = 0; y < z.hoehe - 0.001; y += 1.5) { z.flaeche(0, y - 0.025, z.breite, 0.05, profil); z.relief(0, y - 0.025, z.breite, 0.05, 255); }
+    },
+  },
+
+  // --- Dach ---
+  abdichtung: {
+    breite: 4, hoehe: 4, pixelProMeter: 128, rau: 0.95, metall: 0,
+    zeichnen(z) {
+      z.flaeche(0, 0, z.breite, z.hoehe, z.farbe);
+      z.relief(0, 0, z.breite, z.hoehe, 200);
+      z.koernungEcht(0.08, 70000, true);
+      z.wolken(0.04);
+      for (let x = 0; x < z.breite - 0.001; x += 1) {
+        z.linie(x, 0, x, z.hoehe, abdunkeln(z.farbe, 0.9), 1, 0.6);
+        z.relief(x, 0, 0.01, z.hoehe, 240);
+      }
+    },
+  },
+  // Falzziegel: Farbe je Ziegel nur leicht verschieden (geändert nach Test: vorher zu bunt),
+  // dazu großflächige, weiche Alterung. Relief: jeder Ziegel steigt zur Unterkante hin an und hat
+  // zwei flache Wellen (Mulden) quer, oben liegt er im Schatten des Ziegels darüber.
+  ziegel: {
+    breite: 3, hoehe: 3, pixelProMeter: 192, rau: 0.75, metall: 0, relief: 2.5,
+    zeichnen(z) {
+      const breit = 0.3, reihe = 1 / 3, zellen = 8;
+      for (let y = 0; y < z.hoehe - 0.001; y += reihe) {
+        const versatz = Math.round(y / reihe) % 2 ? breit / 2 : 0;
+        for (let x = -versatz; x < z.breite; x += breit) {
+          const ton = abwandeln(z.farbe, 0.03, z.zufall);
+          for (let i = 0; i < zellen; i++) {
+            const welle = Math.sin(((i + 0.5) / zellen) * 2 * Math.PI * 2); // zwei Mulden je Ziegel
+            const streifen = abdunkeln(ton, 1 + 0.035 * welle);
+            z.flaeche(x + (i * breit) / zellen, y, breit / zellen, reihe, streifen);
+            for (let j = 0; j < zellen; j++) {
+              z.relief(x + (i * breit) / zellen, y + (j * reihe) / zellen, breit / zellen, reihe / zellen,
+                70 + j * 18 + 25 * welle);
+            }
+          }
+          z.flaeche(x, y, breit, 0.03, abdunkeln(ton, 0.72)); // Schatten unter dem Ziegel darüber
+          z.relief(x, y, breit, 0.03, 20);
+          z.flaeche(x + breit - 0.004, y, 0.004, reihe, abdunkeln(ton, 0.8)); // schmaler Spalt zum Nachbarn
+        }
+      }
+      z.koernungEcht(0.03, 40000);
+      z.wolken(0.05);
+    },
+  },
+  stehfalz: {
+    breite: 4, hoehe: 4, pixelProMeter: 160, rau: 0.4, metall: 0.55,
+    zeichnen(z) {
+      const bahn = 0.5;
+      z.relief(0, 0, z.breite, z.hoehe, 120);
+      for (let x = 0; x < z.breite - 0.001; x += bahn) {
+        z.verlauf(x, 0, bahn, z.hoehe, abwandeln(aufhellen(z.farbe, 0.05), 0.03, z.zufall), abwandeln(z.farbe, 0.03, z.zufall));
+        z.flaeche(x - 0.01, 0, 0.02, z.hoehe, aufhellen(z.farbe, 0.15)); // Falz
+        z.flaeche(x + 0.01, 0, 0.006, z.hoehe, abdunkeln(z.farbe, 0.6)); // Schattenseite des Falzes
+        z.relief(x - 0.01, 0, 0.02, z.hoehe, 255);
+      }
+      z.koernungEcht(0.015, 15000);
+    },
+  },
+  gruendach: {
+    breite: 3, hoehe: 3, pixelProMeter: 160, rau: 1, metall: 0,
+    zeichnen(z) {
+      z.flaeche(0, 0, z.breite, z.hoehe, abdunkeln(z.farbe, 0.85));
+      z.relief(0, 0, z.breite, z.hoehe, 120);
+      z.wolken(0.15, 2);
+      for (let i = 0; i < 9000; i++) {
+        const r = 0.006 + 0.018 * z.zufall();
+        const w = z.zufall();
+        const ton = w < 0.15 ? '#9a7b5e' : w < 0.25 ? '#a7a24e' : abwandeln(aufhellen(z.farbe, 0.1 * z.zufall()), 0.18, z.zufall);
+        z.fleck(z.zufall() * z.breite, z.zufall() * z.hoehe, r, r * (0.6 + 0.6 * z.zufall()), ton, 0.85);
+        z.relief(z.zufall() * z.breite, z.zufall() * z.hoehe, r, r, 160 + 95 * z.zufall());
+      }
+      z.koernungEcht(0.1, 50000, true);
     },
   },
 };
@@ -408,7 +564,7 @@ function kachelZeichnen(eintrag) {
 }
 
 function eintragZu(id) {
-  return MATERIALIEN.find((m) => m.id === id) ?? MATERIALIEN[0];
+  return MATERIALIEN.find((m) => m.id === id) ?? DACHMATERIALIEN.find((m) => m.id === id) ?? MATERIALIEN[0];
 }
 
 const kacheln = new Map();
@@ -462,6 +618,14 @@ export function fassadenMaterial(id, hover = false) {
   return materialien.get(schluessel);
 }
 
+// Schlichtes Material für die schmalen Dachkanten (ohne Muster), einmal je Dachmaterial
+const kantenMaterialien = new Map();
+export function dachKantenMaterial(id) {
+  const eintrag = eintragZu(id);
+  if (!kantenMaterialien.has(eintrag.id)) kantenMaterialien.set(eintrag.id, flaeche(eintrag.kante ?? abdunkeln(eintrag.farbe, 0.85)));
+  return kantenMaterialien.get(eintrag.id);
+}
+
 // ---------- „realistisch“: Texturen und 3D-Materialien ----------
 
 // Farb- und Reliefbild einer realistischen Kachel
@@ -503,7 +667,7 @@ export function realistischesFassadenMaterial(original) {
   return new THREE.MeshStandardMaterial({
     map,
     bumpMap: bump,
-    bumpScale: muster.glas ? 0.3 : 1.5,
+    bumpScale: muster.relief ?? (muster.glas ? 0.3 : 1.5),
     roughness: muster.rau,
     metalness: muster.metall,
     envMapIntensity: muster.glas ? 1.4 : 0.6,

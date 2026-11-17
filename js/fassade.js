@@ -1,8 +1,8 @@
 // Außenwände erkennen, Himmelsrichtung bestimmen, einfärben
 // und die Wände mit veränderten Fensteröffnungen als eigene „Scheiben“ neu bauen
 import * as THREE from 'three';
-import { MATERIAL, kantenlinienHinzufuegen } from './darstellung.js?v=16';
-import { fassadenMaterial } from './materialien.js?v=18';
+import { MATERIAL, kantenlinienHinzufuegen } from './darstellung.js?v=19';
+import { fassadenMaterial, dachKantenMaterial } from './materialien.js?v=19e';
 
 // Reihenfolge im Uhrzeigersinn, Norden = Plan-oben = -Z in der 3D-Szene
 const RICHTUNGEN = ['N', 'O', 'S', 'W'];
@@ -287,6 +287,132 @@ export function stuetzenVorbereiten(gruppe) {
 export function stuetzeFaerben(stuetze, materialID) {
   const material = fassadenMaterial(materialID);
   for (const netz of stuetze.children) netz.material = material;
+}
+
+// ---------- Dach (Sitzung 17b) ----------
+
+// Schmale Dachkanten (Ortgang, Traufkante, Attika-Rand): Ebenen, deren Fläche geteilt durch ihre Länge
+// kleiner ist als dieser Wert (Meter). Sie bekommen kein Muster, sondern eine schlichte Farbe (wie ein Ortgangblech),
+// sonst laufen Ziegelreihen dort schräg.
+const KANTE_HOECHSTENS = 0.6;
+
+// Alle Dachteile; bekommen Texturkoordinaten in Metern, je Dreieck nach der Lage seiner Fläche:
+// geneigte Fläche: u waagerecht entlang der Traufe, v die Schräge hinauf (Ziegelreihen liegen parallel zur Traufe,
+// Falze laufen die Schräge hinunter); flache Fläche: Draufsicht. Schmale Kanten kommen in ein eigenes Netz
+// (userData.dachKante) ohne Muster.
+export function dachVorbereiten(gruppe) {
+  gruppe.updateMatrixWorld(true);
+  const dachteile = gruppe.children.filter((b) => b.userData.art === 'dach');
+  const ecken = [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()];
+  const n = new THREE.Vector3(), hinauf = new THREE.Vector3(), traufe = new THREE.Vector3();
+  const k1 = new THREE.Vector3(), k2 = new THREE.Vector3();
+  for (const teil of dachteile) {
+    for (const netz of [...teil.children]) {
+      if (!netz.isMesh) continue;
+      // Jedes Dreieck braucht eigene Eckpunkte, sonst teilen sich zwei verschieden geneigte Flächen eine Texturkoordinate
+      if (netz.geometry.index) netz.geometry = netz.geometry.toNonIndexed();
+      const kanten = kantenDreiecke(netz);
+      if (kanten.size > 0) {
+        const alle = netz.geometry;
+        const flaechen = [], rand = [];
+        for (let d = 0; d < alle.attributes.position.count / 3; d++) (kanten.has(d) ? rand : flaechen).push(d);
+        netz.geometry = dreieckeAuswaehlen(alle, flaechen);
+        const kante = new THREE.Mesh(dreieckeAuswaehlen(alle, rand), MATERIAL.dach);
+        kante.userData.dachKante = true;
+        netz.add(kante);
+        netz.updateMatrixWorld(true);
+        alle.dispose();
+      }
+      const pos = netz.geometry.attributes.position;
+      const uv = new Float32Array(pos.count * 2);
+      for (let i = 0; i + 2 < pos.count; i += 3) {
+        for (let j = 0; j < 3; j++) ecken[j].fromBufferAttribute(pos, i + j).applyMatrix4(netz.matrixWorld);
+        n.crossVectors(k1.subVectors(ecken[1], ecken[0]), k2.subVectors(ecken[2], ecken[0])).normalize();
+        if (n.y < 0) n.negate();
+        for (let j = 0; j < 3; j++) {
+          const p = ecken[j];
+          let u, v;
+          if (n.y > 0.995 || n.lengthSq() < 0.5) { // flach (oder entartetes Dreieck): Draufsicht, Norden oben
+            u = p.x; v = -p.z;
+          } else if (n.y < 0.2) { // senkrecht
+            u = (p.x * -n.z + p.z * n.x) / Math.hypot(n.x, n.z); v = p.y;
+          } else { // geneigt
+            hinauf.set(-n.x * n.y, 1 - n.y * n.y, -n.z * n.y).normalize();
+            traufe.set(-n.z, 0, n.x).normalize();
+            u = p.dot(traufe); v = p.dot(hinauf);
+          }
+          uv[2 * (i + j)] = u;
+          uv[2 * (i + j) + 1] = v;
+        }
+      }
+      netz.geometry.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+    }
+  }
+  return dachteile;
+}
+
+// Nummern der Dreiecke, die zu schmalen Kanten gehören. Dreiecke werden nach ihrer Ebene sortiert
+// (Richtung auf ca. 3° und Lage auf 5 cm gerundet); je Ebene: Fläche ÷ Länge (Diagonale des umgebenden Kastens) = Breite.
+function kantenDreiecke(netz) {
+  const pos = netz.geometry.attributes.position;
+  const a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3();
+  const n = new THREE.Vector3(), k1 = new THREE.Vector3(), k2 = new THREE.Vector3();
+  const ebenen = new Map();
+  const zuEbene = [];
+  for (let i = 0; i + 2 < pos.count; i += 3) {
+    a.fromBufferAttribute(pos, i).applyMatrix4(netz.matrixWorld);
+    b.fromBufferAttribute(pos, i + 1).applyMatrix4(netz.matrixWorld);
+    c.fromBufferAttribute(pos, i + 2).applyMatrix4(netz.matrixWorld);
+    n.crossVectors(k1.subVectors(b, a), k2.subVectors(c, a));
+    const flaeche = n.length() / 2;
+    if (flaeche < 1e-9) { zuEbene.push(null); continue; }
+    n.normalize();
+    // Vorzeichen einheitlich, damit Vorder- und Rückseite derselben Ebene zusammenfallen
+    const e = 1e-3;
+    if (n.y < -e || (Math.abs(n.y) <= e && (n.x < -e || (Math.abs(n.x) <= e && n.z < 0)))) n.negate();
+    const r = (w, schritt) => Math.round(w / schritt);
+    const schluessel = `${r(n.x, 0.05)},${r(n.y, 0.05)},${r(n.z, 0.05)},${r(n.dot(a), 0.05)}`;
+    let ebene = ebenen.get(schluessel);
+    if (!ebene) { ebene = { flaeche: 0, kasten: new THREE.Box3() }; ebenen.set(schluessel, ebene); }
+    ebene.flaeche += flaeche;
+    ebene.kasten.expandByPoint(a).expandByPoint(b).expandByPoint(c);
+    zuEbene.push(ebene);
+  }
+  const kanten = new Set();
+  const groesse = new THREE.Vector3();
+  zuEbene.forEach((ebene, d) => {
+    if (!ebene) return;
+    const laenge = ebene.kasten.getSize(groesse).length();
+    if (laenge > 0 && ebene.flaeche / laenge < KANTE_HOECHSTENS) kanten.add(d);
+  });
+  // Besteht alles nur aus „Kanten“ (z. B. ein sehr kleines Dachteil), lieber nichts abtrennen
+  return kanten.size === zuEbene.length ? new Set() : kanten;
+}
+
+// Neue Form nur aus den genannten Dreiecken (Eckpunkte und Normalen werden übernommen)
+function dreieckeAuswaehlen(geometrie, dreiecke) {
+  const neu = new THREE.BufferGeometry();
+  for (const name of ['position', 'normal']) {
+    const alt = geometrie.attributes[name];
+    if (!alt) continue;
+    const werte = new Float32Array(dreiecke.length * 9);
+    dreiecke.forEach((d, k) => {
+      for (let j = 0; j < 3; j++) for (let x = 0; x < 3; x++) werte[k * 9 + j * 3 + x] = alt.getComponent(d * 3 + j, x);
+    });
+    neu.setAttribute(name, new THREE.BufferAttribute(werte, 3));
+  }
+  return neu;
+}
+
+// Dachteil mit dem gewählten Dachmaterial einfärben; schmale Kanten schlicht in der Kantenfarbe des Materials
+export function dachFaerben(teil, materialID) {
+  const material = fassadenMaterial(materialID);
+  const kante = dachKantenMaterial(materialID);
+  for (const netz of teil.children) {
+    if (!netz.isMesh) continue;
+    netz.material = material;
+    for (const k of netz.children) if (k.userData.dachKante) k.material = kante;
+  }
 }
 
 // ---------- Fenster und Wandscheiben ----------

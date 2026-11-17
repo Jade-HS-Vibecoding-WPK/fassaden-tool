@@ -1,8 +1,8 @@
 // Bedienoberfläche: Datei wählen oder hineinziehen, Modell anzeigen, Fassade gestalten
-import { Szene } from './szene.js?v=18b';
-import { ifcLaden } from './ifc.js?v=17';
-import { aussenwaendeErkennen, wandFaerben, oeffnungenZuordnen, fensterAnpassen, stuetzenVorbereiten, stuetzeFaerben, kennwerteBerechnen, hauptrichtungBestimmen, fensterFaerben, anbauteileZuordnen } from './fassade.js?v=18';
-import { MATERIALIEN, START_MATERIAL, PFOSTEN_RIEGEL, musterBild } from './materialien.js?v=18';
+import { Szene } from './szene.js?v=19e';
+import { ifcLaden } from './ifc.js?v=19';
+import { aussenwaendeErkennen, wandFaerben, oeffnungenZuordnen, fensterAnpassen, stuetzenVorbereiten, stuetzeFaerben, dachVorbereiten, dachFaerben, kennwerteBerechnen, hauptrichtungBestimmen, fensterFaerben, anbauteileZuordnen } from './fassade.js?v=19e';
+import { MATERIALIEN, DACHMATERIALIEN, START_MATERIAL, START_DACH, PFOSTEN_RIEGEL, musterBild } from './materialien.js?v=19e';
 import { variantenLesen, varianteSpeichern, varianteLoeschen } from './varianten.js';
 import { pdfErstellen, pdfDateiname } from './pdf.js?v=11';
 
@@ -13,6 +13,7 @@ const szene = new Szene(ansicht);
 let waende = []; // alle Wände des geladenen Modells
 let oeffnungen = []; // alle Fenster und Türen
 let stuetzen = []; // alle Stützen
+let dachteile = []; // alle Dachteile (IfcRoof bzw. Decken mit Typ „Dach“)
 let modellKennung = null; // Dateiname + Anzahl Wände: zu welchem Modell eine Variante gehört
 let modellName = ''; // Dateiname der IFC (steht im Kopf des PDF)
 
@@ -38,6 +39,9 @@ const materialJeRichtung = { N: START_MATERIAL, O: START_MATERIAL, S: START_MATE
 
 // Ein Material für alle Stützen, unabhängig von den Himmelsrichtungen
 let materialStuetzen = 'sichtbeton';
+
+// Ein Material für alle Dachteile (Sitzung 17b)
+let materialDach = START_DACH;
 
 // Fenstergröße je Himmelsrichtung in % der Größe aus der IFC
 const fensterJeRichtung = {};
@@ -109,6 +113,7 @@ function allesFaerben() {
     wandFaerben(wand, materialien, schimmer, materialJeWand.get(wand.userData.expressID));
   }
   for (const stuetze of stuetzen) stuetzeFaerben(stuetze, materialStuetzen);
+  for (const teil of dachteile) dachFaerben(teil, materialDach);
   for (const oe of oeffnungen) {
     fensterFaerben(oe, fensterAuswahl.has(oe) ? 'auswahl' : einzelneFenster && oe === szene.hoverBauteil);
   }
@@ -222,6 +227,9 @@ function aussenwaendeAnzeigen() {
   // Zeile „Stützen“ nur, wenn die IFC Stützen hat
   materialZeilen.Stuetzen.zeile.hidden = stuetzen.length === 0;
   $('anzahlStuetzen').textContent = stuetzen.length === 1 ? '1 Stütze' : `${stuetzen.length} Stützen`;
+  // Zeile „Dach“ nur, wenn die IFC ein Dach hat
+  materialZeilen.Dach.zeile.hidden = dachteile.length === 0;
+  $('anzahlDach').textContent = dachteile.length === 1 ? '1 Dachteil' : `${dachteile.length} Dachteile`;
 }
 
 // Zwei Zahlenfelder „Felder … breit × … hoch“ für die Pfosten-Riegel-Fassade.
@@ -261,13 +269,13 @@ function felderzeileAufbauen(lesen) {
 }
 
 // Eine Zeile der Materialwahl: Name, Musterbild, Auswahlliste; bei Pfosten-Riegel darunter die Felder
-// schluessel: N/O/S/W, 'Alle' oder 'Stuetzen'; lesen/schreiben: woher das Material kommt und wohin es geht;
-// felder(): die Felder dieser Zeile (nicht bei den Stützen)
+// schluessel: N/O/S/W, 'Alle', 'Stuetzen' oder 'Dach'; lesen/schreiben: woher das Material kommt und wohin es geht;
+// felder(): die Felder dieser Zeile (nicht bei Stützen und Dach); angebot: welche Materialien zur Wahl stehen
 const materialZeilen = {};
-function materialzeileAufbauen(schluessel, name, lesen, schreiben, felder = null) {
+function materialzeileAufbauen(schluessel, name, lesen, schreiben, felder = null, angebot = MATERIALIEN) {
   const block = document.createElement('div');
   const zeile = document.createElement('label');
-  zeile.className = schluessel === 'Stuetzen' ? 'materialzeile stuetzen' : 'materialzeile';
+  zeile.className = schluessel === 'Stuetzen' || schluessel === 'Dach' ? `materialzeile ${schluessel.toLowerCase()}` : 'materialzeile';
 
   const titel = document.createElement('span');
   titel.textContent = name;
@@ -279,7 +287,7 @@ function materialzeileAufbauen(schluessel, name, lesen, schreiben, felder = null
   muster.className = 'muster';
 
   const liste = document.createElement('select');
-  for (const m of MATERIALIEN) if (felder || !m.pfostenRiegel) liste.add(new Option(m.name, m.id));
+  for (const m of angebot) if (felder || !m.pfostenRiegel) liste.add(new Option(m.name, m.id));
   const felderzeile = felder ? felderzeileAufbauen(() => [felder()]) : null;
 
   // Liste und Musterbild auf den gespeicherten Wert setzen
@@ -315,13 +323,15 @@ function materialwahlAufbauen() {
   }
   materialzeileAufbauen('Stuetzen', 'Stützen', () => materialStuetzen, (wert) => { materialStuetzen = wert; });
   materialZeilen.Stuetzen.zeile.hidden = true; // erscheint erst, wenn ein Modell mit Stützen geladen ist
+  materialzeileAufbauen('Dach', 'Dach', () => materialDach, (wert) => { materialDach = wert; }, null, DACHMATERIALIEN);
+  materialZeilen.Dach.zeile.hidden = true; // erscheint erst, wenn ein Modell mit Dach geladen ist
   materialwahlUmschalten();
 }
 
-// Je nach Schalter nur die Zeile „Alle“ oder die vier Zeilen je Seite zeigen (die Zeile „Stützen“ bleibt)
+// Je nach Schalter nur die Zeile „Alle“ oder die vier Zeilen je Seite zeigen (die Zeilen „Stützen“ und „Dach“ bleiben)
 function materialwahlUmschalten() {
   for (const [schluessel, { zeile }] of Object.entries(materialZeilen)) {
-    if (schluessel === 'Stuetzen') continue;
+    if (schluessel === 'Stuetzen' || schluessel === 'Dach') continue;
     zeile.hidden = (schluessel === 'Alle') !== materialAlleGleich;
   }
 }
@@ -653,7 +663,7 @@ $('blickHoehe').addEventListener('input', () => {
 // Alle Einstellungen als reine Daten (Kopien, damit spätere Änderungen die Variante nicht verstellen)
 function einstellungenSammeln() {
   return structuredClone({
-    materialJeRichtung, materialStuetzen, materialAlleGleich, materialAlle,
+    materialJeRichtung, materialStuetzen, materialDach, materialAlleGleich, materialAlle,
     fensterJeRichtung, fensterAlleGleich, fensterAlle,
     // nur die Wände, die per Klick anders sind als die automatische Erkennung
     wandUmgeschaltet: waende.filter((w) => w.userData.aussen !== w.userData.aussenAuto).map((w) => w.userData.expressID),
@@ -702,6 +712,7 @@ function varianteLaden(variante) {
   const e = variante.einstellungen;
   Object.assign(materialJeRichtung, e.materialJeRichtung);
   materialStuetzen = e.materialStuetzen;
+  materialDach = e.materialDach ?? START_DACH; // ältere Varianten: schlicht hell
   materialAlleGleich = e.materialAlleGleich;
   materialAlle = e.materialAlle;
   for (const richtung of Object.keys(RICHTUNGSNAMEN)) fensterJeRichtung[richtung] = { ...e.fensterJeRichtung[richtung] };
@@ -870,7 +881,7 @@ $('vergleichPdf').addEventListener('click', () => pdfSpeichern($('vergleichPdf')
 
 // ---------- Variantenvergleich: eine Spalte je Variante, gleiche Zeilen auf gleicher Höhe ----------
 
-const materialName = (id) => MATERIALIEN.find((m) => m.id === id)?.name ?? id;
+const materialName = (id) => [...MATERIALIEN, ...DACHMATERIALIEN].find((m) => m.id === id)?.name ?? id;
 const anteilText = ({ fassade, fenster }) => (fassade > 0 ? `${Math.round((fenster / fassade) * 100)} %` : '–');
 let vergleichAdressen = []; // Bildadressen des Vergleichs, werden beim Schließen freigegeben
 
@@ -968,6 +979,7 @@ function vergleichOeffnen() {
     zeile(name, (v) => materialFeld(materialVon(v, richtung), felderVon(v, richtung)), 'material');
   }
   if (stuetzen.length > 0) zeile('Stützen', (v) => materialFeld(v.einstellungen.materialStuetzen), 'material');
+  if (dachteile.length > 0) zeile('Dach', (v) => materialFeld(v.einstellungen.materialDach ?? START_DACH), 'material');
   // Einzelne Wände mit eigenem Material: Anzahl je Material (nur, wenn eine der Varianten welche hat)
   if (varianten.some((v) => v.einstellungen.materialJeWand?.length)) {
     zeile('Einzelne Wände', (v) => {
@@ -1100,6 +1112,7 @@ async function dateiOeffnen(datei) {
     oeffnungen = oeffnungenZuordnen(gruppe, waende);
     anbauteileZuordnen(gruppe, waende);
     stuetzen = stuetzenVorbereiten(gruppe);
+    dachteile = dachVorbereiten(gruppe);
     // Eigenes Material einzelner Wände gehört zum alten Modell
     materialJeWand.clear();
     auswahl.clear();
