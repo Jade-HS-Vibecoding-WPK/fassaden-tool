@@ -8,7 +8,7 @@ Entsteht in der Vibecoding KI-Werkstatt (Jade Hochschule, 16.–20.11.2026). Abg
 - Ein Feature pro Sitzung: nur die nächste offene Nummer aus dem Sitzungsplan in PLAN.md bauen, nicht mehr.
   Wird ein zweites Feature gewünscht, auf eine neue Sitzung (`/clear`) hinweisen.
 - Erst bauen, wenn die Nutzerin ausdrücklich „los“ sagt. Beim Planen keine Dateien außer PLAN.md/CLAUDE.md anlegen oder ändern.
-- Ende jeder Sitzung: testen, Commit vorschlagen, Stand in PLAN.md festhalten (Sitzung abhaken, Probleme notieren)
+- Ende jeder Sitzung: testen, Commit + Hochladen zu GitHub vorschlagen, Stand in PLAN.md festhalten (Sitzung abhaken, Probleme notieren)
   und die Nutzerin daran erinnern.
 - Neue Regel oder Entscheidung → sofort hier bzw. in PLAN.md eintragen.
 - Keine API-Keys, keine personenbezogenen Daten, keine Büro-/Kundendaten.
@@ -18,7 +18,8 @@ Entsteht in der Vibecoding KI-Werkstatt (Jade Hochschule, 16.–20.11.2026). Abg
 - Reine statische Webseite, läuft ohne Installation und auf GitHub Pages: `index.html`, `style.css`, `js/*.js`.
 - Bibliotheken per CDN (Import-Map in `index.html`): three.js 0.160.0 (3D), web-ifc 0.0.57 (IFC lesen).
 - Kein Node/npm auf dem Rechner. Lokal testen mit `python -m http.server 8000` (siehe `.claude/launch.json`).
-- Git ist installiert und im Projekt eingerichtet (Zweig `main`). Commits lokal, GitHub erst ab Donnerstag.
+- Git ist installiert und im Projekt eingerichtet (Zweig `main`). GitHub: https://github.com/Jade-HS-Vibecoding-WPK/fassaden-tool
+  (öffentlich). Nach jedem Commit auch hochladen (`git push`), damit die Zwischenstände dort liegen.
 - Code-Namen und Kommentare auf Deutsch.
 
 # Aufbau

@@ -76,12 +76,14 @@ nebeneinander vergleicht und als PDF mitnimmt.
 - Einfach halten: eine Wand pro Seite und Geschoss reicht, Details stören eher.
 
 ## Speicherstände und GitHub
-- Nach jedem fertigen Feature ein lokaler Commit (Speicherstand) auf dem Laptop.
-- Zu GitHub hochladen erst am Donnerstag (Veröffentlichung über GitHub Pages) und zur Abgabe am Freitag.
+- Nach jedem fertigen Feature ein Commit (Speicherstand) und gleich danach hochladen zu GitHub.
+- **Geändert (17.11.):** Zwischenstände sollen laut Werkstatt doch laufend auf GitHub liegen, nicht erst ab Donnerstag.
+  Repo: https://github.com/Jade-HS-Vibecoding-WPK/fassaden-tool (öffentlich, MIT-Lizenz, README von GitHub).
+  Erstes Hochladen am 17.11. nach Sitzung 8. GitHub Pages (Veröffentlichung der App) kommt weiter in Sitzung 21.
 - `testdaten/` wird nicht hochgeladen (Beispiel-IFC stammt von der Bundesingenieurkammer, Nutzungsbedingungen nicht geklärt).
 
 ## Sitzungsplan (ein Feature pro Sitzung)
-Ablauf jeder Sitzung: `/clear` → ein Feature bauen → testen → Commit → Stand hier in PLAN.md festhalten.
+Ablauf jeder Sitzung: `/clear` → ein Feature bauen → testen → Commit + Hochladen → Stand hier in PLAN.md festhalten.
 Erledigte Sitzungen abhaken, die nächste offene Nummer ist dran.
 
 **Mo 16.11.**
