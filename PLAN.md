@@ -115,7 +115,8 @@ Erledigte Sitzungen abhaken, die oberste offene Zeile ist dran (die Nummern blei
 
 **Do 19.11. – bis 12 Uhr fertig**
 - [x] 17. Should 4a: Umschalter „realistisch“ (umgestellt 17.11., Wunsch der Nutzerin) (17.11.)
-- [ ] 18. Should 4b: eigene Farbe pro Material ← **als Nächstes**
+- [ ] 17b. Dachmaterial wählbar (Wunsch der Nutzerin 17.11.: dunkle Dächer stechen heraus) ← **als Nächstes**
+- [ ] 18. Should 4b: eigene Farbe pro Material
 - [ ] 15. Should 3a: Sonnenstand und Schatten (nach hinten gestellt, Wunsch der Nutzerin 17.11.)
 - [ ] 16. Should 3b: Standort per Ortssuche (darf notfalls wegfallen)
 - [ ] 19. Should 4c: PDF-Einzelseiten (fällt als Erstes weg, wenn es eng wird)
@@ -488,6 +489,14 @@ Mit der Nutzerin als Testseite entworfen und abgestimmt („erstmal so festhalte
   kein Unterschied. Nur auf diesem Rechner gemessen; über dem 3D-Bild nur wenige, kleine Glas-Elemente verwenden.
 
 ## Nächste Schritte
+- **Sitzung 17b (Entscheidung 17.11., vor dem Bauen):** Dachmaterial wählbar.
+  **Bedienung:** eine Zeile **„Dach“** im Bereich „3 Fassade“ (wie „Stützen“), ein Material für alle Dachteile
+  (IfcRoof bzw. Decken mit Typ „Dach“); einzelne Dachflächen nicht.
+  **Materialien:** Dachziegel (rot, anthrazit), Stehfalz/Metall (hellgrau, anthrazit), Gründach, schlicht hell / Abdichtung.
+  Gezeichnet im Zeichenstil wie die Fassaden, dazu je eine Fassung für „realistisch“ (Sitzung 17).
+  **Startwert:** ruhiges Hellgrau (schlicht), damit das Dach nicht mehr heraussticht.
+  **Fensterrahmen und Pfosten/Riegel bleiben anthrazit** (Entkopplung von der Dachfarbe).
+  Wird mit der Variante gespeichert und geladen (ältere Varianten: hellgrau); Bilder/PDF zeigen es automatisch.
 - **Sitzung 17 (erledigt, s. o.; Entscheidung 17.11., vor dem Bauen):** Umschalter „realistisch“.
   **Ort:** kleiner Umschalter **„Zeichnung | Realistisch“ im 3D-Fenster**, immer sichtbar.
   **Look realistisch:** keine Kantenlinien, echtes Licht mit Licht- und Schattenseiten, feinere Texturen
