@@ -399,6 +399,29 @@ Was bis Do 10:30 nicht fertig ist, wandert zu Could.
   `index.html` im Zwischenspeicher – falls der Schalter fehlt: Strg+Umschalt+R. Mit echter Maus nur kurz ausprobiert.
   **Geändert (Wunsch der Nutzerin):** In der ausklappbaren Erklärung zu „Einzelne Fenster“ steht kein „0 = Fenster zu“ mehr.
 
+## Design-Vision (Entwurf 17.11., nach Sitzung 13 – noch nicht gebaut, Zeitpunkt offen)
+Mit der Nutzerin als Testseite entworfen und abgestimmt („erstmal so festhalten“). Umbau später in einer eigenen Sitzung.
+- **Stil:** Glassmorphism – halbtransparente Glaskarten mit Unschärfe vor einem dunklen, farbigen Verlauf,
+  feine helle Ränder, weiche Schatten, viel Luft.
+- **Hintergrund:** dunkler Verlauf Nachtblau → Violett → Petrol (Grundton `linear-gradient(135deg, #13203f, #241a46, #0f3a33)`),
+  darüber weiche Farbflecken: Blau `#2f5fa8` oben links, Violett `#6a3f9e` oben rechts, Petrol `#12807a` unten rechts,
+  **dunkles Grün** `#1c5c39` unten links (nach Rückmeldung abgedunkelt) und ein leichter Grünschimmer in der Mitte.
+- **Gläser (Kopfleiste, Seitenleiste):** sehr durchsichtig und spiegelnd: Weiß 3–20 % mit Lichtreflex oben links,
+  Unschärfe ca. 16 px, helle Oberkante, Ecken ca. 22 px rund. Schrift darauf fast weiß (`#eef2f8`), Regular statt Light.
+- **3D-Fenster:** fast weiß (ca. 84 % deckend), damit die Materialfarben echt wirken; Schrift dort dunkelgrau (`#2c3445`), nie ganz schwarz.
+  Das 3D-Fenster nimmt den größten Teil der Fläche ein, das Haus füllt es fast ganz.
+- **Aufbau:** oben eine Glas-Kopfleiste mit App-Name, Dateiname, den Schritten **Außenwände · Fassade · Fenster · Varianten**
+  (ohne Nummern, aktiver Schritt als helle „Pille“) und rechts „Variante speichern“ (Dunkelblau, rund).
+  Passen die Schritte nicht hinein, lassen sie sich mit einer dünnen Glas-Schiebeleiste seitlich schieben.
+  Links eine Glas-Seitenleiste nur mit dem aktuellen Schritt (Seitenleiste ca. 300 px, Schiebeleiste ebenfalls aus Glas).
+  Im 3D-Fenster oben rechts kleine Glas-Knöpfe 3D / N / O / S / W, unten links die Maus-Legende als Glas-Pille.
+- **Kennwerte:** klein, als eine Zeile unten in der Seitenleiste (nicht zentral, Wunsch der Nutzerin).
+- **Schrift:** Artifakt Element (Autodesk): Fließtext **Light**, Überschriften **Heavy**, größer und schwer.
+  Bei der Nutzerin installiert (kommt mit Revit). Schriftdatei **nicht** auf GitHub (Lizenz Autodesk); wer sie nicht hat,
+  sieht Helvetica/Arial. Einbinden über `@font-face` mit `local("Artifakt Element Light")` usw.
+- **Ruckel-Test (17.11.):** Einfamilienhaus mit Glas-Effekten in der echten App 4 s gedreht: ca. 50 Bilder/s, ohne Glas ca. 51 –
+  kein Unterschied. Nur auf diesem Rechner gemessen; über dem 3D-Bild nur wenige, kleine Glas-Elemente verwenden.
+
 ## Nächste Schritte
 - **Sitzung 13 (erledigt, s. o.; Entscheidung 17.11., vor dem Bauen):** Einzelnes Fenster → Maße ändern.
   Im Bereich „4 Fenster“ ein Schalter **„Einzelne Fenster“** (wie „Einzelne Wände“; ist der eine an, geht der andere aus).

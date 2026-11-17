@@ -46,5 +46,8 @@ Entsteht in der Vibecoding KI-Werkstatt (Jade Hochschule, 16.–20.11.2026). Abg
 - Oberfläche schlank: nur zeigen, was schon funktioniert; jeder Bereich kommt in seiner Sitzung dazu.
 
 # Gestaltung
-- Swiss Style: weiß, viel Weißraum, dünne Linien, eine Akzentfarbe (Dunkelblau).
-- Ein Hauptbutton pro Ansicht („Variante speichern“).
+- Bisher (gebaut): Swiss Style, weiß, viel Weißraum, dünne Linien, eine Akzentfarbe (Dunkelblau).
+- **Neue Richtung (Entwurf 17.11., noch nicht gebaut):** Glassmorphism – Details in PLAN.md unter „Design-Vision“.
+- Ein Hauptbutton pro Ansicht („Variante speichern“), Akzentfarbe bleibt Dunkelblau (#1f3a68).
+- Kennwerte zurückhaltend zeigen, nicht groß oder zentral (Wunsch der Nutzerin, 17.11.).
+- PDF und Variantenbilder bleiben weiß, der neue Look gilt nur für die Bedienoberfläche.
