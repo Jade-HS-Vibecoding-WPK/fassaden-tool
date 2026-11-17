@@ -675,12 +675,22 @@ function grossbildSchliessen() {
 $('vergleichOeffnen').addEventListener('click', vergleichOeffnen);
 $('vergleichSchliessen').addEventListener('click', vergleichSchliessen);
 $('grossbild').addEventListener('click', grossbildSchliessen);
-// Esc schließt zuerst das große Bild, dann den Vergleich
+// Esc schließt zuerst das große Bild, dann den Vergleich, dann die Anleitung (nur wenn ein Modell da ist)
 window.addEventListener('keydown', (ereignis) => {
   if (ereignis.key !== 'Escape') return;
   if (!$('grossbild').hidden) grossbildSchliessen();
   else if (!$('vergleich').hidden) vergleichSchliessen();
+  else if (!$('anleitung').hidden && modellKennung) anleitungZeigen(false);
 });
+
+// Anleitung: ohne Modell die Startseite; mit Modell legt sie sich über das 3D-Fenster
+function anleitungZeigen(sichtbar) {
+  $('anleitung').hidden = !sichtbar;
+  $('anleitungSchliessen').hidden = !modellKennung; // ohne Modell gibt es nichts, wohin man zurück kann
+  $('anleitungOeffnen').textContent = sichtbar ? 'Anleitung schließen' : 'Anleitung';
+}
+$('anleitungOeffnen').addEventListener('click', () => anleitungZeigen($('anleitung').hidden));
+$('anleitungSchliessen').addEventListener('click', () => anleitungZeigen(false));
 
 function variantenStatus(text, istFehler = false) {
   const status = $('variantenStatus');
@@ -726,7 +736,8 @@ async function dateiOeffnen(datei) {
     modellKennung = `${datei.name} · ${anzahl.wand} Wände`;
     modellName = datei.name;
     variantenAnzeigen();
-    $('leerHinweis').hidden = true;
+    anleitungZeigen(false);
+    $('anleitungOeffnen').hidden = false;
     $('legende').hidden = false;
     statusZeigen(datei.name);
     // Bauteil-Anzahlen: nebensächlich, deshalb zugeklappt unter „Bauteile“

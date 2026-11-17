@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Fassaden-Tool</title>
-  <link rel="stylesheet" href="style.css?v=12f">
+  <link rel="stylesheet" href="style.css?v=13">
   <!-- Bibliotheken aus dem Internet: three.js (3D) und web-ifc (IFC lesen) -->
   <script type="importmap">
   {
@@ -16,7 +16,7 @@
   }
   </script>
   <!-- ?v=… erzwingt nach Änderungen die neue Fassung (sonst hält der Browser alte Dateien fest) -->
-  <script type="module" src="js/app.js?v=12"></script>
+  <script type="module" src="js/app.js?v=13"></script>
 </head>
 <body>
   <div class="app">
@@ -24,6 +24,7 @@
       <header>
         <h1>Fassaden-Tool</h1>
         <p>IFC laden · Fassade gestalten · Varianten vergleichen</p>
+        <button class="textknopf" id="anleitungOeffnen" hidden>Anleitung</button>
       </header>
 
       <section>
@@ -110,9 +111,63 @@
     </aside>
 
     <main class="ansicht" id="ansicht">
-      <div class="leer-hinweis" id="leerHinweis">
-        <p>Noch kein Modell geladen.</p>
-        <p class="hinweis">Exportiere deinen Entwurf als IFC (z. B. aus Revit oder ArchiCAD) und lade ihn links hoch.</p>
+      <!-- Anleitung: Startseite ohne Modell; mit Modell über „Anleitung“ in der Seitenleiste wieder aufrufbar -->
+      <div class="anleitung" id="anleitung" role="region" aria-labelledby="anleitungTitel">
+        <div class="anleitung-inhalt">
+          <div class="anleitung-kopf">
+            <h2 id="anleitungTitel">So geht’s</h2>
+            <button class="knopf" id="anleitungSchliessen" hidden>Zurück zum Modell</button>
+          </div>
+          <p class="anleitung-einleitung">Den eigenen Entwurf als IFC laden, die Fassade gestalten und Varianten vergleichen.
+          Alles bleibt in diesem Browser, nichts wird hochgeladen.</p>
+          <ol class="schritte">
+            <li><span>1</span><div><strong>IFC laden</strong>
+              <p>Entwurf als IFC exportieren und links mit „IFC-Datei wählen“ öffnen oder ins Fenster ziehen.</p></div></li>
+            <li><span>2</span><div><strong>Außenwände prüfen</strong>
+              <p>Farbig = Außenwand. Falsch erkannte Wände einfach anklicken, dann schalten sie um.</p></div></li>
+            <li><span>3</span><div><strong>Gestalten</strong>
+              <p>Je Himmelsrichtung ein Material wählen und die Fenster mit den Reglern größer oder kleiner machen.
+              Die Kennwerte rechnen sofort mit.</p></div></li>
+            <li><span>4</span><div><strong>Vergleichen</strong>
+              <p>„Variante speichern“ macht 5 Bilder. Bis zu 4 Varianten ankreuzen, nebeneinander vergleichen
+              und als PDF (A3 quer) speichern.</p></div></li>
+          </ol>
+
+          <details class="export" id="exportTipps">
+            <summary>IFC-Export – Tipps</summary>
+            <div class="export-inhalt">
+              <div>
+                <h3>Allgemein</h3>
+                <ul>
+                  <li>Außenwände als <em>Wände</em> modellieren, nicht als Volumen oder Masse.</li>
+                  <li>Fenster und Türen als echte Bauteile in die Wände setzen.</li>
+                  <li>Außenwände als „außen“ kennzeichnen, dann erkennt die App sie sicherer.</li>
+                  <li>Einfach halten: eine Wand pro Seite und Geschoss reicht, Details stören eher.</li>
+                  <li>IFC 2x3 und IFC 4 gehen beide. Norden ist in der App immer Plan-oben.</li>
+                </ul>
+              </div>
+              <div>
+                <h3>Revit</h3>
+                <ul>
+                  <li>Datei → Exportieren → IFC.</li>
+                  <li>Version z. B. „IFC 2x3 Coordination View 2.0“.</li>
+                  <li>Im Wandtyp bei „Funktion“ „Außen“ wählen – das wird als „außen“ exportiert.</li>
+                  <li>Tipp: in den Optionen nur die sichtbaren Elemente einer aufgeräumten 3D-Ansicht exportieren.</li>
+                </ul>
+              </div>
+              <div>
+                <h3>ArchiCAD</h3>
+                <ul>
+                  <li>Datei → Speichern unter … → Dateityp „IFC“
+                    (neuere Versionen auch: Datei → Interoperabilität → IFC).</li>
+                  <li>Übersetzer z. B. „Allgemeiner Übersetzer“ bzw. „Coordination View“.</li>
+                  <li>In den Wandeinstellungen bei „Position“ „Außen“ wählen.</li>
+                </ul>
+              </div>
+            </div>
+            <p class="hinweis">Je nach Programmversion heißen die Menüs etwas anders.</p>
+          </details>
+        </div>
       </div>
       <div class="laden" id="laden" hidden><span>IFC wird gelesen …</span></div>
       <div class="ablage" id="ablage" hidden><span>IFC-Datei hier ablegen</span></div>

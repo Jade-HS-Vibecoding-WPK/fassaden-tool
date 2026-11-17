@@ -149,13 +149,44 @@ h2 span { color: var(--akzent); }
 .ansicht { position: relative; overflow: hidden; min-height: 0; }
 .ansicht canvas { display: block; width: 100%; height: 100%; }
 
-.leer-hinweis {
-  position: absolute; inset: 0; display: grid; place-content: center;
-  text-align: center; max-width: 360px; margin: auto; font-size: 15px;
+/* Anleitung: Startseite ohne Modell, mit Modell weiße Fläche über dem 3D-Fenster */
+.anleitung {
+  position: absolute; inset: 0; z-index: 2; background: var(--flaeche);
+  overflow-y: auto; display: flex; padding: 48px 40px;
 }
-.leer-hinweis p { margin: 0; }
+.anleitung-inhalt { max-width: 620px; margin: auto; width: 100%; }
+.anleitung-kopf { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; }
+.anleitung-kopf h2 { font-size: 22px; font-weight: 700; text-transform: none; letter-spacing: -0.01em; margin: 0; }
+.anleitung-einleitung { font-size: 14px; color: var(--leise); line-height: 1.5; margin: 10px 0 0; }
+.schritte { list-style: none; margin: 32px 0 0; padding: 0; border-top: 1px solid var(--linie); }
+.schritte li {
+  display: grid; grid-template-columns: 36px 1fr; gap: 8px;
+  padding: 16px 0; border-bottom: 1px solid var(--linie); font-size: 14px;
+}
+.schritte li > span { color: var(--akzent); font-weight: 600; }
+.schritte p { margin: 4px 0 0; color: var(--leise); font-size: 13px; line-height: 1.5; }
 
-.laden, .ablage { position: absolute; inset: 0; display: grid; place-items: center; font-size: 15px; }
+.export { margin-top: 24px; }
+.export summary {
+  display: inline-block; list-style: none; cursor: pointer; user-select: none;
+  font-size: 13px; color: var(--akzent);
+}
+.export summary::-webkit-details-marker { display: none; }
+.export summary::after { content: " ▸"; }
+.export[open] summary::after { content: " ▾"; }
+.export summary:hover { text-decoration: underline; text-underline-offset: 3px; }
+.export-inhalt { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 16px; }
+.export h3 {
+  font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em;
+  margin: 0 0 8px; padding-bottom: 6px; border-bottom: 1px solid var(--linie);
+}
+.export ul { margin: 0; padding-left: 16px; font-size: 12px; line-height: 1.5; color: var(--text); }
+.export li + li { margin-top: 6px; }
+@media (max-width: 1000px) { .export-inhalt { grid-template-columns: 1fr; } }
+
+header .textknopf { margin-top: 10px; }
+
+.laden, .ablage { position: absolute; inset: 0; z-index: 3; display: grid; place-items: center; font-size: 15px; }
 .laden { background: rgba(255,255,255,.8); }
 .laden span { background: #fff; padding: 12px 18px; border: 1px solid var(--linie); }
 .ablage {

@@ -23,7 +23,7 @@ nebeneinander vergleicht und als PDF mitnimmt.
       pro Variante automatisch 5 Bilder aus fester Kamera: Perspektive + Ansichten Nord/Ost/Süd/West
 - [x] PDF-Übersichtsseite: bis zu 4 Varianten auf **A3 quer**, mit Perspektive + 4 Ansichten,
       Kennwerten (Materialien bewusst nicht, Wunsch der Nutzerin); im Kopf Standort (Nordpfeil gestrichen, s. Sitzung 10)
-- [ ] Für Kommiliton*innen: kurze Anleitung beim ersten Öffnen und Hinweise, wie man die IFC exportiert
+- [x] Für Kommiliton*innen: kurze Anleitung beim ersten Öffnen und Hinweise, wie man die IFC exportiert
 
 ## Should (wenn Must steht, Ziel Mittwoch) – in dieser Reihenfolge abarbeiten
 **1. Feinjustierung**
@@ -108,7 +108,7 @@ Erledigte Sitzungen abhaken, die nächste offene Nummer ist dran.
 - [x] 10. PDF-Übersichtsseite A3 quer (17.11.)
 - [x] 10b. Perspektive: Blick weniger steil von oben, und selbst einstellbar (Wunsch der Nutzerin, 17.11.)
 - [x] 10c. Seitenleiste ruhiger: Nebensächliches und Erklärtexte ausklappbar (Wunsch der Nutzerin, 17.11.)
-- [ ] 11. Kurze Anleitung beim ersten Öffnen + IFC-Export-Hinweise → **Must komplett**
+- [x] 11. Kurze Anleitung beim ersten Öffnen + IFC-Export-Hinweise → **Must komplett** (17.11.)
 - [ ] 12. Should 1a: einzelne Wand → anderes Material
 - [ ] 13. Should 1b: einzelnes Fenster → Maße ändern
 - [ ] 14. Should 2: Pfosten-Riegel-Fassade
@@ -128,7 +128,7 @@ Erledigte Sitzungen abhaken, die nächste offene Nummer ist dran.
 Wenn es eng wird, zuerst streichen: 19 (PDF-Einzelseiten), dann 16 (Ortssuche).
 Was bis Do 10:30 nicht fertig ist, wandert zu Could.
 
-## Stand (17.11.2026, nach Sitzung 10c)
+## Stand (17.11.2026, nach Sitzung 11)
 - CLAUDE.md und PLAN.md angelegt, Plan mit der Nutzerin abgestimmt.
 - Test-IFC liegt in `testdaten/` (Einfamilienhaus, Revit 2023, IFC2x3: 192 Wände, 57 Fenster, 49 Türen).
   Quelle: Bundesingenieurkammer, Seite „BIM-Praxisbeispiele“ (Download zum Betrachten angeboten).
@@ -338,7 +338,23 @@ Was bis Do 10:30 nicht fertig ist, wandert zu Could.
   (etwas größer, wird beim Daraufzeigen blau, Tooltip „Erklärung aufklappen“). „Bauteile ▸“ in Bereich 1 behält sein Wort.
   Versionsnummer jetzt `style.css?v=12f`.
 
+- Sitzung 11 (17.11.): Anleitung als Startseite im 3D-Bereich (ersetzt „Noch kein Modell geladen“): Titel „So geht’s“,
+  kurzer Satz (alles bleibt im Browser), 4 Schritte mit blauer Nummer: IFC laden · Außenwände prüfen · Gestalten · Vergleichen.
+  Darunter aufklappbar „IFC-Export – Tipps ▸“ mit drei Spalten Allgemein / Revit / ArchiCAD (Menüweg, IFC-Version,
+  Wände als „außen“ kennzeichnen: Revit Wandtyp „Funktion = Außen“, ArchiCAD „Position = Außen“) und dem Hinweis,
+  dass Menüs je nach Version anders heißen. Nach dem Laden einer IFC verschwindet die Anleitung; oben in der Seitenleiste
+  erscheint der Textknopf „Anleitung“ (wird zu „Anleitung schließen“). Mit Modell liegt die Anleitung weiß über dem
+  3D-Fenster, schließen mit „Zurück zum Modell“, dem Textknopf oder Esc. „IFC wird gelesen …“ liegt über der Anleitung.
+  Getestet (Browser 1440 × 900) mit `Test-ArchiCAD.ifc`: Startseite, Aufklappen, Laden, Öffnen/Schließen auf allen drei Wegen. Keine Fehler.
+  Geändert: `index.html`, `style.css`, `app.js`. Versionsnummern: `app.js?v=13`, `style.css?v=13`.
+  Probleme: Die Menüwege für Revit/ArchiCAD sind aus dem Gedächtnis, nicht im Programm nachgeprüft – bitte einmal mit
+  der eigenen Programmversion vergleichen. Im schmalen Fenster (unter 1000 px) stehen die drei Spalten untereinander.
+
 ## Nächste Schritte
+- **Sitzung 11 (Entscheidung 17.11., vor dem Bauen):** Anleitung als **Startseite** im 3D-Bereich (statt „Noch kein Modell
+  geladen“): 4 Schritte (IFC laden · Außenwände prüfen · Gestalten · Vergleichen/PDF), verschwindet beim Laden der IFC.
+  Darunter aufklappbar „IFC-Export ▸“: allgemeine Tipps + je ein kurzer Abschnitt **Revit** und **ArchiCAD**.
+  Oben in der Seitenleiste ein kleiner Textknopf „Anleitung“, der sie später wieder zeigt. Kein Fenster zum Wegklicken.
 - **Sitzung 10c (erledigt, s. o.; Wunsch der Nutzerin, 17.11., nach Sitzung 10b):** Seitenleiste ruhiger machen.
   **Entscheidungen:** Bereich 1: Dateiname bleibt sichtbar, die Bauteil-Anzahlen (Wände, Fenster, Türen …) sind zugeklappt.
   Bereich 2: die Zahl der Außenwände bleibt sichtbar, die Bedienerklärung ist zugeklappt.
