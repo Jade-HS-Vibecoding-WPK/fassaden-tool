@@ -176,8 +176,12 @@ export class Szene {
 
   // 5 Bilder aus fester Kamera, unabhängig von der aktuellen Blickrichtung:
   // Perspektive (schräg von oben aus Südosten) und die Ansichten Nord/Ost/Süd/West als Parallelprojektion.
+  // drehung: um wie viel Grad das Gebäude im Plan gedreht ist (im Uhrzeigersinn positiv).
+  // Die Kameras drehen sich mit, damit die Ansichten gerade auf die Fassade schauen.
   // Liefert { perspektive, N, O, S, W } als JPEG-Bilder (Blob).
-  async bilderAufnehmen(breite = 1500, hoehe = 1000) {
+  async bilderAufnehmen(breite = 1500, hoehe = 1000, drehung = 0) {
+    const yAchse = new THREE.Vector3(0, 1, 0);
+    const drehungRad = THREE.MathUtils.degToRad(-drehung); // three.js dreht gegen den Uhrzeigersinn
     const box = this.gebaeudeBox();
     const mitte = box.getCenter(new THREE.Vector3());
     const groesse = box.getSize(new THREE.Vector3());
@@ -186,7 +190,7 @@ export class Szene {
 
     // Perspektive: Abstand und Bildmitte so wählen, dass die sichtbaren Bauteile knapp ins Bild passen
     const perspektive = new THREE.PerspectiveCamera(this.kamera.fov, seitenverhaeltnis, 0.1, 5000);
-    const richtung = new THREE.Vector3(1, 0.7, 1).normalize();
+    const richtung = new THREE.Vector3(1, 0.7, 1).normalize().applyAxisAngle(yAchse, drehungRad);
     const punkte = this.sichtbarePunkte();
     const ziel = mitte.clone();
     let abstand = groesse.length() * 2;
@@ -215,18 +219,30 @@ export class Szene {
     perspektive.far = abstand * 10;
     perspektive.updateProjectionMatrix();
 
-    // Ansichten: Blick waagerecht auf die jeweilige Seite (Norden = -Z = Plan-oben)
-    const ANSICHTEN = { N: [0, 0, -1], O: [1, 0, 0], S: [0, 0, 1], W: [-1, 0, 0] };
-    const ansichtKamera = ([x, , z]) => {
-      const bildBreite = (x === 0 ? groesse.x : groesse.z) * rand;
-      const bildHoehe = groesse.y * rand;
-      // Bildausschnitt aufs Seitenverhältnis bringen, ohne etwas abzuschneiden
-      const halbB = Math.max(bildBreite, bildHoehe * seitenverhaeltnis) / 2;
-      const halbH = halbB / seitenverhaeltnis;
+    // Ansichten: Blick waagerecht und senkrecht auf die jeweilige Seite (Norden = -Z = Plan-oben),
+    // um die Drehung des Gebäudes mitgedreht
+    const ANSICHTEN = { N: 0, O: 90, S: 180, W: 270 }; // Himmelsrichtung in Grad, 0 = Nord, im Uhrzeigersinn
+    const ansichtKamera = (grad) => {
+      const rad = THREE.MathUtils.degToRad(grad + drehung);
       const tiefe = groesse.length();
-      const kamera = new THREE.OrthographicCamera(-halbB, halbB, halbH, -halbH, 0.1, tiefe * 3);
-      kamera.position.copy(mitte).add(new THREE.Vector3(x, 0, z).multiplyScalar(tiefe));
+      const kamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, tiefe * 3);
+      kamera.position.copy(mitte).add(new THREE.Vector3(Math.sin(rad), 0, -Math.cos(rad)).multiplyScalar(tiefe));
       kamera.lookAt(mitte);
+      kamera.updateMatrixWorld();
+      // Ausdehnung des Gebäudes in dieser Blickrichtung messen (im Bild: x = waagerecht, y = senkrecht)
+      const bild = new THREE.Box2();
+      const p = new THREE.Vector3();
+      for (const punkt of punkte) {
+        p.copy(punkt).applyMatrix4(kamera.matrixWorldInverse);
+        bild.expandByPoint(new THREE.Vector2(p.x, p.y));
+      }
+      const bildMitte = bild.getCenter(new THREE.Vector2());
+      const ausdehnung = bild.getSize(new THREE.Vector2()).multiplyScalar(rand);
+      // Bildausschnitt aufs Seitenverhältnis bringen, ohne etwas abzuschneiden
+      const halbB = Math.max(ausdehnung.x, ausdehnung.y * seitenverhaeltnis) / 2;
+      const halbH = halbB / seitenverhaeltnis;
+      kamera.left = bildMitte.x - halbB; kamera.right = bildMitte.x + halbB;
+      kamera.bottom = bildMitte.y - halbH; kamera.top = bildMitte.y + halbH;
       kamera.updateProjectionMatrix();
       return kamera;
     };

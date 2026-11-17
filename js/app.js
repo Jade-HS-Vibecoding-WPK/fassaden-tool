@@ -1,7 +1,7 @@
 // Bedienoberfläche: Datei wählen oder hineinziehen, Modell anzeigen, Fassade gestalten
 import { Szene } from './szene.js';
 import { ifcLaden } from './ifc.js';
-import { aussenwaendeErkennen, wandFaerben, oeffnungenZuordnen, fensterAnpassen, stuetzenVorbereiten, stuetzeFaerben, kennwerteBerechnen } from './fassade.js';
+import { aussenwaendeErkennen, wandFaerben, oeffnungenZuordnen, fensterAnpassen, stuetzenVorbereiten, stuetzeFaerben, kennwerteBerechnen, hauptrichtungBestimmen } from './fassade.js';
 import { MATERIALIEN, START_MATERIAL, musterBild } from './materialien.js';
 import { variantenLesen, varianteSpeichern, varianteLoeschen } from './varianten.js';
 
@@ -16,6 +16,22 @@ let modellKennung = null; // Dateiname + Anzahl Wände: zu welchem Modell eine V
 
 // Gewähltes Fassadenmaterial je Himmelsrichtung
 const RICHTUNGSNAMEN = { N: 'Nord', O: 'Ost', S: 'Süd', W: 'West' };
+
+// Feinere Himmelsrichtungen (16 Stück, je 22,5°) für die Beschriftung der Ansichten
+const KOMPASS = [
+  ['N', 'Nord'], ['NNO', 'Nordnordost'], ['NO', 'Nordost'], ['ONO', 'Ostnordost'],
+  ['O', 'Ost'], ['OSO', 'Ostsüdost'], ['SO', 'Südost'], ['SSO', 'Südsüdost'],
+  ['S', 'Süd'], ['SSW', 'Südsüdwest'], ['SW', 'Südwest'], ['WSW', 'Westsüdwest'],
+  ['W', 'West'], ['WNW', 'Westnordwest'], ['NW', 'Nordwest'], ['NNW', 'Nordnordwest'],
+];
+const RICHTUNG_GRAD = { N: 0, O: 90, S: 180, W: 270 };
+// Wohin zeigt die Fassade einer Seite wirklich? (drehung = Drehung des Gebäudes in Grad)
+// Gibt null zurück, wenn es dieselbe Richtung ist wie der Name der Seite (Gebäude kaum gedreht).
+function genaueRichtung(richtung, drehung = 0) {
+  const stufe = ((Math.round((RICHTUNG_GRAD[richtung] + drehung) / 22.5) % 16) + 16) % 16;
+  const [kurz, lang] = KOMPASS[stufe];
+  return kurz === richtung ? null : { kurz, lang };
+}
 const materialJeRichtung = { N: START_MATERIAL, O: START_MATERIAL, S: START_MATERIAL, W: START_MATERIAL };
 
 // Ein Material für alle Stützen, unabhängig von den Himmelsrichtungen
@@ -302,10 +318,11 @@ $('varianteSpeichern').addEventListener('click', async () => {
     // (falls ein Regler gerade erst bewegt wurde und das Neubauen noch aussteht)
     szene.hoverBauteil = null;
     fensterAktualisieren();
-    const bilder = await szene.bilderAufnehmen();
+    const drehung = hauptrichtungBestimmen(waende);
+    const bilder = await szene.bilderAufnehmen(undefined, undefined, drehung);
     await varianteSpeichern({
       modell: modellKennung, name, datum: Date.now(),
-      einstellungen: einstellungenSammeln(), kennwerte: kennwerteMitGesamt(), bilder,
+      einstellungen: einstellungenSammeln(), kennwerte: kennwerteMitGesamt(), bilder, drehung,
     });
     $('variantenName').value = '';
     variantenStatus(`„${name}“ ist gespeichert.`);
@@ -449,7 +466,7 @@ function textElement(tag, text, klasse) {
 }
 
 // Bild einer Variante als anklickbares Vorschaubild (Klick = groß zeigen)
-function vergleichsbild(variante, schluessel, titel) {
+function vergleichsbild(variante, schluessel, titel, kennzeichen = schluessel) {
   const knopf = document.createElement('button');
   knopf.className = 'vergleich-bild';
   knopf.setAttribute('aria-label', `${titel} von „${variante.name}“ groß zeigen`);
@@ -458,7 +475,7 @@ function vergleichsbild(variante, schluessel, titel) {
   bild.alt = '';
   vergleichAdressen.push(bild.src);
   knopf.append(bild);
-  if (schluessel !== 'perspektive') knopf.append(textElement('span', schluessel));
+  if (schluessel !== 'perspektive') knopf.append(textElement('span', kennzeichen));
   knopf.addEventListener('click', () => grossbildZeigen(bild.src, `${variante.name} · ${titel}`));
   return knopf;
 }
@@ -490,7 +507,13 @@ function vergleichOeffnen() {
   zeile('Ansichten', (v) => {
     const ansichten = document.createElement('div');
     ansichten.className = 'ansichten';
-    for (const [richtung, name] of Object.entries(RICHTUNGSNAMEN)) ansichten.append(vergleichsbild(v, richtung, `Ansicht ${name}`));
+    for (const [richtung, name] of Object.entries(RICHTUNGSNAMEN)) {
+      // Ist das Gebäude gedreht, steht dabei, wohin die Fassade wirklich zeigt (ältere Varianten: ohne)
+      const genau = genaueRichtung(richtung, v.drehung);
+      ansichten.append(genau
+        ? vergleichsbild(v, richtung, `Ansicht ${name} – zeigt nach ${genau.lang}`, `${richtung} (${genau.kurz})`)
+        : vergleichsbild(v, richtung, `Ansicht ${name}`));
+    }
     return ansichten;
   });
 

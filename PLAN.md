@@ -104,7 +104,7 @@ Erledigte Sitzungen abhaken, die nächste offene Nummer ist dran.
 - [x] 7. Kennwerte (Fassadenfläche, Fensterfläche, Fensterflächenanteil) (16.11.)
 - [x] 8. Varianten speichern, mit 5 Bildern (Perspektive + N/O/S/W) (16.11.)
 - [x] 9. Variantenvergleich nebeneinander (17.11.)
-- [ ] 9b. Ansichten gerade auf die Fassade, auch wenn das Gebäude im Plan gedreht ist (Wunsch der Nutzerin)
+- [x] 9b. Ansichten gerade auf die Fassade, auch wenn das Gebäude im Plan gedreht ist (Wunsch der Nutzerin) (17.11.)
 - [ ] 10. PDF-Übersichtsseite A3 quer
 - [ ] 11. Kurze Anleitung beim ersten Öffnen + IFC-Export-Hinweise → **Must komplett**
 - [ ] 12. Should 1a: einzelne Wand → anderes Material
@@ -126,7 +126,7 @@ Erledigte Sitzungen abhaken, die nächste offene Nummer ist dran.
 Wenn es eng wird, zuerst streichen: 19 (PDF-Einzelseiten), dann 16 (Ortssuche).
 Was bis Do 10:30 nicht fertig ist, wandert zu Could.
 
-## Stand (17.11.2026, nach Sitzung 9)
+## Stand (17.11.2026, nach Sitzung 9b)
 - CLAUDE.md und PLAN.md angelegt, Plan mit der Nutzerin abgestimmt.
 - Test-IFC liegt in `testdaten/` (Einfamilienhaus, Revit 2023, IFC2x3: 192 Wände, 57 Fenster, 49 Türen).
   Quelle: Bundesingenieurkammer, Seite „BIM-Praxisbeispiele“ (Download zum Betrachten angeboten).
@@ -264,13 +264,26 @@ Was bis Do 10:30 nicht fertig ist, wandert zu Could.
   veraltet sein, wenn direkt nach einer Reglerbewegung gespeichert wurde (fiel nur beim sehr schnellen Testskript auf).
   Probleme: keine. Die Auswahl der Kästchen wird nicht gespeichert (nach Neuladen der Seite leer).
 
+- Sitzung 9b (17.11.): Ansichten gerade auf die Fassade. Die App bestimmt beim Speichern, um wie viel Grad das Gebäude
+  im Plan gedreht ist (Richtung aller Außenwände, große Wände zählen mehr), und dreht die Kameras für die 4 Ansichten
+  und die Perspektive mit. Der Bildausschnitt jeder Ansicht wird in der gedrehten Richtung gemessen, damit nichts abgeschnitten wird.
+  Die Drehung wird mit der Variante gespeichert. Im Vergleich steht auf den kleinen Bildern z. B. „N (NNW)“,
+  im großen Bild „Ansicht Nord – zeigt nach Nordnordwest“ (16 Himmelsrichtungen, je 22,5°). Kaum gedreht (unter ca. 11°): nur „N“.
+  Ältere Varianten behalten ihre alten Bilder und ihre alte Beschriftung.
+  Getestet: `Test-ArchiCAD.ifc` ist um ca. 19° gedreht (Nord zeigt nach NNW), Einfamilienhaus (Revit) um ca. 32°;
+  in beiden Fällen sind alle 4 Ansichten gerade (Giebel symmetrisch, keine zweite Seite sichtbar). Keine Fehler.
+  Geändert: `fassade.js`, `szene.js`, `app.js`, `style.css`.
+  Probleme: Bei einem Gebäude, das fast genau 45° gedreht ist, ist die Einteilung der Wände in Nord/Ost/Süd/West
+  nicht eindeutig (gab es vorher auch schon). Die Kamera beim Öffnen der Datei (3D-Bereich) bleibt ungedreht aus Südosten.
+
 ## Nächste Schritte
-- **Sitzung 9b (Wunsch der Nutzerin, 17.11., nach Sitzung 9):** Die Ansichten sollen wie echte Ansichten aussehen,
+- **Sitzung 9b (erledigt, s. o.; Wunsch der Nutzerin, 17.11., nach Sitzung 9):** Die Ansichten sollen wie echte Ansichten aussehen,
   also gerade auf eine „glatte“ Wand. Bisher blickt die Kamera genau aus N/O/S/W. Ist das Gebäude im Plan gedreht
   (wie in `Test.ifc`, ca. 10–15°), sieht man schräg auf zwei Seiten. Vorschlag: Die App ermittelt die Hauptrichtung
   der Außenwände und schaut senkrecht darauf. Die 4 Ansichten gehören weiter zu den Wandgruppen Nord/Ost/Süd/West,
-  damit sie zu Material, Fenstern und Kennwerten passen. Offen: Beschriftung nur „Nord“ oder mit genauer Richtung
-  (z. B. „Nord, Blick 12° gedreht“ bzw. „Nordnordwest“). Bereits gespeicherte Varianten behalten ihre alten Bilder.
+  damit sie zu Material, Fenstern und Kennwerten passen. Bereits gespeicherte Varianten behalten ihre alten Bilder.
+  **Entscheidung (17.11.):** Beschriftung mit Himmelsrichtungs-Namen, wohin die Fassade wirklich zeigt
+  (z. B. „Nord – zeigt nach Nordnordwest“), keine Gradzahl. Ist das Gebäude kaum gedreht, steht nur „Nord“.
 - Sitzung 10: PDF-Übersichtsseite A3 quer (bis zu 4 Varianten, nutzt die Auswahl aus dem Vergleich).
 - **Entscheidung (16.11., vor Sitzung 7):** Neuer Bereich „5 Kennwerte“ als Tabelle Nord/Ost/Süd/West + Gesamt,
   rechnet sofort neu bei jeder Änderung. Fassadenfläche = Außenseite der Außenwände (Rohbaumaß, Öffnungen mitgezählt).

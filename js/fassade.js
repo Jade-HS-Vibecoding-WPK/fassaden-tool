@@ -195,6 +195,26 @@ function himmelsrichtung(nachAussen) {
   return RICHTUNGEN[((Math.round(grad / 90) % 4) + 4) % 4];
 }
 
+// Um wie viel Grad ist das Gebäude im Plan gedreht? (−45° … +45°, im Uhrzeigersinn positiv)
+// Jede Außenwand zeigt in eine Richtung; ihre Abweichung von N/O/S/W wird nach Wandfläche gewichtet gemittelt.
+// Mit vierfachem Winkel, damit z. B. eine Nordwand bei −2° und eine Ostwand bei 88° zusammenpassen.
+// Ergebnis 0, wenn es keine Außenwände gibt.
+export function hauptrichtungBestimmen(waende) {
+  let summeCos = 0, summeSin = 0;
+  for (const wand of waende) {
+    const lage = wand.userData.lage;
+    if (!wand.userData.aussen || !lage) continue;
+    const nachAussen = lage.quer.clone().multiplyScalar(wand.userData.aussenSeite);
+    const grad = THREE.MathUtils.radToDeg(Math.atan2(nachAussen.x, -nachAussen.z));
+    const flaeche = lage.laenge * (lage.yMax - lage.yMin);
+    const rad = THREE.MathUtils.degToRad(4 * grad);
+    summeCos += flaeche * Math.cos(rad);
+    summeSin += flaeche * Math.sin(rad);
+  }
+  if (summeCos === 0 && summeSin === 0) return 0;
+  return THREE.MathUtils.radToDeg(Math.atan2(summeSin, summeCos)) / 4;
+}
+
 // Texturkoordinaten in Metern: waagerecht entlang der Wand, senkrecht die Höhe.
 // Stirnseiten und Oberkanten der Wand bekommen passende Koordinaten, damit das Muster dort nicht verzerrt.
 function texturKoordinatenSetzen(netze, lage) {
