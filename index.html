@@ -74,6 +74,10 @@
           Nord, Ost, Süd, West. Die Varianten bleiben nur in diesem Browser auf diesem Rechner.</p>
         <p class="status" id="variantenStatus"></p>
         <ul class="variantenliste" id="variantenListe"></ul>
+        <div class="vergleichswahl" id="vergleichswahl" hidden>
+          <p class="hinweis" id="vergleichHinweis"></p>
+          <button class="textknopf" id="vergleichOeffnen">Vergleichen</button>
+        </div>
       </section>
     </aside>
 
@@ -86,6 +90,26 @@
       <div class="ablage" id="ablage" hidden><span>IFC-Datei hier ablegen</span></div>
       <p class="legende" id="legende" hidden>Drehen: linke Maustaste · Zoomen: Mausrad · Verschieben: rechte Maustaste</p>
     </main>
+  </div>
+
+  <!-- Variantenvergleich: liegt über der ganzen App, eine Spalte je Variante -->
+  <div class="vergleich" id="vergleich" hidden role="dialog" aria-modal="true" aria-labelledby="vergleichTitel">
+    <div class="vergleich-kopf">
+      <div>
+        <h2 id="vergleichTitel">Variantenvergleich</h2>
+        <p class="hinweis" id="vergleichModell"></p>
+      </div>
+      <button class="knopf" id="vergleichSchliessen">Schließen</button>
+    </div>
+    <div class="vergleich-raster" id="vergleichRaster"></div>
+  </div>
+
+  <!-- Ein Bild aus dem Vergleich groß zeigen -->
+  <div class="grossbild" id="grossbild" hidden>
+    <figure>
+      <img id="grossbildBild" alt="">
+      <figcaption id="grossbildText"></figcaption>
+    </figure>
   </div>
 </body>
 </html>

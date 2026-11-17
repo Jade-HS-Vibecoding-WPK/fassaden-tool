@@ -298,9 +298,10 @@ $('varianteSpeichern').addEventListener('click', async () => {
   knopf.disabled = true;
   variantenStatus('Bilder werden aufgenommen …');
   try {
-    // Ohne blauen Hover-Schimmer fotografieren
+    // Ohne blauen Hover-Schimmer fotografieren; Fenster sicher auf dem neuesten Stand
+    // (falls ein Regler gerade erst bewegt wurde und das Neubauen noch aussteht)
     szene.hoverBauteil = null;
-    allesFaerben();
+    fensterAktualisieren();
     const bilder = await szene.bilderAufnehmen();
     await varianteSpeichern({
       modell: modellKennung, name, datum: Date.now(),
@@ -344,9 +345,16 @@ function varianteLaden(variante) {
 }
 
 let bildAdressen = []; // Vorschaubilder der Liste, werden beim Neuzeichnen freigegeben
+let gespeicherteVarianten = []; // die Varianten des geladenen Modells, neueste zuerst
+const zumVergleich = new Set(); // Nummern (id) der angekreuzten Varianten
+const VERGLEICH_HOECHSTENS = 4; // so viele passen später auch aufs PDF (A3 quer)
+
 async function variantenAnzeigen() {
   $('bereichVarianten').hidden = waende.length === 0;
   const varianten = await variantenLesen(modellKennung);
+  gespeicherteVarianten = varianten;
+  // Gelöschte Varianten (oder die eines anderen Modells) aus der Auswahl nehmen
+  for (const id of [...zumVergleich]) if (!varianten.some((v) => v.id === id)) zumVergleich.delete(id);
   $('variantenName').placeholder = `Variante ${varianten.length + 1}`;
 
   for (const adresse of bildAdressen) URL.revokeObjectURL(adresse);
@@ -384,11 +392,186 @@ async function variantenAnzeigen() {
     });
     knoepfe.append(laden, loeschen);
 
+    // Kästchen „zum Vergleich ankreuzen“
+    const kaestchen = document.createElement('input');
+    kaestchen.type = 'checkbox';
+    kaestchen.className = 'ankreuzen';
+    kaestchen.checked = zumVergleich.has(variante.id);
+    kaestchen.setAttribute('aria-label', `„${variante.name}“ zum Vergleich auswählen`);
+    kaestchen.addEventListener('change', () => {
+      if (kaestchen.checked) zumVergleich.add(variante.id);
+      else zumVergleich.delete(variante.id);
+      vergleichswahlAnzeigen();
+    });
+
     text.append(name, angaben, knoepfe);
-    eintrag.append(bild, text);
+    eintrag.append(kaestchen, bild, text);
     liste.append(eintrag);
   }
+  vergleichswahlAnzeigen();
 }
+
+// Hinweis und Knopf „Vergleichen“ unter der Liste; ab 4 Kreuzen sind die übrigen Kästchen gesperrt
+function vergleichswahlAnzeigen() {
+  $('vergleichswahl').hidden = gespeicherteVarianten.length < 2;
+  const anzahl = zumVergleich.size;
+  const voll = anzahl >= VERGLEICH_HOECHSTENS;
+  for (const kaestchen of $('variantenListe').querySelectorAll('.ankreuzen')) {
+    kaestchen.disabled = voll && !kaestchen.checked;
+  }
+  $('vergleichHinweis').textContent =
+    anzahl < 2 ? `Zum Vergleichen 2 bis ${VERGLEICH_HOECHSTENS} Varianten ankreuzen (${anzahl} gewählt).`
+      : voll ? `${anzahl} Varianten gewählt (mehr passen nicht nebeneinander).`
+        : `${anzahl} Varianten gewählt.`;
+  $('vergleichOeffnen').hidden = anzahl < 2;
+  $('vergleichOeffnen').textContent = `${anzahl} Varianten vergleichen`;
+}
+
+// ---------- Variantenvergleich: eine Spalte je Variante, gleiche Zeilen auf gleicher Höhe ----------
+
+const materialName = (id) => MATERIALIEN.find((m) => m.id === id)?.name ?? id;
+const anteilText = ({ fassade, fenster }) => (fassade > 0 ? `${Math.round((fenster / fassade) * 100)} %` : '–');
+let vergleichAdressen = []; // Bildadressen des Vergleichs, werden beim Schließen freigegeben
+
+// Ein Feld im Raster anlegen (klasse z. B. 'beschriftung' für die linke Spalte)
+function feld(klasse, ...inhalt) {
+  const element = document.createElement('div');
+  element.className = klasse;
+  element.append(...inhalt);
+  $('vergleichRaster').append(element);
+  return element;
+}
+function textElement(tag, text, klasse) {
+  const element = document.createElement(tag);
+  element.textContent = text; // textContent: Namen werden nie als HTML gelesen
+  if (klasse) element.className = klasse;
+  return element;
+}
+
+// Bild einer Variante als anklickbares Vorschaubild (Klick = groß zeigen)
+function vergleichsbild(variante, schluessel, titel) {
+  const knopf = document.createElement('button');
+  knopf.className = 'vergleich-bild';
+  knopf.setAttribute('aria-label', `${titel} von „${variante.name}“ groß zeigen`);
+  const bild = document.createElement('img');
+  bild.src = URL.createObjectURL(variante.bilder[schluessel]);
+  bild.alt = '';
+  vergleichAdressen.push(bild.src);
+  knopf.append(bild);
+  if (schluessel !== 'perspektive') knopf.append(textElement('span', schluessel));
+  knopf.addEventListener('click', () => grossbildZeigen(bild.src, `${variante.name} · ${titel}`));
+  return knopf;
+}
+
+function vergleichOeffnen() {
+  // Älteste links, neueste rechts
+  const varianten = gespeicherteVarianten.filter((v) => zumVergleich.has(v.id)).sort((a, b) => a.datum - b.datum);
+  if (varianten.length < 2) return;
+
+  const raster = $('vergleichRaster');
+  raster.replaceChildren();
+  raster.style.setProperty('--spalten', varianten.length);
+  $('vergleichModell').textContent = modellKennung;
+
+  // Eine Zeile: Beschriftung links, dann ein Feld je Variante
+  const zeile = (beschriftung, inhalt, klasse = '') => {
+    feld(`beschriftung ${klasse}`, beschriftung);
+    for (const variante of varianten) feld(`zelle ${klasse}`, ...[inhalt(variante)].flat());
+  };
+  const zwischentitel = (text) => feld('zwischentitel', textElement('h3', text));
+
+  // Kopf: Name und Datum (bleibt beim Scrollen oben stehen)
+  zeile('', (v) => [
+    textElement('strong', v.name),
+    textElement('small', new Date(v.datum).toLocaleString('de-DE', { day: 'numeric', month: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })),
+  ], 'kopf');
+
+  zeile('Perspektive', (v) => vergleichsbild(v, 'perspektive', 'Perspektive'));
+  zeile('Ansichten', (v) => {
+    const ansichten = document.createElement('div');
+    ansichten.className = 'ansichten';
+    for (const [richtung, name] of Object.entries(RICHTUNGSNAMEN)) ansichten.append(vergleichsbild(v, richtung, `Ansicht ${name}`));
+    return ansichten;
+  });
+
+  // Material, das je Seite wirklich gilt (auch bei „Alle Seiten gleich“)
+  const materialVon = (v, richtung) => {
+    const e = v.einstellungen;
+    return e.materialAlleGleich ? e.materialAlle : e.materialJeRichtung[richtung];
+  };
+  const fensterVon = (v, richtung) => {
+    const e = v.einstellungen;
+    return e.fensterAlleGleich ? e.fensterAlle : e.fensterJeRichtung[richtung];
+  };
+  const materialFeld = (id) => {
+    const muster = document.createElement('span');
+    muster.className = 'muster';
+    muster.style.backgroundImage = `url(${musterBild(id)})`;
+    return [muster, textElement('span', materialName(id))];
+  };
+
+  zwischentitel('Fassade');
+  for (const [richtung, name] of Object.entries(RICHTUNGSNAMEN)) {
+    zeile(name, (v) => materialFeld(materialVon(v, richtung)), 'material');
+  }
+  if (stuetzen.length > 0) zeile('Stützen', (v) => materialFeld(v.einstellungen.materialStuetzen), 'material');
+
+  zwischentitel('Fenster');
+  for (const [richtung, name] of Object.entries(RICHTUNGSNAMEN)) {
+    zeile(name, (v) => {
+      const { breite, hoehe } = fensterVon(v, richtung);
+      return textElement('span', breite === 0 || hoehe === 0 ? 'zu (0 %)' : `Breite ${breite} % · Höhe ${hoehe} %`);
+    });
+  }
+
+  zwischentitel('Kennwerte');
+  const dreiWerte = (werte, klasse = 'werte') => {
+    const reihe = document.createElement('div');
+    reihe.className = klasse;
+    for (const wert of werte) reihe.append(textElement('span', wert));
+    return reihe;
+  };
+  zeile('', () => dreiWerte(['Fassade m²', 'Fenster m²', 'Anteil'], 'werte spaltenkopf'));
+  for (const [schluessel, name] of [...Object.entries(RICHTUNGSNAMEN), ['gesamt', 'Gesamt']]) {
+    zeile(name, (v) => {
+      const k = v.kennwerte[schluessel];
+      return dreiWerte([quadratmeter(k.fassade), quadratmeter(k.fenster), anteilText(k)]);
+    }, schluessel === 'gesamt' ? 'gesamt' : '');
+  }
+
+  $('vergleich').hidden = false;
+  raster.scrollTop = 0;
+  $('vergleichSchliessen').focus();
+}
+
+function vergleichSchliessen() {
+  grossbildSchliessen();
+  $('vergleich').hidden = true;
+  $('vergleichRaster').replaceChildren();
+  for (const adresse of vergleichAdressen) URL.revokeObjectURL(adresse);
+  vergleichAdressen = [];
+  $('vergleichOeffnen').focus();
+}
+
+function grossbildZeigen(adresse, text) {
+  $('grossbildBild').src = adresse;
+  $('grossbildText').textContent = text;
+  $('grossbild').hidden = false;
+}
+function grossbildSchliessen() {
+  $('grossbild').hidden = true;
+  $('grossbildBild').removeAttribute('src');
+}
+
+$('vergleichOeffnen').addEventListener('click', vergleichOeffnen);
+$('vergleichSchliessen').addEventListener('click', vergleichSchliessen);
+$('grossbild').addEventListener('click', grossbildSchliessen);
+// Esc schließt zuerst das große Bild, dann den Vergleich
+window.addEventListener('keydown', (ereignis) => {
+  if (ereignis.key !== 'Escape') return;
+  if (!$('grossbild').hidden) grossbildSchliessen();
+  else if (!$('vergleich').hidden) vergleichSchliessen();
+});
 
 function variantenStatus(text, istFehler = false) {
   const status = $('variantenStatus');

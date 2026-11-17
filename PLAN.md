@@ -103,7 +103,8 @@ Erledigte Sitzungen abhaken, die nächste offene Nummer ist dran.
 - [x] 6d. Stützen: ein Material für alle Stützen (Wunsch der Nutzerin) (16.11.)
 - [x] 7. Kennwerte (Fassadenfläche, Fensterfläche, Fensterflächenanteil) (16.11.)
 - [x] 8. Varianten speichern, mit 5 Bildern (Perspektive + N/O/S/W) (16.11.)
-- [ ] 9. Variantenvergleich nebeneinander
+- [x] 9. Variantenvergleich nebeneinander (17.11.)
+- [ ] 9b. Ansichten gerade auf die Fassade, auch wenn das Gebäude im Plan gedreht ist (Wunsch der Nutzerin)
 - [ ] 10. PDF-Übersichtsseite A3 quer
 - [ ] 11. Kurze Anleitung beim ersten Öffnen + IFC-Export-Hinweise → **Must komplett**
 - [ ] 12. Should 1a: einzelne Wand → anderes Material
@@ -125,7 +126,7 @@ Erledigte Sitzungen abhaken, die nächste offene Nummer ist dran.
 Wenn es eng wird, zuerst streichen: 19 (PDF-Einzelseiten), dann 16 (Ortssuche).
 Was bis Do 10:30 nicht fertig ist, wandert zu Could.
 
-## Stand (16.11.2026, nach Sitzung 8)
+## Stand (17.11.2026, nach Sitzung 9)
 - CLAUDE.md und PLAN.md angelegt, Plan mit der Nutzerin abgestimmt.
 - Test-IFC liegt in `testdaten/` (Einfamilienhaus, Revit 2023, IFC2x3: 192 Wände, 57 Fenster, 49 Türen).
   Quelle: Bundesingenieurkammer, Seite „BIM-Praxisbeispiele“ (Download zum Betrachten angeboten).
@@ -248,8 +249,29 @@ Was bis Do 10:30 nicht fertig ist, wandert zu Could.
   wird sie unter gleichem Namen neu exportiert, können die Wand-Klicks auf andere Wände fallen (Wand-Nummern ändern sich).
   Die Varianten gibt es nur in diesem Browser auf diesem Rechner (Arbeitsdatei sichern = Could).
 
+- Sitzung 9 (17.11.): Variantenvergleich. In der Variantenliste hat jede Variante ein Kästchen zum Ankreuzen;
+  ab 2 Kreuzen erscheint unter der Liste der Textknopf „… Varianten vergleichen“. **Höchstens 4** (wie später das PDF A3 quer),
+  danach sind die übrigen Kästchen gesperrt. Gelöschte Varianten fallen aus der Auswahl.
+  Der Vergleich liegt als eigene weiße Ansicht über der ganzen App (mehr Platz als nur der 3D-Bereich),
+  eine Spalte je Variante, älteste links. Zeilen auf gleicher Höhe: Name + Datum (bleibt beim Scrollen oben),
+  Perspektive, Ansichten N/O/S/W (2 × 2), Material je Seite + Stützen (mit Musterbild; bei „Alle Seiten gleich“
+  das tatsächlich geltende Material), Fenster je Seite (Breite/Höhe in %, „zu (0 %)“), Kennwerte je Seite + Gesamt.
+  Klick auf ein Bild zeigt es groß, Esc oder Klick schließt es; „Schließen“ oder Esc schließt den Vergleich.
+  Unterschiede werden bewusst nicht farbig markiert. Die Zeile „Stützen“ gibt es nur, wenn das Modell Stützen hat.
+  Getestet mit `Test-ArchiCAD.ifc`: 3 und 4 Varianten nebeneinander, Sperre beim 5. Kästchen, großes Bild, Esc,
+  Löschen angekreuzter Varianten. Keine Fehler. Geändert: `app.js`, `index.html`, `style.css`.
+  Nebenbei behoben: „Variante speichern“ baut die Fenster vor dem Speichern einmal neu. Vorher konnten die Kennwerte
+  veraltet sein, wenn direkt nach einer Reglerbewegung gespeichert wurde (fiel nur beim sehr schnellen Testskript auf).
+  Probleme: keine. Die Auswahl der Kästchen wird nicht gespeichert (nach Neuladen der Seite leer).
+
 ## Nächste Schritte
-- Sitzung 9: Variantenvergleich nebeneinander (Bilder + Materialien + Kennwerte).
+- **Sitzung 9b (Wunsch der Nutzerin, 17.11., nach Sitzung 9):** Die Ansichten sollen wie echte Ansichten aussehen,
+  also gerade auf eine „glatte“ Wand. Bisher blickt die Kamera genau aus N/O/S/W. Ist das Gebäude im Plan gedreht
+  (wie in `Test.ifc`, ca. 10–15°), sieht man schräg auf zwei Seiten. Vorschlag: Die App ermittelt die Hauptrichtung
+  der Außenwände und schaut senkrecht darauf. Die 4 Ansichten gehören weiter zu den Wandgruppen Nord/Ost/Süd/West,
+  damit sie zu Material, Fenstern und Kennwerten passen. Offen: Beschriftung nur „Nord“ oder mit genauer Richtung
+  (z. B. „Nord, Blick 12° gedreht“ bzw. „Nordnordwest“). Bereits gespeicherte Varianten behalten ihre alten Bilder.
+- Sitzung 10: PDF-Übersichtsseite A3 quer (bis zu 4 Varianten, nutzt die Auswahl aus dem Vergleich).
 - **Entscheidung (16.11., vor Sitzung 7):** Neuer Bereich „5 Kennwerte“ als Tabelle Nord/Ost/Süd/West + Gesamt,
   rechnet sofort neu bei jeder Änderung. Fassadenfläche = Außenseite der Außenwände (Rohbaumaß, Öffnungen mitgezählt).
   Fensterfläche = Fensteröffnungen (Rohbaumaß). **Glastüren zählen als Fenster** (Wunsch der Nutzerin),
