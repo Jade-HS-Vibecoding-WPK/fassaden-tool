@@ -45,16 +45,16 @@
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 html, body { margin: 0; height: 100%; }
-body { background: #13203f; font-weight: 400; overflow: hidden; }
+body { background: #16243a; font-weight: 400; overflow: hidden; }
 
 /* ---------- Hintergrund: dunkler Verlauf + weiche Farbflecken ---------- */
 .hintergrund {
   position: fixed; inset: 0; z-index: -1; overflow: hidden;
-  background: linear-gradient(135deg, #13203f 0%, #241a46 50%, #0f3a33 100%);
+  background: linear-gradient(135deg, #16243a 0%, #1f2c36 50%, #0f3a33 100%);
 }
 .hintergrund i { position: absolute; border-radius: 50%; filter: blur(90px); opacity: .75; }
-.hintergrund i:nth-child(1) { width: 52vw; height: 52vw; left: -14vw; top: -18vw; background: #2f5fa8; }  /* Blau oben links */
-.hintergrund i:nth-child(2) { width: 44vw; height: 44vw; right: -12vw; top: -16vw; background: #6a3f9e; } /* Violett oben rechts */
+.hintergrund i:nth-child(1) { width: 52vw; height: 52vw; left: -14vw; top: -18vw; background: #35618f; }  /* gedecktes Blau oben links */
+.hintergrund i:nth-child(2) { width: 44vw; height: 44vw; right: -12vw; top: -16vw; background: #4f6b7c; } /* Graublau oben rechts (vorher Violett) */
 .hintergrund i:nth-child(3) { width: 48vw; height: 48vw; right: -14vw; bottom: -20vw; background: #12807a; } /* Petrol unten rechts */
 .hintergrund i:nth-child(4) { width: 44vw; height: 44vw; left: -14vw; bottom: -20vw; background: #1c5c39; }  /* dunkles Grün unten links */
 .hintergrund i:nth-child(5) { width: 30vw; height: 30vw; left: 35vw; top: 35vh; background: #1d6b52; opacity: .35; } /* Grünschimmer Mitte */
@@ -73,7 +73,9 @@ body { background: #13203f; font-weight: 400; overflow: hidden; }
 
 /* Aufbau: oben die Kopfleiste, darunter links die Seitenleiste und rechts das große 3D-Fenster */
 .app {
-  display: grid; grid-template-columns: 300px minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr);
+  /* Seitenleiste höchstens ca. ein Drittel: im kleinen Fenster schmaler (ab 210 px), im großen höchstens 280 px –
+     das 3D-Fenster bekommt so mindestens ca. 2/3 der Breite (Wunsch der Nutzerin) */
+  display: grid; grid-template-columns: clamp(210px, 30vw, 280px) minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr);
   gap: 14px; height: 100vh; padding: 14px;
 }
 
@@ -110,7 +112,7 @@ body { background: #13203f; font-weight: 400; overflow: hidden; }
 
 /* Meldung zu den Varianten: kleine Glas-Pille unter dem Hauptbutton, verschwindet von selbst */
 .meldung {
-  position: fixed; left: calc(50% + 157px); top: 84px; transform: translateX(-50%); z-index: 5; margin: 0; max-width: 420px;
+  position: fixed; left: calc(50% + 140px); top: 84px; transform: translateX(-50%); z-index: 5; margin: 0; max-width: 420px;
   font-size: 13px; color: var(--text); background: rgba(255, 255, 255, .92);
   padding: 8px 14px; border-radius: 14px; box-shadow: 0 8px 24px rgba(5, 8, 25, .3);
 }
@@ -124,7 +126,7 @@ body { background: #13203f; font-weight: 400; overflow: hidden; }
     linear-gradient(135deg, rgba(255, 255, 255, .14) 0%, rgba(255, 255, 255, .04) 38%, rgba(255, 255, 255, 0) 100%),
     rgba(24, 27, 40, .72);
   display: flex; flex-direction: column; min-height: 0;
-  overflow-y: auto; padding: 22px 22px 0;
+  overflow-y: auto; padding: 20px 18px 0;
   scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, .28) transparent;
 }
 .seitenleiste::-webkit-scrollbar { width: 6px; }
@@ -165,7 +167,7 @@ select, .eingabe {
   background: var(--feld); border: 1px solid var(--feld-rand); border-radius: 10px;
 }
 select:hover, select:focus, .eingabe:hover, .eingabe:focus { border-color: var(--feld-rand-aktiv); outline: none; }
-.glas option { background: #232a4a; color: #eef2f8; }
+.glas option { background: #25313a; color: #eef2f8; }
 
 /* Materialwahl: eine Zeile je Himmelsrichtung */
 .materialwahl { display: grid; gap: 10px; }
@@ -514,3 +516,17 @@ select:hover, select:focus, .eingabe:hover, .eingabe:focus { border-color: var(-
 .grossbild figure { margin: 0; max-width: 100%; max-height: 100%; display: grid; gap: 10px; justify-items: center; }
 .grossbild img { max-width: 100%; max-height: calc(100vh - 120px); border: 1px solid var(--linie); }
 .grossbild figcaption { font-size: 13px; }
+
+/* Schmales Fenster: Seitenleiste enger, Beschriftungsspalte der Zeilen kleiner, damit die Listen Platz haben */
+@media (max-width: 900px) {
+  .seitenleiste { padding: 18px 14px 0; }
+  .materialzeile { grid-template-columns: 46px 22px 1fr; gap: 7px; }
+  .muster { width: 22px; height: 22px; }
+  .fensterzeile { grid-template-columns: 46px 1fr; gap: 7px; }
+  .fensterzeile label { grid-template-columns: 36px 1fr 34px; gap: 5px; }
+  .felderzeile { grid-template-columns: 46px 1fr 1fr; gap: 7px; }
+  .masszeile label { grid-template-columns: 46px 1fr 24px; }
+  .blickwahl label { grid-template-columns: 64px 1fr 34px; }
+  .variantenliste li { grid-template-columns: 15px 64px 1fr; }
+  .variantenliste img { width: 64px; }
+}

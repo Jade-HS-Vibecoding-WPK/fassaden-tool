@@ -53,8 +53,9 @@ for (const richtung of Object.keys(RICHTUNGSNAMEN)) fensterJeRichtung[richtung] 
 
 // Schalter „Alle Seiten gleich“ (Material und Fenster getrennt): ein Wert für alle Seiten,
 // die Einstellung je Seite bleibt im Hintergrund erhalten
-let materialAlleGleich = false;
-let materialAlle = null; // wird beim ersten Einschalten mit dem Material der Nordseite belegt
+// Material startet mit „Alle Seiten gleich“ an (Wunsch der Nutzerin: erst einmal sind alle Seiten gleich)
+let materialAlleGleich = true;
+let materialAlle = materialJeRichtung.N;
 let fensterAlleGleich = false;
 let fensterAlle = null; // wird beim ersten Einschalten mit den Werten der Nordseite belegt
 
@@ -411,6 +412,15 @@ $('materialAlleGleich').addEventListener('change', (ereignis) => {
   materialAlleGleich = ereignis.target.checked;
   if (materialAlleGleich && materialAlle === null) materialAlle = materialJeRichtung.N;
   if (materialAlleGleich && felderAlle === null) felderAlle = { ...felderJeRichtung.N }; // Kopie, sonst verstellt „Alle“ die Nordseite mit
+  // Ausschalten: die vier Seiten übernehmen das Material (und die Pfosten-Riegel-Felder) von „Alle“,
+  // dann ändert man nur noch die Seite, die anders werden soll (Wunsch der Nutzerin, 17.11.)
+  if (!materialAlleGleich) {
+    for (const richtung of Object.keys(RICHTUNGSNAMEN)) {
+      materialJeRichtung[richtung] = materialAlle;
+      if (felderAlle) felderJeRichtung[richtung] = { ...felderAlle };
+      materialZeilen[richtung].anzeigen();
+    }
+  }
   materialZeilen.Alle.anzeigen();
   materialwahlUmschalten();
   fensterAktualisieren();

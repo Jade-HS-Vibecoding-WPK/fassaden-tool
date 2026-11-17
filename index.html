@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Fassaden-Tool</title>
-  <link rel="stylesheet" href="style.css?v=23f">
+  <link rel="stylesheet" href="style.css?v=23i">
   <!-- Bibliotheken aus dem Internet: three.js (3D) und web-ifc (IFC lesen) -->
   <script type="importmap">
   {
@@ -16,7 +16,7 @@
   }
   </script>
   <!-- ?v=… erzwingt nach Änderungen die neue Fassung (sonst hält der Browser alte Dateien fest) -->
-  <script type="module" src="js/app.js?v=23c"></script>
+  <script type="module" src="js/app.js?v=23e"></script>
 </head>
 <body>
   <!-- Hintergrund: dunkler Farbverlauf mit weichen Farbflecken (Sitzung 15b, Glassmorphism) -->
@@ -64,7 +64,7 @@
 
       <section id="bereichFassade" data-schritt="fassade" hidden>
         <h2>Fassade</h2>
-        <label class="schalter"><input type="checkbox" id="materialAlleGleich" autocomplete="off"> Alle Seiten gleich</label>
+        <label class="schalter"><input type="checkbox" id="materialAlleGleich" checked autocomplete="off"> Alle Seiten gleich</label>
         <div class="materialwahl" id="materialwahl"></div>
         <div class="farbtoene" id="farbtoene" hidden></div>
         <details class="erklaerung"><summary class="nur-ecke" title="Erklärung aufklappen" aria-label="Erklärung"></summary>

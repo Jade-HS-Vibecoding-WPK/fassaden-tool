@@ -626,13 +626,27 @@ Was bis Do 10:30 nicht fertig ist, wandert zu Could.
   und weichen Schatten; Schrift hell, gewählter Farbpunkt mit weißem Ring.
   **Entscheidung:** Hinter Farben, die man beurteilen soll, keine durchscheinenden Flächen (verfälschen die Farbe).
   Versionsnummern `app.js?v=23c`, `style.css?v=23f`.
+  **Nachtrag (Wunsch der Nutzerin):** Seitenleiste schmaler, 3D-Fenster mindestens ca. **2/3 der Breite**:
+  Breite = 30 % des Fensters, mindestens 210 px, höchstens 280 px (vorher fest 300 px). Unter 900 px Fensterbreite
+  rücken die Zeilen enger zusammen (schmalere Beschriftung, kleinere Musterbilder und Vorschaubilder).
+  Gemessen: Fenster 664 px breit → Leiste 210 px, 3D 412 px = 66 %. Versionsnummer `style.css?v=23h`.
+  Problem: Im sehr schmalen Fenster werden lange Materialnamen in den Listen abgeschnitten (z. B. „Sichtbet…“), im normalen Browserfenster nicht.
+  **Nachtrag (Wunsch der Nutzerin): Hintergrund ohne Lila**, eher grau-blau-grünlich: Verlauf `#16243a → #1f2c36 → #0f3a33`,
+  Fleck oben rechts Graublau `#4f6b7c` statt Violett, oben links gedecktes Blau `#35618f`; Petrol, dunkles Grün und Grünschimmer bleiben.
+  Listen-Hintergrund `#25313a`. Versionsnummer `style.css?v=23i`.
+  **Nachtrag (Wunsch der Nutzerin):** Im Schritt „Fassade“ ist **„Alle Seiten gleich“ beim Start an** (Startmaterial „Alle“ = Klinker rot).
+  Die Fenster starten weiter je Seite. Getestet: Start zeigt nur „Alle“, Materialwahl wirkt, aus/an wie bisher. Versionsnummer `app.js?v=23d`.
+  **Entscheidung (Wunsch der Nutzerin, ändert Sitzung 6b):** Beim **Ausschalten** übernehmen die vier Seiten das Material von „Alle“
+  (und bei Pfosten-Riegel dessen Felder); dann ändert man nur noch die Seite, die anders werden soll. Die eigene Auswahl je Seite
+  im Hintergrund gibt es damit beim Material nicht mehr (Fenster-Schalter unverändert). Varianten laden stellt weiter genau den gespeicherten Stand her.
+  Getestet: Alle = Putz → aus → alle vier Seiten Putz → Süd auf Klinker, 3D zeigt es sofort. Versionsnummer `app.js?v=23e`.
 
 ## Design-Vision (Entwurf 17.11., in Sitzung 15b umgesetzt)
 Mit der Nutzerin als Testseite entworfen und abgestimmt („erstmal so festhalten“). Umbau später in einer eigenen Sitzung.
 - **Stil:** Glassmorphism – halbtransparente Glaskarten mit Unschärfe vor einem dunklen, farbigen Verlauf,
   feine helle Ränder, weiche Schatten, viel Luft.
-- **Hintergrund:** dunkler Verlauf Nachtblau → Violett → Petrol (Grundton `linear-gradient(135deg, #13203f, #241a46, #0f3a33)`),
-  darüber weiche Farbflecken: Blau `#2f5fa8` oben links, Violett `#6a3f9e` oben rechts, Petrol `#12807a` unten rechts,
+- **Hintergrund:** dunkler Verlauf Nachtblau → Graublau → Petrol (Grundton `linear-gradient(135deg, #16243a, #1f2c36, #0f3a33)`,
+  **geändert 17.11.: kein Lila mehr**), darüber weiche Farbflecken: Blau `#35618f` oben links, Graublau `#4f6b7c` oben rechts, Petrol `#12807a` unten rechts,
   **dunkles Grün** `#1c5c39` unten links (nach Rückmeldung abgedunkelt) und ein leichter Grünschimmer in der Mitte.
 - **Gläser (Kopfleiste, Seitenleiste):** sehr durchsichtig und spiegelnd: Weiß 3–20 % mit Lichtreflex oben links,
   Unschärfe ca. 16 px, helle Oberkante, Ecken ca. 22 px rund. Schrift darauf fast weiß (`#eef2f8`), Regular statt Light.
