@@ -107,6 +107,7 @@ Erledigte Sitzungen abhaken, die nächste offene Nummer ist dran.
 - [x] 9b. Ansichten gerade auf die Fassade, auch wenn das Gebäude im Plan gedreht ist (Wunsch der Nutzerin) (17.11.)
 - [x] 10. PDF-Übersichtsseite A3 quer (17.11.)
 - [x] 10b. Perspektive: Blick weniger steil von oben, und selbst einstellbar (Wunsch der Nutzerin, 17.11.)
+- [x] 10c. Seitenleiste ruhiger: Nebensächliches und Erklärtexte ausklappbar (Wunsch der Nutzerin, 17.11.)
 - [ ] 11. Kurze Anleitung beim ersten Öffnen + IFC-Export-Hinweise → **Must komplett**
 - [ ] 12. Should 1a: einzelne Wand → anderes Material
 - [ ] 13. Should 1b: einzelnes Fenster → Maße ändern
@@ -127,7 +128,7 @@ Erledigte Sitzungen abhaken, die nächste offene Nummer ist dran.
 Wenn es eng wird, zuerst streichen: 19 (PDF-Einzelseiten), dann 16 (Ortssuche).
 Was bis Do 10:30 nicht fertig ist, wandert zu Could.
 
-## Stand (17.11.2026, nach Sitzung 10b)
+## Stand (17.11.2026, nach Sitzung 10c)
 - CLAUDE.md und PLAN.md angelegt, Plan mit der Nutzerin abgestimmt.
 - Test-IFC liegt in `testdaten/` (Einfamilienhaus, Revit 2023, IFC2x3: 192 Wände, 57 Fenster, 49 Türen).
   Quelle: Bundesingenieurkammer, Seite „BIM-Praxisbeispiele“ (Download zum Betrachten angeboten).
@@ -320,7 +321,30 @@ Was bis Do 10:30 nicht fertig ist, wandert zu Could.
   Bei 0° liegt die Kamera auf halber Gebäudehöhe, nicht auf Augenhöhe eines Menschen. Das PDF-Blatt selbst wurde nur
   über seine Texte geprüft, nicht als Bild angesehen.
 
+- Sitzung 10c (17.11.): Seitenleiste ruhiger. Alle grauen Erklärtexte in den Bereichen 2–6 sind zugeklappt hinter einem
+  kleinen grauen Textknopf „Erklärung ▸“ (aufgeklappt „▾“, Hover dunkelblau). In Bereich 6 gibt es zwei davon
+  (zum Blick und zum Speichern), jeweils direkt unter dem, was sie erklären. Bereich 1 zeigt nach dem Laden nur noch
+  den Dateinamen, die Bauteil-Anzahlen stehen zugeklappt unter „Bauteile ▸“. Start: alles zugeklappt.
+  Immer sichtbar bleiben: Fehler- und Statusmeldungen, die Zahl der Außenwände, „… oder die Datei einfach ins Fenster ziehen“,
+  der Hinweis zum Ankreuzen unter der Variantenliste und die Startseite ohne Modell.
+  Technik: eingebautes Ausklapp-Element des Browsers (`<details>`), fast ohne JavaScript.
+  Getestet mit `Test-ArchiCAD.ifc`: alles startet zugeklappt, Auf- und Zuklappen klappt, keine Fehler.
+  Geändert: `index.html`, `style.css`, `app.js`. Versionsnummern: `app.js?v=12`, neu auch `style.css?v=12b`.
+  Probleme: keine. Ob etwas aufgeklappt ist, merkt sich die App nicht (nach Neuladen wieder zu).
+  **Geändert nach Test (17.11., Wunsch der Nutzerin):** Bei „5 Kennwerte“ und „6 Varianten“ sind die Erklärungen ganz entfernt
+  (auch nicht ausklappbar), damit die Leiste nicht zu voll wird. Ausklappbare Erklärungen gibt es nur noch in den Bereichen 2–4.
+  Etwas mehr Abstand zwischen „Blickhöhe“ und Namensfeld.
+  **Nochmals geändert (Wunsch der Nutzerin):** Das Wort „Erklärung“ ist weg, zum Aufklappen gibt es nur noch die kleine Ecke ▸/▾
+  (etwas größer, wird beim Daraufzeigen blau, Tooltip „Erklärung aufklappen“). „Bauteile ▸“ in Bereich 1 behält sein Wort.
+  Versionsnummer jetzt `style.css?v=12f`.
+
 ## Nächste Schritte
+- **Sitzung 10c (erledigt, s. o.; Wunsch der Nutzerin, 17.11., nach Sitzung 10b):** Seitenleiste ruhiger machen.
+  **Entscheidungen:** Bereich 1: Dateiname bleibt sichtbar, die Bauteil-Anzahlen (Wände, Fenster, Türen …) sind zugeklappt.
+  Bereich 2: die Zahl der Außenwände bleibt sichtbar, die Bedienerklärung ist zugeklappt.
+  **Alle** grauen Erklärtexte (auch in Fassade, Fenster, Kennwerte, Varianten) werden einheitlich zugeklappt
+  und lassen sich mit einem kleinen Textknopf (z. B. „Erklärung ▸“) aufklappen. Start: zugeklappt.
+  Fehlermeldungen und Statusmeldungen (z. B. „ist gespeichert“) bleiben immer sichtbar.
 - **Sitzung 9b (erledigt, s. o.; Wunsch der Nutzerin, 17.11., nach Sitzung 9):** Die Ansichten sollen wie echte Ansichten aussehen,
   also gerade auf eine „glatte“ Wand. Bisher blickt die Kamera genau aus N/O/S/W. Ist das Gebäude im Plan gedreht
   (wie in `Test.ifc`, ca. 10–15°), sieht man schräg auf zwei Seiten. Vorschlag: Die App ermittelt die Hauptrichtung

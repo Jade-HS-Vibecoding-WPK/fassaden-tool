@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Fassaden-Tool</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=12f">
   <!-- Bibliotheken aus dem Internet: three.js (3D) und web-ifc (IFC lesen) -->
   <script type="importmap">
   {
@@ -16,7 +16,7 @@
   }
   </script>
   <!-- ?v=… erzwingt nach Änderungen die neue Fassung (sonst hält der Browser alte Dateien fest) -->
-  <script type="module" src="js/app.js?v=11"></script>
+  <script type="module" src="js/app.js?v=12"></script>
 </head>
 <body>
   <div class="app">
@@ -31,13 +31,18 @@
         <label class="knopf">IFC-Datei wählen<input type="file" id="datei" accept=".ifc" hidden></label>
         <p class="hinweis">… oder die Datei einfach ins Fenster ziehen.</p>
         <p class="status" id="status"></p>
+        <details class="erklaerung" id="bauteile" hidden><summary>Bauteile</summary>
+          <p class="hinweis" id="bauteileText"></p>
+        </details>
       </section>
 
       <section id="bereichAussenwaende" hidden>
         <h2><span>2</span> Außenwände</h2>
         <p class="zaehler" id="aussenZaehler"></p>
-        <p class="hinweis">Farbig = Außenwand, weiß = Innenwand. Erkannt aus der IFC-Eigenschaft „Außenbauteil“
+        <details class="erklaerung"><summary class="nur-ecke" title="Erklärung aufklappen" aria-label="Erklärung"></summary>
+          <p class="hinweis">Farbig = Außenwand, weiß = Innenwand. Erkannt aus der IFC-Eigenschaft „Außenbauteil“
           und der Lage im Gebäude. Stimmt etwas nicht? Wand anklicken, um sie umzuschalten.</p>
+        </details>
         <button class="textknopf" id="erkennungZuruecksetzen" hidden>Erkennung zurücksetzen</button>
       </section>
 
@@ -45,15 +50,19 @@
         <h2><span>3</span> Fassade</h2>
         <label class="schalter"><input type="checkbox" id="materialAlleGleich" autocomplete="off"> Alle Seiten gleich</label>
         <div class="materialwahl" id="materialwahl"></div>
-        <p class="hinweis">Material je Himmelsrichtung. Norden ist im Plan oben. Die Stützen haben ein eigenes Material.</p>
+        <details class="erklaerung"><summary class="nur-ecke" title="Erklärung aufklappen" aria-label="Erklärung"></summary>
+          <p class="hinweis">Material je Himmelsrichtung. Norden ist im Plan oben. Die Stützen haben ein eigenes Material.</p>
+        </details>
       </section>
 
       <section id="bereichFenster" hidden>
         <h2><span>4</span> Fenster</h2>
         <label class="schalter"><input type="checkbox" id="fensterAlleGleich" autocomplete="off"> Alle Seiten gleich</label>
         <div class="fensterwahl" id="fensterwahl"></div>
-        <p class="hinweis">Größe in % der Fenster aus der IFC. Die Breite wächst von der Fenstermitte aus,
+        <details class="erklaerung"><summary class="nur-ecke" title="Erklärung aufklappen" aria-label="Erklärung"></summary>
+          <p class="hinweis">Größe in % der Fenster aus der IFC. Die Breite wächst von der Fenstermitte aus,
           der Sturz bleibt und die Brüstung wandert. 0 % = Fenster zu.</p>
+        </details>
         <button class="textknopf" id="fensterZuruecksetzen" hidden>Alle Fenster auf 100 %</button>
       </section>
 
@@ -63,8 +72,6 @@
           <thead><tr><th></th><th>Fassade</th><th>Fenster</th><th>Anteil</th></tr></thead>
           <tbody id="kennwerteTabelle"></tbody>
         </table>
-        <p class="hinweis">Flächen in m², Rohbaumaße. Fassade = Außenseite der Außenwände mit allen Öffnungen.
-          Fenster = Fensteröffnungen und Glastüren. Anteil = Fenster ÷ Fassade.</p>
       </section>
 
       <section id="bereichVarianten" hidden>
@@ -83,12 +90,8 @@
             <output id="blickHoeheWert">15°</output>
           </label>
         </div>
-        <p class="hinweis">Blick der Perspektive: 0° = waagerecht, 45° = steil von oben.
-          Das 3D-Fenster zeigt ihn beim Verstellen an.</p>
         <input type="text" class="eingabe" id="variantenName" maxlength="60" autocomplete="off" aria-label="Name der Variante">
         <button class="knopf haupt" id="varianteSpeichern">Variante speichern</button>
-        <p class="hinweis">Speichert alle Einstellungen, die Kennwerte und 5 Bilder: Perspektive und die Ansichten
-          Nord, Ost, Süd, West. Die Varianten bleiben nur in diesem Browser auf diesem Rechner.</p>
         <p class="status" id="variantenStatus"></p>
         <ul class="variantenliste" id="variantenListe"></ul>
         <div class="vergleichswahl" id="vergleichswahl" hidden>

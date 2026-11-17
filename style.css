@@ -74,7 +74,7 @@ h2 span { color: var(--akzent); }
 .fensterzeile output { text-align: right; font-variant-numeric: tabular-nums; }
 
 /* Perspektive: Blickrichtung und Blickhöhe */
-.blickwahl { display: grid; gap: 6px; margin-bottom: 6px; }
+.blickwahl { display: grid; gap: 6px; margin-bottom: 14px; }
 .blickwahl label { display: grid; grid-template-columns: 76px 1fr 40px; gap: 8px; align-items: center; font-size: 13px; }
 .blickwahl select {
   grid-column: 2 / 4;
@@ -124,6 +124,22 @@ h2 span { color: var(--akzent); }
 .knopf:disabled { opacity: .6; cursor: wait; }
 
 .hinweis { font-size: 12px; color: var(--leise); margin: 8px 0 0; line-height: 1.45; }
+/* Ausklappbare Erklärtexte: kleiner Textknopf „Erklärung ▸“, Start zugeklappt */
+.erklaerung { margin-top: 10px; }
+.erklaerung summary {
+  display: inline-block; list-style: none; cursor: pointer;
+  font-size: 12px; color: var(--leise); user-select: none;
+}
+.erklaerung summary::-webkit-details-marker { display: none; }
+.erklaerung summary::after { content: " ▸"; }
+.erklaerung[open] summary::after { content: " ▾"; }
+.erklaerung summary:hover { color: var(--akzent); }
+.erklaerung .hinweis { margin-top: 4px; }
+/* Nur die kleine Ecke, ohne Wort: etwas größer, damit man sie gut trifft */
+.erklaerung summary.nur-ecke { font-size: 17px; line-height: 1; padding: 2px 8px 2px 0; }
+.erklaerung summary.nur-ecke::after { content: "▸"; }
+.erklaerung[open] summary.nur-ecke::after { content: "▾"; }
+
 .status { font-size: 13px; line-height: 1.5; margin: 16px 0 0; white-space: pre-line; }
 .status::first-line { font-weight: 600; }
 .status:empty { display: none; }

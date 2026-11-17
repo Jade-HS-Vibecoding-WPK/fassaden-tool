@@ -714,6 +714,7 @@ async function dateiOeffnen(datei) {
   }
   $('laden').hidden = false;
   statusZeigen('');
+  $('bauteile').hidden = true;
   try {
     const { gruppe, anzahl } = await ifcLaden(datei);
     waende = aussenwaendeErkennen(gruppe);
@@ -727,10 +728,11 @@ async function dateiOeffnen(datei) {
     variantenAnzeigen();
     $('leerHinweis').hidden = true;
     $('legende').hidden = false;
-    statusZeigen(
-      `${datei.name}\n` +
-      `${anzahl.wand} Wände · ${anzahl.fenster} Fenster · ${anzahl.tuer} Türen · ${anzahl.stuetze ? `${anzahl.stuetze} Stützen · ` : ''}${anzahl.dach} Dachteile · ${anzahl.rest} weitere Bauteile`
-    );
+    statusZeigen(datei.name);
+    // Bauteil-Anzahlen: nebensächlich, deshalb zugeklappt unter „Bauteile“
+    $('bauteileText').textContent =
+      `${anzahl.wand} Wände · ${anzahl.fenster} Fenster · ${anzahl.tuer} Türen · ${anzahl.stuetze ? `${anzahl.stuetze} Stützen · ` : ''}${anzahl.dach} Dachteile · ${anzahl.rest} weitere Bauteile`;
+    $('bauteile').hidden = false;
   } catch (fehler) {
     console.error(fehler);
     statusZeigen(`Die Datei konnte nicht geöffnet werden: ${fehler.message}`, true);
