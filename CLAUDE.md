@@ -24,6 +24,8 @@ Entsteht in der Vibecoding KI-Werkstatt (Jade Hochschule, 16.–20.11.2026). Abg
 - Code-Namen und Kommentare auf Deutsch.
 - Nach Änderungen an einer JS-Datei die Versionsnummer an ihrem Import erhöhen (`?v=…` in `index.html` bzw. im
   `import` in `app.js`), sonst zeigt der Browser alte Fassungen (python-Server schickt keine Zwischenspeicher-Regeln).
+  Wird eine Datei an mehreren Stellen importiert (z. B. `materialien.js` in `app.js` und `fassade.js`), überall
+  dieselbe Nummer, sonst lädt der Browser sie doppelt.
 
 # Aufbau
 - `js/app.js` – Bedienoberfläche, Zustand, Varianten speichern/laden

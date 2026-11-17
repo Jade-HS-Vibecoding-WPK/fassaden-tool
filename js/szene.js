@@ -58,7 +58,7 @@ export class Szene {
   }
 
   // Bauteile mit der Maus anfahren und anklicken.
-  // Wer mitmachen will, setzt: istAnklickbar(bauteil), beiHover(bauteil oder null), beiKlick(bauteil)
+  // Wer mitmachen will, setzt: istAnklickbar(bauteil), beiHover(bauteil oder null), beiKlick(bauteil oder null, ereignis)
   mausAnklickenEinrichten() {
     this.istAnklickbar = () => false;
     this.beiHover = () => {};
@@ -94,8 +94,8 @@ export class Szene {
       // Nur ein Klick, wenn die Maus dabei kaum bewegt wurde (sonst war es Drehen)
       if (!gedrueckt || Math.hypot(e.clientX - gedrueckt.x, e.clientY - gedrueckt.y) > 4) return;
       gedrueckt = null;
-      const bauteil = bauteilUnterMaus(e);
-      if (bauteil) this.beiKlick(bauteil);
+      // Auch ein Klick ins Leere wird gemeldet (bauteil = null), z. B. um eine Auswahl aufzuheben
+      this.beiKlick(bauteilUnterMaus(e), e);
     });
   }
 

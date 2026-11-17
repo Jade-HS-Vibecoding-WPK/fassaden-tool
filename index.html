@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Fassaden-Tool</title>
-  <link rel="stylesheet" href="style.css?v=13">
+  <link rel="stylesheet" href="style.css?v=14">
   <!-- Bibliotheken aus dem Internet: three.js (3D) und web-ifc (IFC lesen) -->
   <script type="importmap">
   {
@@ -16,7 +16,7 @@
   }
   </script>
   <!-- ?v=… erzwingt nach Änderungen die neue Fassung (sonst hält der Browser alte Dateien fest) -->
-  <script type="module" src="js/app.js?v=13"></script>
+  <script type="module" src="js/app.js?v=14c"></script>
 </head>
 <body>
   <div class="app">
@@ -54,6 +54,21 @@
         <details class="erklaerung"><summary class="nur-ecke" title="Erklärung aufklappen" aria-label="Erklärung"></summary>
           <p class="hinweis">Material je Himmelsrichtung. Norden ist im Plan oben. Die Stützen haben ein eigenes Material.</p>
         </details>
+        <div class="einzelne">
+          <label class="schalter"><input type="checkbox" id="einzelneWaende" autocomplete="off"> Einzelne Wände</label>
+          <div id="einzelwahl" hidden>
+            <p class="zaehler" id="einzelZaehler"></p>
+            <label class="materialzeile" id="einzelZeile" hidden>
+              <span>Auswahl<small id="einzelAnzahl"></small></span>
+              <span class="muster" id="einzelMuster"></span>
+              <select id="einzelMaterial" autocomplete="off"></select>
+            </label>
+          </div>
+          <details class="erklaerung"><summary class="nur-ecke" title="Erklärung aufklappen" aria-label="Erklärung"></summary>
+            <p class="hinweis">Wand anklicken, Umschalt + Klick für mehrere.</p>
+          </details>
+          <button class="textknopf" id="einzelZuruecksetzen" hidden>Einzelne Wände zurücksetzen</button>
+        </div>
       </section>
 
       <section id="bereichFenster" hidden>

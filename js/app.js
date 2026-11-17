@@ -1,8 +1,8 @@
 // Bedienoberfläche: Datei wählen oder hineinziehen, Modell anzeigen, Fassade gestalten
-import { Szene } from './szene.js?v=11';
+import { Szene } from './szene.js?v=14';
 import { ifcLaden } from './ifc.js';
-import { aussenwaendeErkennen, wandFaerben, oeffnungenZuordnen, fensterAnpassen, stuetzenVorbereiten, stuetzeFaerben, kennwerteBerechnen, hauptrichtungBestimmen } from './fassade.js';
-import { MATERIALIEN, START_MATERIAL, musterBild } from './materialien.js';
+import { aussenwaendeErkennen, wandFaerben, oeffnungenZuordnen, fensterAnpassen, stuetzenVorbereiten, stuetzeFaerben, kennwerteBerechnen, hauptrichtungBestimmen } from './fassade.js?v=14b';
+import { MATERIALIEN, START_MATERIAL, musterBild } from './materialien.js?v=14b';
 import { variantenLesen, varianteSpeichern, varianteLoeschen } from './varianten.js';
 import { pdfErstellen, pdfDateiname } from './pdf.js?v=11';
 
@@ -62,9 +62,17 @@ function geltendeFenster() {
   return { N: fensterAlle, O: fensterAlle, S: fensterAlle, W: fensterAlle };
 }
 
+// Schalter „Einzelne Wände“: einzelnen Außenwänden ein eigenes Material geben
+let einzelneWaende = false;
+const materialJeWand = new Map(); // Wand-Nummer aus der IFC (expressID) → eigenes Material
+const auswahl = new Set(); // gerade ausgewählte Wände (nur bei eingeschaltetem Schalter)
+
 function allesFaerben() {
   const materialien = geltendeMaterialien();
-  for (const wand of waende) wandFaerben(wand, materialien, wand === szene.hoverBauteil);
+  for (const wand of waende) {
+    const schimmer = auswahl.has(wand) ? 'auswahl' : wand === szene.hoverBauteil;
+    wandFaerben(wand, materialien, schimmer, materialJeWand.get(wand.userData.expressID));
+  }
   for (const stuetze of stuetzen) stuetzeFaerben(stuetze, materialStuetzen);
 }
 
@@ -107,10 +115,27 @@ function kennwerteAnzeigen() {
   }
 }
 
-// Wände anfahren (hervorheben) und anklicken (außen ↔ innen umschalten)
-szene.istAnklickbar = (bauteil) => bauteil.userData.art === 'wand';
+// Wände anfahren (hervorheben) und anklicken:
+// normal schaltet ein Klick außen ↔ innen um; mit Schalter „Einzelne Wände“ wählt er Außenwände aus
+szene.istAnklickbar = (bauteil) => bauteil.userData.art === 'wand' && (!einzelneWaende || bauteil.userData.aussen);
 szene.beiHover = () => allesFaerben();
-szene.beiKlick = (wand) => {
+szene.beiKlick = (wand, ereignis) => {
+  if (einzelneWaende) {
+    if (!ereignis.shiftKey) {
+      // Einfacher Klick: nur diese Wand (Klick auf die einzige gewählte Wand oder ins Leere hebt die Auswahl auf)
+      const nurDiese = wand && auswahl.size === 1 && auswahl.has(wand);
+      auswahl.clear();
+      if (wand && !nurDiese) auswahl.add(wand);
+    } else if (wand) {
+      // Umschalt + Klick: Wand dazunehmen oder wieder herausnehmen
+      if (auswahl.has(wand)) auswahl.delete(wand);
+      else auswahl.add(wand);
+    }
+    einzelwahlAnzeigen();
+    allesFaerben();
+    return;
+  }
+  if (!wand) return;
   wand.userData.aussen = !wand.userData.aussen;
   fensterAktualisieren();
   aussenwaendeAnzeigen();
@@ -170,6 +195,7 @@ function materialzeileAufbauen(schluessel, name, lesen, schreiben) {
     schreiben(liste.value);
     anzeigen();
     allesFaerben();
+    einzelwahlAnzeigen(); // Musterbild der Auswahl kann sich mitändern („wie die Seite“)
   });
   anzeigen();
 
@@ -202,8 +228,67 @@ $('materialAlleGleich').addEventListener('change', (ereignis) => {
   materialZeilen.Alle.anzeigen();
   materialwahlUmschalten();
   allesFaerben();
+  einzelwahlAnzeigen();
 });
 materialwahlAufbauen();
+
+// ---------- Einzelne Wände: eigenes Material für ausgewählte Außenwände ----------
+
+const WIE_DIE_SEITE = ''; // Eintrag „wie die Seite“: Wand hat kein eigenes Material
+const VERSCHIEDEN = '*'; // ausgewählte Wände haben unterschiedliche Materialien
+$('einzelMaterial').add(new Option('wie die Seite', WIE_DIE_SEITE));
+for (const m of MATERIALIEN) $('einzelMaterial').add(new Option(m.name, m.id));
+const verschiedenEintrag = new Option('– verschieden –', VERSCHIEDEN);
+verschiedenEintrag.disabled = true;
+$('einzelMaterial').add(verschiedenEintrag);
+
+const wandText = (anzahl) => (anzahl === 1 ? '1 Wand' : `${anzahl} Wände`);
+
+function einzelwahlAnzeigen() {
+  $('einzelwahl').hidden = !einzelneWaende;
+  // Ohne Auswahl keine Zeile: wie es geht, steht in der ausklappbaren Erklärung
+  $('einzelZaehler').hidden = auswahl.size === 0;
+  $('einzelZaehler').textContent = `${wandText(auswahl.size)} gewählt.`;
+  $('einzelZeile').hidden = auswahl.size === 0;
+  $('einzelAnzahl').textContent = wandText(auswahl.size);
+
+  // Gilt für alle gewählten Wände dasselbe? Dann zeigt die Liste es, sonst „verschieden“
+  const seite = geltendeMaterialien();
+  const eintraege = new Set([...auswahl].map((w) => materialJeWand.get(w.userData.expressID) ?? WIE_DIE_SEITE));
+  const geltend = new Set([...auswahl].map((w) => materialJeWand.get(w.userData.expressID) ?? seite[w.userData.himmelsrichtung ?? 'S']));
+  verschiedenEintrag.hidden = eintraege.size <= 1;
+  $('einzelMaterial').value = eintraege.size === 1 ? [...eintraege][0] : VERSCHIEDEN;
+  // Musterbild: das Material, das die Wände gerade wirklich haben (leer, wenn verschieden)
+  $('einzelMuster').style.backgroundImage = geltend.size === 1 ? `url(${musterBild([...geltend][0])})` : 'none';
+
+  const anzahlEigene = waende.filter((w) => materialJeWand.has(w.userData.expressID)).length;
+  $('einzelZuruecksetzen').hidden = anzahlEigene === 0;
+  $('einzelZuruecksetzen').textContent = `Einzelne Wände zurücksetzen (${wandText(anzahlEigene)})`;
+}
+
+$('einzelMaterial').addEventListener('change', () => {
+  const wert = $('einzelMaterial').value;
+  for (const wand of auswahl) {
+    if (wert === WIE_DIE_SEITE) materialJeWand.delete(wand.userData.expressID);
+    else materialJeWand.set(wand.userData.expressID, wert);
+  }
+  einzelwahlAnzeigen();
+  allesFaerben();
+});
+
+$('einzelneWaende').addEventListener('change', (ereignis) => {
+  einzelneWaende = ereignis.target.checked;
+  auswahl.clear();
+  szene.hoverBauteil = null;
+  einzelwahlAnzeigen();
+  allesFaerben();
+});
+
+$('einzelZuruecksetzen').addEventListener('click', () => {
+  materialJeWand.clear();
+  einzelwahlAnzeigen();
+  allesFaerben();
+});
 
 // Eine Zeile der Fensterwahl: Name mit Anzahl der Fenster, Regler für Breite und Höhe
 // schluessel: N/O/S/W oder 'Alle'; groesse(): das Objekt { breite, hoehe }, das die Regler verstellen
@@ -345,6 +430,8 @@ function einstellungenSammeln() {
     fensterJeRichtung, fensterAlleGleich, fensterAlle,
     // nur die Wände, die per Klick anders sind als die automatische Erkennung
     wandUmgeschaltet: waende.filter((w) => w.userData.aussen !== w.userData.aussenAuto).map((w) => w.userData.expressID),
+    // Wände mit eigenem Material: [Wand-Nummer, Material]
+    materialJeWand: [...materialJeWand],
   });
 }
 
@@ -356,7 +443,10 @@ $('varianteSpeichern').addEventListener('click', async () => {
   try {
     // Ohne blauen Hover-Schimmer fotografieren; Fenster sicher auf dem neuesten Stand
     // (falls ein Regler gerade erst bewegt wurde und das Neubauen noch aussteht)
+    // (auch ohne den Schimmer ausgewählter Wände: Auswahl aufheben)
     szene.hoverBauteil = null;
+    auswahl.clear();
+    einzelwahlAnzeigen();
     fensterAktualisieren();
     const drehung = hauptrichtungBestimmen(waende);
     const bilder = await szene.bilderAufnehmen(undefined, undefined, drehung, blick);
@@ -389,6 +479,11 @@ function varianteLaden(variante) {
   for (const wand of waende) {
     wand.userData.aussen = umgeschaltet.has(wand.userData.expressID) ? !wand.userData.aussenAuto : wand.userData.aussenAuto;
   }
+  // Eigenes Material einzelner Wände (ältere Varianten haben keins)
+  materialJeWand.clear();
+  for (const [id, material] of e.materialJeWand ?? []) materialJeWand.set(id, material);
+  auswahl.clear();
+  einzelwahlAnzeigen();
 
   $('materialAlleGleich').checked = materialAlleGleich;
   $('fensterAlleGleich').checked = fensterAlleGleich;
@@ -624,6 +719,18 @@ function vergleichOeffnen() {
     zeile(name, (v) => materialFeld(materialVon(v, richtung)), 'material');
   }
   if (stuetzen.length > 0) zeile('Stützen', (v) => materialFeld(v.einstellungen.materialStuetzen), 'material');
+  // Einzelne Wände mit eigenem Material: Anzahl je Material (nur, wenn eine der Varianten welche hat)
+  if (varianten.some((v) => v.einstellungen.materialJeWand?.length)) {
+    zeile('Einzelne Wände', (v) => {
+      const anzahlJeMaterial = new Map();
+      for (const [, material] of v.einstellungen.materialJeWand ?? []) {
+        anzahlJeMaterial.set(material, (anzahlJeMaterial.get(material) ?? 0) + 1);
+      }
+      if (anzahlJeMaterial.size === 0) return textElement('span', '–');
+      return [...anzahlJeMaterial].map(([material, anzahl]) =>
+        textElement('span', `${wandText(anzahl)} ${materialName(material)}`));
+    }, 'einzeln');
+  }
 
   zwischentitel('Fenster');
   for (const [richtung, name] of Object.entries(RICHTUNGSNAMEN)) {
@@ -730,6 +837,10 @@ async function dateiOeffnen(datei) {
     waende = aussenwaendeErkennen(gruppe);
     oeffnungen = oeffnungenZuordnen(gruppe, waende);
     stuetzen = stuetzenVorbereiten(gruppe);
+    // Eigenes Material einzelner Wände gehört zum alten Modell
+    materialJeWand.clear();
+    auswahl.clear();
+    einzelwahlAnzeigen();
     szene.zeigeModell(gruppe);
     fensterAktualisieren();
     aussenwaendeAnzeigen();

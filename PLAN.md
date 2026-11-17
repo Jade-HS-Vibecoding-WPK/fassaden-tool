@@ -27,7 +27,7 @@ nebeneinander vergleicht und als PDF mitnimmt.
 
 ## Should (wenn Must steht, Ziel Mittwoch) – in dieser Reihenfolge abarbeiten
 **1. Feinjustierung**
-- [ ] 2. Schritt: einzelne Wand anklicken und anderes Material geben
+- [x] 2. Schritt: einzelne Wand anklicken und anderes Material geben
 - [ ] 2. Schritt: einzelnes Fenster anklicken, Breite/Höhe per Regler oder in cm ändern
 
 **2. Pfosten-Riegel**
@@ -109,7 +109,7 @@ Erledigte Sitzungen abhaken, die nächste offene Nummer ist dran.
 - [x] 10b. Perspektive: Blick weniger steil von oben, und selbst einstellbar (Wunsch der Nutzerin, 17.11.)
 - [x] 10c. Seitenleiste ruhiger: Nebensächliches und Erklärtexte ausklappbar (Wunsch der Nutzerin, 17.11.)
 - [x] 11. Kurze Anleitung beim ersten Öffnen + IFC-Export-Hinweise → **Must komplett** (17.11.)
-- [ ] 12. Should 1a: einzelne Wand → anderes Material
+- [x] 12. Should 1a: einzelne Wand → anderes Material (17.11.)
 - [ ] 13. Should 1b: einzelnes Fenster → Maße ändern
 - [ ] 14. Should 2: Pfosten-Riegel-Fassade
 
@@ -128,7 +128,7 @@ Erledigte Sitzungen abhaken, die nächste offene Nummer ist dran.
 Wenn es eng wird, zuerst streichen: 19 (PDF-Einzelseiten), dann 16 (Ortssuche).
 Was bis Do 10:30 nicht fertig ist, wandert zu Could.
 
-## Stand (17.11.2026, nach Sitzung 11)
+## Stand (17.11.2026, nach Sitzung 12)
 - CLAUDE.md und PLAN.md angelegt, Plan mit der Nutzerin abgestimmt.
 - Test-IFC liegt in `testdaten/` (Einfamilienhaus, Revit 2023, IFC2x3: 192 Wände, 57 Fenster, 49 Türen).
   Quelle: Bundesingenieurkammer, Seite „BIM-Praxisbeispiele“ (Download zum Betrachten angeboten).
@@ -350,7 +350,37 @@ Was bis Do 10:30 nicht fertig ist, wandert zu Could.
   Probleme: Die Menüwege für Revit/ArchiCAD sind aus dem Gedächtnis, nicht im Programm nachgeprüft – bitte einmal mit
   der eigenen Programmversion vergleichen. Im schmalen Fenster (unter 1000 px) stehen die drei Spalten untereinander.
 
+- Sitzung 12 (17.11.): Einzelne Wand → anderes Material. Im Bereich „3 Fassade“ unter der Materialwahl (mit dünner Trennlinie)
+  der Schalter „Einzelne Wände“. Aus: Klick schaltet wie bisher außen ↔ innen. An: nur Außenwände lassen sich anfahren;
+  Klick wählt eine Wand, Umschalt + Klick nimmt weitere dazu bzw. wieder heraus, Klick ins Leere oder auf die einzige
+  gewählte Wand hebt die Auswahl auf. Gewählte Wände sind deutlich blau getönt (stärker als der Hover-Schimmer).
+  Darunter „1 Wand gewählt.“ und die Zeile „Auswahl“ mit Musterbild und Liste: „wie die Seite“ + die 10 Materialien;
+  haben die gewählten Wände Verschiedenes, steht „– verschieden –“. Textknopf „Einzelne Wände zurücksetzen (n Wände)“
+  erscheint, sobald eine Wand ein eigenes Material hat. Erklärung ausklappbar (▸). Ausschalten hebt die Auswahl auf,
+  die eigenen Materialien bleiben. Eigenes Material bleibt auch bei Änderung der Seite oder „Alle Seiten gleich“.
+  Gespeichert mit der Variante (Liste Wand-Nummer → Material), „Laden“ stellt es wieder her; ältere Varianten: keine.
+  Vor dem Fotografieren wird die Auswahl aufgehoben (keine blaue Wand auf den Bildern). Vergleich: neue Zeile
+  „Einzelne Wände“ (z. B. „1 Wand Holz natur“), nur wenn eine der Varianten welche hat. PDF unverändert (zeigt es über die Bilder).
+  Neues Modell laden löscht die eigenen Materialien.
+  Getestet mit `Test-ArchiCAD.ifc`: Auswahl, Umschalt-Klick, „verschieden“, Seitenmaterial ändern, „wie die Seite“,
+  Zurücksetzen, Speichern → Zurücksetzen → Laden, Vergleich, Schalter aus = außen/innen wie bisher. Testvariante wieder gelöscht.
+  Geändert: `app.js`, `fassade.js`, `materialien.js`, `szene.js` (meldet jetzt auch Klicks ins Leere), `index.html`, `style.css`.
+  Versionsnummern: `app.js?v=14b`, `fassade.js?v=14b`, `materialien.js?v=14b` (in `app.js` und `fassade.js` gleich!), `szene.js?v=14`, `style.css?v=14`.
+  Probleme: Die Zuordnung hängt an der Wand-Nummer aus der IFC – wird die IFC neu exportiert, können eigene Materialien
+  auf anderen Wänden landen (wie bei den Wand-Klicks). Bei mehrschaligen Wänden bekommt nur die angeklickte Schale das Material.
+  Mit echter Maus noch nicht ausprobiert (Test lief über künstliche Klicks) – bitte einmal selbst klicken, auch Umschalt + Klick.
+  **Geändert nach Test (Wunsch der Nutzerin):** Ohne Auswahl steht unter dem Schalter keine Kurzanleitung mehr,
+  nur die ausklappbare Erklärung (▸); „n Wände gewählt.“ erscheint erst, wenn etwas ausgewählt ist. Versionsnummer `app.js?v=14c`.
+  Von der Nutzerin mit dem Einfamilienhaus ausprobiert: passt. Erklärung auf einen Satz gekürzt:
+  „Wand anklicken, Umschalt + Klick für mehrere.“
+
 ## Nächste Schritte
+- **Sitzung 12 (erledigt, s. o.; Entscheidung 17.11., vor dem Bauen):** Einzelne Wand → anderes Material.
+  Im Bereich „3 Fassade“ ein Schalter **„Einzelne Wände“**. Aus: Klick schaltet wie bisher außen ↔ innen.
+  An: Klick wählt eine Außenwand aus, **Umschalt + Klick** nimmt weitere dazu; für die Auswahl gibt es eine
+  Material-Liste (dieselben 10 Materialien + „wie die Seite“). Nur Außenwände. Eigenes Material bleibt, auch wenn
+  das Material der Seite oder „Alle Seiten gleich“ geändert wird. Textknopf „Einzelne Wände zurücksetzen“.
+  Wird mit der Variante gespeichert und geladen; Bilder und PDF zeigen es automatisch.
 - **Sitzung 11 (Entscheidung 17.11., vor dem Bauen):** Anleitung als **Startseite** im 3D-Bereich (statt „Noch kein Modell
   geladen“): 4 Schritte (IFC laden · Außenwände prüfen · Gestalten · Vergleichen/PDF), verschwindet beim Laden der IFC.
   Darunter aufklappbar „IFC-Export ▸“: allgemeine Tipps + je ein kurzer Abschnitt **Revit** und **ArchiCAD**.

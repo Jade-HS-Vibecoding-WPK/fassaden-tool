@@ -246,15 +246,19 @@ function textur(id) {
   return t;
 }
 
-// 3D-Material zu einer Material-Nummer; hover = mit blauem Schimmer, wenn die Maus darüber ist
+// 3D-Material zu einer Material-Nummer; hover = mit blauem Schimmer, wenn die Maus darüber ist,
+// 'auswahl' = ausgewählte Wand (Schalter „Einzelne Wände“): deutlich blau getönt, auch auf hellen Materialien sichtbar
+const SCHIMMER = { hover: 0.45, auswahl: 0.35 };
+const TOENUNG = { hover: 0xffffff, auswahl: 0x7f9cd0 };
 const materialien = new Map();
 export function fassadenMaterial(id, hover = false) {
   id = eintragZu(id).id;
-  const schluessel = id + (hover ? ':hover' : '');
+  const art = hover === 'auswahl' ? 'auswahl' : hover ? 'hover' : '';
+  const schluessel = id + (art ? `:${art}` : '');
   if (!materialien.has(schluessel)) {
-    materialien.set(schluessel, flaeche(0xffffff, {
+    materialien.set(schluessel, flaeche(art ? TOENUNG[art] : 0xffffff, {
       map: textur(id),
-      ...(hover ? { emissive: 0x1f3a68, emissiveIntensity: 0.45 } : {}),
+      ...(art ? { emissive: 0x1f3a68, emissiveIntensity: SCHIMMER[art] } : {}),
     }));
   }
   return materialien.get(schluessel);

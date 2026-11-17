@@ -2,7 +2,7 @@
 // und die Wände mit veränderten Fensteröffnungen als eigene „Scheiben“ neu bauen
 import * as THREE from 'three';
 import { MATERIAL, kantenlinienHinzufuegen } from './darstellung.js';
-import { fassadenMaterial } from './materialien.js';
+import { fassadenMaterial } from './materialien.js?v=14b';
 
 // Reihenfolge im Uhrzeigersinn, Norden = Plan-oben = -Z in der 3D-Szene
 const RICHTUNGEN = ['N', 'O', 'S', 'W'];
@@ -239,9 +239,10 @@ function texturKoordinatenSetzen(netze, lage) {
 
 // Wand je nach Zustand einfärben: Außenwand mit dem Material ihrer Himmelsrichtung, sonst Rohmodell.
 // materialJeRichtung: z. B. { N: 'klinker-rot', O: …, S: …, W: … }
-export function wandFaerben(wand, materialJeRichtung, hover = false) {
+// eigenesMaterial: Material nur für diese Wand (Schalter „Einzelne Wände“), sonst gilt das der Seite
+export function wandFaerben(wand, materialJeRichtung, hover = false, eigenesMaterial = null) {
   const material = wand.userData.aussen
-    ? fassadenMaterial(materialJeRichtung[wand.userData.himmelsrichtung ?? 'S'], hover)
+    ? fassadenMaterial(eigenesMaterial ?? materialJeRichtung[wand.userData.himmelsrichtung ?? 'S'], hover)
     : MATERIAL[hover ? 'wandHover' : 'wand'];
   for (const netz of wand.children) netz.material = material;
 }
