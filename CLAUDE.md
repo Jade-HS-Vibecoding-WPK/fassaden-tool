@@ -5,7 +5,8 @@ Entsteht in der Vibecoding KI-Werkstatt (Jade Hochschule, 16.–20.11.2026). Abg
 
 # Regeln
 - Die Nutzerin studiert Architektur und kann nicht programmieren: jeden Schritt einfach erklären, auf Deutsch.
-- Ein Feature pro Sitzung: nur die nächste offene Nummer aus dem Sitzungsplan in PLAN.md bauen, nicht mehr.
+- Ein Feature pro Sitzung: nur die oberste offene Zeile aus dem Sitzungsplan in PLAN.md bauen, nicht mehr
+  (Reihenfolge der Zeilen zählt, nicht die Nummer – Zeilen können auf Wunsch umgestellt sein).
   Wird ein zweites Feature gewünscht, auf eine neue Sitzung (`/clear`) hinweisen.
 - Erst bauen, wenn die Nutzerin ausdrücklich „los“ sagt. Beim Planen keine Dateien außer PLAN.md/CLAUDE.md anlegen oder ändern.
 - Ende jeder Sitzung: testen, Commit + Hochladen zu GitHub vorschlagen, Stand in PLAN.md festhalten (Sitzung abhaken, Probleme notieren)

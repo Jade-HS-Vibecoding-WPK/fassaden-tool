@@ -34,7 +34,7 @@ nebeneinander vergleicht und als PDF mitnimmt.
 - [x] Pfosten-Riegel-Fassade als eigenes Material für eine ganze Seite;
       Anzahl der Felder einstellbar (z. B. 8 breit × 3 hoch), Pfosten und Riegel werden gleichmäßig verteilt
 
-**3. Sonne & Standort**
+**3. Sonne & Standort** (kommt erst nach 4a + 4b, Wunsch der Nutzerin 17.11.)
 - [ ] Sonnenstand und Schatten in 3D: Datum und Uhrzeit frei wählbar, Schnelltasten 21.3. / 21.6. / 21.12.
 - [ ] Standort per Ortssuche (OpenStreetMap, Namensnennung in der App) – *darf notfalls zu Could*;
       Ersatz dann: Koordinaten von Hand eintippen (Schatten gibt es trotzdem)
@@ -84,7 +84,7 @@ nebeneinander vergleicht und als PDF mitnimmt.
 
 ## Sitzungsplan (ein Feature pro Sitzung)
 Ablauf jeder Sitzung: `/clear` → ein Feature bauen → testen → Commit + Hochladen → Stand hier in PLAN.md festhalten.
-Erledigte Sitzungen abhaken, die nächste offene Nummer ist dran.
+Erledigte Sitzungen abhaken, die oberste offene Zeile ist dran (die Nummern bleiben, auch wenn Zeilen umgestellt werden).
 
 **Mo 16.11.**
 - [x] 0. PLAN.md und CLAUDE.md fertig
@@ -114,10 +114,10 @@ Erledigte Sitzungen abhaken, die nächste offene Nummer ist dran.
 - [x] 14. Should 2: Pfosten-Riegel-Fassade (17.11.)
 
 **Do 19.11. – bis 12 Uhr fertig**
-- [ ] 15. Should 3a: Sonnenstand und Schatten
-- [ ] 16. Should 3b: Standort per Ortssuche (darf notfalls wegfallen)
-- [ ] 17. Should 4a: Umschalter „realistisch“
+- [ ] 17. Should 4a: Umschalter „realistisch“ ← **als Nächstes** (umgestellt 17.11., Wunsch der Nutzerin)
 - [ ] 18. Should 4b: eigene Farbe pro Material
+- [ ] 15. Should 3a: Sonnenstand und Schatten (nach hinten gestellt, Wunsch der Nutzerin 17.11.)
+- [ ] 16. Should 3b: Standort per Ortssuche (darf notfalls wegfallen)
 - [ ] 19. Should 4c: PDF-Einzelseiten (fällt als Erstes weg, wenn es eng wird)
 - [ ] 20. Ab ca. 10:30: Test mit eigener IFC, Fehler beheben
 - [ ] 21. Auf GitHub hochladen und über GitHub Pages veröffentlichen → **12 Uhr Freeze**
