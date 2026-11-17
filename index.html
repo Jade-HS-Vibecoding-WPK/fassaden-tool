@@ -16,7 +16,7 @@
   }
   </script>
   <!-- ?v=… erzwingt nach Änderungen die neue Fassung (sonst hält der Browser alte Dateien fest) -->
-  <script type="module" src="js/app.js?v=10"></script>
+  <script type="module" src="js/app.js?v=11"></script>
 </head>
 <body>
   <div class="app">
@@ -69,6 +69,22 @@
 
       <section id="bereichVarianten" hidden>
         <h2><span>6</span> Varianten</h2>
+        <div class="blickwahl">
+          <label>Blick aus
+            <select id="blickAus" autocomplete="off">
+              <option value="45">Nordost</option>
+              <option value="135" selected>Südost</option>
+              <option value="225">Südwest</option>
+              <option value="315">Nordwest</option>
+            </select>
+          </label>
+          <label>Blickhöhe
+            <input type="range" id="blickHoehe" min="0" max="45" step="5" value="15" autocomplete="off">
+            <output id="blickHoeheWert">15°</output>
+          </label>
+        </div>
+        <p class="hinweis">Blick der Perspektive: 0° = waagerecht, 45° = steil von oben.
+          Das 3D-Fenster zeigt ihn beim Verstellen an.</p>
         <input type="text" class="eingabe" id="variantenName" maxlength="60" autocomplete="off" aria-label="Name der Variante">
         <button class="knopf haupt" id="varianteSpeichern">Variante speichern</button>
         <p class="hinweis">Speichert alle Einstellungen, die Kennwerte und 5 Bilder: Perspektive und die Ansichten

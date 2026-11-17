@@ -73,6 +73,19 @@ h2 span { color: var(--akzent); }
 .fensterzeile input[type=range] { width: 100%; min-width: 0; margin: 0; accent-color: var(--akzent); cursor: pointer; }
 .fensterzeile output { text-align: right; font-variant-numeric: tabular-nums; }
 
+/* Perspektive: Blickrichtung und Blickhöhe */
+.blickwahl { display: grid; gap: 6px; margin-bottom: 6px; }
+.blickwahl label { display: grid; grid-template-columns: 76px 1fr 40px; gap: 8px; align-items: center; font-size: 13px; }
+.blickwahl select {
+  grid-column: 2 / 4;
+  font: inherit; font-size: 13px; color: var(--text);
+  border: 1px solid var(--linie); border-radius: 0; background: #fff;
+  padding: 6px 8px; min-width: 0; cursor: pointer;
+}
+.blickwahl select:hover, .blickwahl select:focus { border-color: var(--text); outline: none; }
+.blickwahl input[type=range] { width: 100%; min-width: 0; margin: 0; accent-color: var(--akzent); cursor: pointer; }
+.blickwahl output { text-align: right; font-variant-numeric: tabular-nums; }
+
 /* Kennwerte: kleine Tabelle, Zahlen rechtsbündig */
 .kennwerte { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
 .kennwerte th { font-size: 11px; font-weight: 400; color: var(--leise); text-align: right; padding: 0 0 6px; }

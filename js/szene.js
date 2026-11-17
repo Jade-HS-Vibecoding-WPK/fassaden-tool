@@ -174,50 +174,71 @@ export class Szene {
     return punkte;
   }
 
+  // Richtung vom Gebäude zur Kamera für die Perspektive.
+  // blick = { aus: Himmelsrichtung in Grad (z. B. 135 = Südost), hoehe: Grad über der Waagerechten };
+  // drehung: Drehung des Gebäudes im Plan in Grad (die Kamera dreht sich mit)
+  static blickRichtung(blick, drehung = 0) {
+    const rad = THREE.MathUtils.degToRad(blick.aus + drehung);
+    const hoehe = THREE.MathUtils.degToRad(blick.hoehe);
+    return new THREE.Vector3(Math.cos(hoehe) * Math.sin(rad), Math.sin(hoehe), -Math.cos(hoehe) * Math.cos(rad));
+  }
+
+  // Perspektiv-Kamera so stellen, dass die sichtbaren Bauteile knapp ins Bild passen (Haus mittig).
+  // Gibt den Punkt zurück, auf den die Kamera schaut.
+  perspektiveEinpassen(kamera, richtung, punkte, rand = 1.12) {
+    const box = this.gebaeudeBox();
+    const ziel = box.getCenter(new THREE.Vector3());
+    let abstand = box.getSize(new THREE.Vector3()).length() * 2;
+    const stellen = () => {
+      kamera.position.copy(ziel).addScaledVector(richtung, abstand);
+      kamera.lookAt(ziel);
+      kamera.near = abstand / 100;
+      kamera.far = abstand * 10;
+      kamera.updateProjectionMatrix();
+      kamera.updateMatrixWorld();
+    };
+    for (let versuch = 0; versuch < 5; versuch++) {
+      stellen();
+      // Ausdehnung im Bild (-1 … 1 = Bildrand) messen
+      const bild = new THREE.Box2();
+      const p = new THREE.Vector3();
+      for (const punkt of punkte) bild.expandByPoint(p.copy(punkt).project(kamera));
+      // Ziel zur Mitte der Ausdehnung verschieben, dann Abstand anpassen
+      const versatz = bild.getCenter(new THREE.Vector2());
+      const halbH = Math.tan(THREE.MathUtils.degToRad(kamera.fov / 2)) * abstand;
+      ziel.addScaledVector(new THREE.Vector3().setFromMatrixColumn(kamera.matrixWorld, 0), versatz.x * halbH * kamera.aspect);
+      ziel.addScaledVector(new THREE.Vector3().setFromMatrixColumn(kamera.matrixWorld, 1), versatz.y * halbH);
+      const ausdehnung = bild.getSize(new THREE.Vector2());
+      abstand *= (Math.max(ausdehnung.x, ausdehnung.y) / 2) * rand;
+    }
+    stellen();
+    return ziel;
+  }
+
+  // Das 3D-Fenster auf den eingestellten Blick der Perspektive stellen (danach frei drehbar)
+  blickZeigen(blick, drehung = 0) {
+    if (!this.modell) return;
+    const ziel = this.perspektiveEinpassen(this.kamera, Szene.blickRichtung(blick, drehung), this.sichtbarePunkte(), 1.05);
+    this.steuerung.target.copy(ziel);
+    this.steuerung.update();
+  }
+
   // 5 Bilder aus fester Kamera, unabhängig von der aktuellen Blickrichtung:
-  // Perspektive (schräg von oben aus Südosten) und die Ansichten Nord/Ost/Süd/West als Parallelprojektion.
+  // Perspektive (eingestellter Blick, s. blickRichtung) und die Ansichten Nord/Ost/Süd/West als Parallelprojektion.
   // drehung: um wie viel Grad das Gebäude im Plan gedreht ist (im Uhrzeigersinn positiv).
   // Die Kameras drehen sich mit, damit die Ansichten gerade auf die Fassade schauen.
   // Liefert { perspektive, N, O, S, W } als JPEG-Bilder (Blob).
-  async bilderAufnehmen(breite = 1500, hoehe = 1000, drehung = 0) {
-    const yAchse = new THREE.Vector3(0, 1, 0);
-    const drehungRad = THREE.MathUtils.degToRad(-drehung); // three.js dreht gegen den Uhrzeigersinn
+  async bilderAufnehmen(breite = 1500, hoehe = 1000, drehung = 0, blick = { aus: 135, hoehe: 15 }) {
     const box = this.gebaeudeBox();
     const mitte = box.getCenter(new THREE.Vector3());
     const groesse = box.getSize(new THREE.Vector3());
     const seitenverhaeltnis = breite / hoehe;
     const rand = 1.12; // etwas Luft ums Gebäude
+    const punkte = this.sichtbarePunkte();
 
     // Perspektive: Abstand und Bildmitte so wählen, dass die sichtbaren Bauteile knapp ins Bild passen
     const perspektive = new THREE.PerspectiveCamera(this.kamera.fov, seitenverhaeltnis, 0.1, 5000);
-    const richtung = new THREE.Vector3(1, 0.7, 1).normalize().applyAxisAngle(yAchse, drehungRad);
-    const punkte = this.sichtbarePunkte();
-    const ziel = mitte.clone();
-    let abstand = groesse.length() * 2;
-    for (let versuch = 0; versuch < 5; versuch++) {
-      perspektive.position.copy(ziel).addScaledVector(richtung, abstand);
-      perspektive.lookAt(ziel);
-      perspektive.near = abstand / 100;
-      perspektive.far = abstand * 10;
-      perspektive.updateProjectionMatrix();
-      perspektive.updateMatrixWorld();
-      // Ausdehnung im Bild (-1 … 1 = Bildrand) messen
-      const bild = new THREE.Box2();
-      const p = new THREE.Vector3();
-      for (const punkt of punkte) bild.expandByPoint(p.copy(punkt).project(perspektive));
-      // Ziel zur Mitte der Ausdehnung verschieben, dann Abstand anpassen
-      const versatz = bild.getCenter(new THREE.Vector2());
-      const halbH = Math.tan(THREE.MathUtils.degToRad(perspektive.fov / 2)) * abstand;
-      ziel.addScaledVector(new THREE.Vector3().setFromMatrixColumn(perspektive.matrixWorld, 0), versatz.x * halbH * seitenverhaeltnis);
-      ziel.addScaledVector(new THREE.Vector3().setFromMatrixColumn(perspektive.matrixWorld, 1), versatz.y * halbH);
-      const ausdehnung = bild.getSize(new THREE.Vector2());
-      abstand *= (Math.max(ausdehnung.x, ausdehnung.y) / 2) * rand;
-    }
-    perspektive.position.copy(ziel).addScaledVector(richtung, abstand);
-    perspektive.lookAt(ziel);
-    perspektive.near = abstand / 100;
-    perspektive.far = abstand * 10;
-    perspektive.updateProjectionMatrix();
+    this.perspektiveEinpassen(perspektive, Szene.blickRichtung(blick, drehung), punkte, rand);
 
     // Ansichten: Blick waagerecht und senkrecht auf die jeweilige Seite (Norden = -Z = Plan-oben),
     // um die Drehung des Gebäudes mitgedreht

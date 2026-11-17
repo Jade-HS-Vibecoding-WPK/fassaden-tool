@@ -106,7 +106,7 @@ Erledigte Sitzungen abhaken, die nächste offene Nummer ist dran.
 - [x] 9. Variantenvergleich nebeneinander (17.11.)
 - [x] 9b. Ansichten gerade auf die Fassade, auch wenn das Gebäude im Plan gedreht ist (Wunsch der Nutzerin) (17.11.)
 - [x] 10. PDF-Übersichtsseite A3 quer (17.11.)
-- [ ] 10b. Perspektive: Blick weniger steil von oben, und selbst einstellbar (Wunsch der Nutzerin, 17.11.)
+- [x] 10b. Perspektive: Blick weniger steil von oben, und selbst einstellbar (Wunsch der Nutzerin, 17.11.)
 - [ ] 11. Kurze Anleitung beim ersten Öffnen + IFC-Export-Hinweise → **Must komplett**
 - [ ] 12. Should 1a: einzelne Wand → anderes Material
 - [ ] 13. Should 1b: einzelnes Fenster → Maße ändern
@@ -127,7 +127,7 @@ Erledigte Sitzungen abhaken, die nächste offene Nummer ist dran.
 Wenn es eng wird, zuerst streichen: 19 (PDF-Einzelseiten), dann 16 (Ortssuche).
 Was bis Do 10:30 nicht fertig ist, wandert zu Could.
 
-## Stand (17.11.2026, nach Sitzung 10)
+## Stand (17.11.2026, nach Sitzung 10b)
 - CLAUDE.md und PLAN.md angelegt, Plan mit der Nutzerin abgestimmt.
 - Test-IFC liegt in `testdaten/` (Einfamilienhaus, Revit 2023, IFC2x3: 192 Wände, 57 Fenster, 49 Türen).
   Quelle: Bundesingenieurkammer, Seite „BIM-Praxisbeispiele“ (Download zum Betrachten angeboten).
@@ -303,6 +303,23 @@ Was bis Do 10:30 nicht fertig ist, wandert zu Could.
   Der Standort wird nicht gespeichert (nach Neuladen der Seite leer). Sonderzeichen außerhalb des westeuropäischen
   Zeichensatzes (z. B. Emojis) im Variantennamen erscheinen im PDF falsch. Ohne Internet kein PDF (Meldung erscheint).
 
+- Sitzung 10b (17.11.): Perspektive einstellbar. Im Bereich „6 Varianten“ über dem Namensfeld: Auswahl „Blick aus“
+  (Nordost, Südost, Südwest, Nordwest; Start Südost) und Regler „Blickhöhe“ 0–45° in 5er-Schritten (Start 15°, vorher fest ca. 26°).
+  Beim Verstellen springt das 3D-Fenster auf genau diesen Blick (danach wieder frei drehbar); gespeichert wird immer
+  der eingestellte Blick, nicht der aktuelle im 3D-Fenster. Ist das Gebäude im Plan gedreht, dreht sich der Blick mit (wie die Ansichten).
+  Der Blick wird mit der Variante gespeichert, „Laden“ stellt ihn wieder ein. Ältere Varianten behalten ihre Bilder und
+  gelten als „aus Südosten, ca. 26°“ (Laden lässt dort die Einstellung, wie sie ist).
+  Vergleich: Kennzeichen auf der Perspektive, z. B. „SW · 5°“, im großen Bild „Perspektive aus Südwesten, 5°“.
+  PDF: dieselbe lange Beschriftung oben links auf der Perspektive; in der Fußzeile steht statt „Perspektive aus Südosten“
+  jetzt „Blickhöhe der Perspektive in Grad über der Waagerechten“.
+  Getestet mit `Test-ArchiCAD.ifc`: Varianten mit SW 5° und NO 40° gespeichert, mit alter „Variante 1“ verglichen,
+  PDF-Knopf im Vergleich (Texte geprüft), Laden stellt Auswahl und Regler richtig ein. Testvarianten wieder gelöscht. Keine Fehler.
+  Geändert: `szene.js` (Kamera-Einpassen als eigener Baustein), `app.js`, `pdf.js`, `index.html`, `style.css`.
+  Versionsnummern: `app.js?v=11`, `szene.js?v=11`, `pdf.js?v=11`.
+  Probleme: Die Kamera beim Öffnen einer IFC nutzt noch den alten festen Blick (Südost, ca. 26°), bis man den Regler bewegt.
+  Bei 0° liegt die Kamera auf halber Gebäudehöhe, nicht auf Augenhöhe eines Menschen. Das PDF-Blatt selbst wurde nur
+  über seine Texte geprüft, nicht als Bild angesehen.
+
 ## Nächste Schritte
 - **Sitzung 9b (erledigt, s. o.; Wunsch der Nutzerin, 17.11., nach Sitzung 9):** Die Ansichten sollen wie echte Ansichten aussehen,
   also gerade auf eine „glatte“ Wand. Bisher blickt die Kamera genau aus N/O/S/W. Ist das Gebäude im Plan gedreht
@@ -316,6 +333,9 @@ Was bis Do 10:30 nicht fertig ist, wandert zu Could.
   Idee A: Regler (Blickhöhe/Winkel und Richtung, z. B. aus Südosten/Südwesten …). Idee B: den aktuellen Blick im
   3D-Fenster als Perspektive übernehmen (Knopf „Diesen Blick verwenden“). Gilt nur für neu gespeicherte Varianten
   (alte behalten ihre Bilder). Der Text „Perspektive aus Südosten“ in der PDF-Fußzeile muss dann angepasst werden.
+  **Entscheidung (17.11., vor Sitzung 10b):** Idee A, Regler. Auswahl „Blick aus“ mit 4 Ecken (Nordost, Südost,
+  Südwest, Nordwest; Start Südost) und Regler „Blickhöhe“ in Grad, Start **15°** (bisher ca. 26°).
+  Kein Knopf „Diesen Blick verwenden“.
 - Sitzung 10: PDF-Übersichtsseite A3 quer (bis zu 4 Varianten, nutzt die Auswahl aus dem Vergleich).
   **Entscheidungen (17.11., vor Sitzung 10):** PDF wird direkt als Datei gespeichert (Bibliothek jsPDF per CDN),
   nicht über den Druckdialog. Standort: Textfeld zum Eintippen (leer = Zeile fehlt), Sitzung 16 kann es später füllen.

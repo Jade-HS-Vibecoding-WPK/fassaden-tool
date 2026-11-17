@@ -152,9 +152,10 @@ function bild(doc, daten, alias, [x, y, b, h], kennzeichen) {
  * Baut die Übersichtsseite und liefert das fertige PDF-Dokument (zum Speichern: doc.save(name)).
  * varianten: 1–4 gespeicherte Varianten (älteste zuerst); modellName: Dateiname der IFC;
  * standort: Text oder leer; mitKennwerte: Tabelle „Kennwerte“ zeigen (sonst nur Bilder);
- * kennzeichen(variante, richtung): Beschriftung einer Ansicht, z. B. „N“ oder „N (NNW)“
+ * kennzeichen(variante, richtung): Beschriftung einer Ansicht, z. B. „N“ oder „N (NNW)“;
+ * blickText(variante): Beschriftung der Perspektive, z. B. „Perspektive aus Südosten, 15°“
  */
-export async function pdfErstellen({ varianten, modellName, standort, kennzeichen, mitKennwerte = true }) {
+export async function pdfErstellen({ varianten, modellName, standort, kennzeichen, blickText, mitKennwerte = true }) {
   const JsPdf = await bibliothekLaden();
   const doc = new JsPdf({ orientation: 'landscape', unit: 'mm', format: 'a3' });
   const heute = new Date().toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -176,7 +177,7 @@ export async function pdfErstellen({ varianten, modellName, standort, kennzeiche
   doc.setFont('helvetica', 'normal').setFontSize(7).setTextColor(...LEISE);
   doc.text((mitKennwerte ? 'Flächen in m², Rohbaumaße. Fassade = Außenseite der Außenwände mit allen Öffnungen. '
     + 'Fenster = Fensteröffnungen und Glastüren. Anteil = Fenster ÷ Fassade. ' : '')
-    + 'Ansichten als Parallelprojektion, Perspektive aus Südosten. Norden ist im Plan oben.', RAND, fussY);
+    + 'Ansichten als Parallelprojektion. Blickhöhe der Perspektive in Grad über der Waagerechten. Norden ist im Plan oben.', RAND, fussY);
 
   // ---------- Spalten, eine je Variante ----------
   const n = varianten.length;
@@ -206,7 +207,7 @@ export async function pdfErstellen({ varianten, modellName, standort, kennzeiche
 
     // Bilder
     const verschoben = ([bx, by, b, h]) => [x + bx, y + by, b, h];
-    bild(doc, new Uint8Array(await v.bilder.perspektive.arrayBuffer()), `v${v.id}-p`, verschoben(lage.perspektive));
+    bild(doc, new Uint8Array(await v.bilder.perspektive.arrayBuffer()), `v${v.id}-p`, verschoben(lage.perspektive), blickText(v));
     for (const [j, richtung] of Object.keys(RICHTUNGSNAMEN).entries()) {
       bild(doc, new Uint8Array(await v.bilder[richtung].arrayBuffer()), `v${v.id}-${richtung}`, verschoben(lage.ansichten[j]), kennzeichen(v, richtung));
     }

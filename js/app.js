@@ -1,10 +1,10 @@
 // Bedienoberfläche: Datei wählen oder hineinziehen, Modell anzeigen, Fassade gestalten
-import { Szene } from './szene.js';
+import { Szene } from './szene.js?v=11';
 import { ifcLaden } from './ifc.js';
 import { aussenwaendeErkennen, wandFaerben, oeffnungenZuordnen, fensterAnpassen, stuetzenVorbereiten, stuetzeFaerben, kennwerteBerechnen, hauptrichtungBestimmen } from './fassade.js';
 import { MATERIALIEN, START_MATERIAL, musterBild } from './materialien.js';
 import { variantenLesen, varianteSpeichern, varianteLoeschen } from './varianten.js';
-import { pdfErstellen, pdfDateiname } from './pdf.js?v=10b';
+import { pdfErstellen, pdfDateiname } from './pdf.js?v=11';
 
 const $ = (id) => document.getElementById(id);
 const ansicht = $('ansicht');
@@ -298,6 +298,44 @@ function fensterAnzeigen() {
   $('fensterZuruecksetzen').hidden = groessen.every((g) => g.breite === 100 && g.hoehe === 100);
 }
 
+// ---------- Perspektive: Blick aus einer Ecke, Blickhöhe in Grad ----------
+
+const BLICK_NAMEN = { 45: 'Nordosten', 135: 'Südosten', 225: 'Südwesten', 315: 'Nordwesten' };
+const BLICK_KURZ = { 45: 'NO', 135: 'SO', 225: 'SW', 315: 'NW' };
+const blick = { aus: 135, hoehe: 15 }; // Start: aus Südosten, 15° von oben
+
+// Blick einer Variante; ältere Varianten (vor Sitzung 10b) hatten fest Südost mit ca. 26°
+const blickVon = (variante) => variante.blick ?? { aus: 135, hoehe: 26 };
+const blickText = (variante) => {
+  const b = blickVon(variante);
+  return `Perspektive aus ${BLICK_NAMEN[b.aus]}, ${variante.blick ? '' : 'ca. '}${b.hoehe}°`;
+};
+const blickKurz = (variante) => {
+  const b = blickVon(variante);
+  return `${BLICK_KURZ[b.aus]} · ${b.hoehe}°`;
+};
+
+function blickAnzeigen() {
+  $('blickAus').value = String(blick.aus);
+  $('blickHoehe').value = String(blick.hoehe);
+  $('blickHoeheWert').textContent = `${blick.hoehe}°`;
+}
+
+// Das 3D-Fenster springt auf den eingestellten Blick (beim Ziehen höchstens einmal pro Bild)
+let blickGeplant = false;
+function blickImFenster() {
+  if (blickGeplant) return;
+  blickGeplant = true;
+  requestAnimationFrame(() => { blickGeplant = false; szene.blickZeigen(blick, hauptrichtungBestimmen(waende)); });
+}
+
+$('blickAus').addEventListener('change', () => { blick.aus = Number($('blickAus').value); blickImFenster(); });
+$('blickHoehe').addEventListener('input', () => {
+  blick.hoehe = Number($('blickHoehe').value);
+  $('blickHoeheWert').textContent = `${blick.hoehe}°`;
+  blickImFenster();
+});
+
 // ---------- Varianten: speichern, auflisten, laden, löschen ----------
 
 // Alle Einstellungen als reine Daten (Kopien, damit spätere Änderungen die Variante nicht verstellen)
@@ -321,10 +359,10 @@ $('varianteSpeichern').addEventListener('click', async () => {
     szene.hoverBauteil = null;
     fensterAktualisieren();
     const drehung = hauptrichtungBestimmen(waende);
-    const bilder = await szene.bilderAufnehmen(undefined, undefined, drehung);
+    const bilder = await szene.bilderAufnehmen(undefined, undefined, drehung, blick);
     await varianteSpeichern({
       modell: modellKennung, name, datum: Date.now(),
-      einstellungen: einstellungenSammeln(), kennwerte: kennwerteMitGesamt(), bilder, drehung,
+      einstellungen: einstellungenSammeln(), kennwerte: kennwerteMitGesamt(), bilder, drehung, blick: { ...blick },
     });
     $('variantenName').value = '';
     variantenStatus(`„${name}“ ist gespeichert.`);
@@ -360,6 +398,12 @@ function varianteLaden(variante) {
   fensterwahlUmschalten();
   fensterAktualisieren();
   aussenwaendeAnzeigen();
+  // Blick der Perspektive übernehmen (ältere Varianten ohne gespeicherten Blick: Einstellung bleibt)
+  if (variante.blick) {
+    Object.assign(blick, variante.blick);
+    blickAnzeigen();
+    blickImFenster();
+  }
   variantenStatus(`„${variante.name}“ ist geladen.`);
 }
 
@@ -468,7 +512,7 @@ async function pdfSpeichern(knopf) {
   knopf.textContent = 'PDF wird erstellt …';
   try {
     const doc = await pdfErstellen({
-      varianten, modellName, standort: $('standort').value.trim(), kennzeichen: ansichtKennzeichen,
+      varianten, modellName, standort: $('standort').value.trim(), kennzeichen: ansichtKennzeichen, blickText,
       mitKennwerte: $('pdfKennwerte').checked,
     });
     const dateiname = pdfDateiname(modellName, varianten.length);
@@ -517,7 +561,7 @@ function vergleichsbild(variante, schluessel, titel, kennzeichen = schluessel) {
   bild.alt = '';
   vergleichAdressen.push(bild.src);
   knopf.append(bild);
-  if (schluessel !== 'perspektive') knopf.append(textElement('span', kennzeichen));
+  knopf.append(textElement('span', kennzeichen));
   knopf.addEventListener('click', () => grossbildZeigen(bild.src, `${variante.name} · ${titel}`));
   return knopf;
 }
@@ -545,7 +589,7 @@ function vergleichOeffnen() {
     textElement('small', new Date(v.datum).toLocaleString('de-DE', { day: 'numeric', month: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })),
   ], 'kopf');
 
-  zeile('Perspektive', (v) => vergleichsbild(v, 'perspektive', 'Perspektive'));
+  zeile('Perspektive', (v) => vergleichsbild(v, 'perspektive', blickText(v), blickKurz(v)));
   zeile('Ansichten', (v) => {
     const ansichten = document.createElement('div');
     ansichten.className = 'ansichten';
