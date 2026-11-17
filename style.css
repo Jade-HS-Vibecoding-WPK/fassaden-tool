@@ -242,6 +242,72 @@ header .textknopf { margin-top: 10px; }
 .stilwahl button:hover { color: var(--akzent); }
 .stilwahl button[aria-pressed="true"] { background: var(--akzent); color: #fff; }
 
+/* Sonne und Schatten (Sitzung 15): Knopf unter „Zeichnung | Realistisch“, Feld darunter */
+/* zurückhaltend: zugeklappt nur ein kleiner Knopf, Einstellungen bei Bedarf aufklappbar */
+.sonnenwahl {
+  position: absolute; right: 16px; top: 50px; z-index: 1;
+  display: flex; flex-direction: column; align-items: flex-end; gap: 4px;
+}
+.sonnen-zeile { display: flex; align-items: center; gap: 4px; }
+/* Rundes Sonnensymbol: aus = graue Umrisslinie, an = gelbe Sonne mit leichtem Schein */
+.sonnenknopf {
+  width: 32px; height: 32px; padding: 5px; border-radius: 50%; cursor: pointer;
+  background: rgba(255,255,255,.9); border: 1px solid var(--linie);
+  transition: box-shadow .3s, background .3s;
+}
+.sonnenknopf svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.sonnenknopf circle { fill: none; stroke: var(--leise); stroke-width: 1.6; transition: fill .3s, stroke .3s; }
+.sonnenknopf .strahlen { stroke: var(--leise); stroke-width: 1.6; stroke-linecap: round; transform-origin: 12px 12px; transition: transform .6s, stroke .3s; }
+.sonnenknopf:hover .strahlen { transform: rotate(45deg); }
+.sonnenknopf:hover circle, .sonnenknopf:hover .strahlen { stroke: var(--akzent); }
+.sonnenknopf[aria-pressed="true"] { background: #fff8e6; border-color: #f0c869; box-shadow: 0 0 0 3px rgba(245,190,70,.25), 0 0 14px rgba(245,180,40,.45); }
+.sonnenknopf[aria-pressed="true"] circle { fill: #f5b82e; stroke: #e39a12; }
+.sonnenknopf[aria-pressed="true"] .strahlen { stroke: #e9a51c; }
+/* kleiner Pfeil zum Aufklappen der Einstellungen */
+.sonnen-mehr {
+  font: inherit; font-size: 13px; line-height: 1; width: 20px; height: 20px; padding: 0; cursor: pointer;
+  background: rgba(255,255,255,.9); border: 1px solid var(--linie); border-radius: 50%; color: var(--leise);
+}
+.sonnen-mehr::after { content: "▾"; }
+.sonnen-mehr[aria-expanded="true"]::after { content: "▴"; }
+.sonnen-mehr:hover { color: var(--akzent); border-color: var(--akzent); }
+.sonnenfeld {
+  width: 176px; padding: 7px; font-size: 11px;
+  background: rgba(255,255,255,.92); border: 1px solid var(--linie);
+  display: grid; gap: 5px;
+}
+.sonnenfeld .eingabe { margin: 0; padding: 2px 4px; font-size: 11px; font-variant-numeric: tabular-nums; }
+/* Uhrzeit-Regler als Tagesverlauf: Himmelsfarbe je Stunde (--tag kommt aus app.js), Griff = kleine Sonne */
+.sonnenfeld input[type="range"] {
+  -webkit-appearance: none; appearance: none; width: 100%; min-width: 0; height: 8px; margin: 0;
+  border-radius: 4px; background: var(--tag, linear-gradient(90deg, #2b3a55, #bcd7f0, #2b3a55)); cursor: pointer;
+}
+.sonnenfeld input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 15px; height: 15px; border-radius: 50%;
+  background: #f5b82e; border: 2px solid #fff; box-shadow: 0 0 0 1px #e39a12, 0 0 8px rgba(245,180,40,.8);
+}
+.sonnenfeld input[type="range"]::-moz-range-thumb {
+  width: 11px; height: 11px; border-radius: 50%;
+  background: #f5b82e; border: 2px solid #fff; box-shadow: 0 0 0 1px #e39a12, 0 0 8px rgba(245,180,40,.8);
+}
+/* Sonne untergegangen: Griff wird zum blassen Mond */
+.sonnenfeld input[type="range"].nacht::-webkit-slider-thumb { background: #dfe3ea; box-shadow: 0 0 0 1px #8a93a5; }
+.sonnenfeld input[type="range"].nacht::-moz-range-thumb { background: #dfe3ea; box-shadow: 0 0 0 1px #8a93a5; }
+.sonnenfeld output { color: var(--text); font-variant-numeric: tabular-nums; }
+.sonne-uhr { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 6px; }
+.sonne-tage { display: flex; border: 1px solid var(--linie); }
+.sonne-tage button {
+  flex: 1; font: inherit; font-size: 11px; padding: 2px 0; border: 0; background: none; color: var(--leise); cursor: pointer;
+}
+.sonne-tage button + button { border-left: 1px solid var(--linie); }
+.sonne-tage button:hover { color: var(--akzent); }
+.sonne-tage button[aria-pressed="true"] { background: var(--akzent-hell); color: var(--akzent); }
+.sonne-ort { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+.sonne-ort label { display: flex; align-items: center; gap: 2px; color: var(--leise); white-space: nowrap; }
+.sonne-ort .eingabe { width: 100%; min-width: 0; -moz-appearance: textfield; }
+.sonne-ort .eingabe::-webkit-inner-spin-button, .sonne-ort .eingabe::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.sonnenfeld .hinweis { margin: 0; font-size: 10.5px; line-height: 1.35; }
+
 .legende {
   position: absolute; left: 16px; bottom: 12px; margin: 0;
   font-size: 12px; color: var(--leise);
@@ -296,6 +362,7 @@ header .textknopf { margin-top: 10px; }
 .vergleich-raster .material.beschriftung { display: block; }
 .vergleich-raster .material .muster { flex: none; }
 .vergleich-raster .zelle.einzeln { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+.vergleich-raster .zelle.sonne small { display: block; font-size: 11px; color: var(--leise); margin-top: 2px; }
 
 /* Kennwerte: drei Zahlen je Zelle, rechtsbündig */
 .vergleich-raster .werte { display: grid; grid-template-columns: repeat(3, 1fr); font-variant-numeric: tabular-nums; }

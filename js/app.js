@@ -1,5 +1,5 @@
 // Bedienoberfläche: Datei wählen oder hineinziehen, Modell anzeigen, Fassade gestalten
-import { Szene } from './szene.js?v=20b';
+import { Szene } from './szene.js?v=22b';
 import { ifcLaden } from './ifc.js?v=19';
 import { aussenwaendeErkennen, wandFaerben, oeffnungenZuordnen, fensterAnpassen, stuetzenVorbereiten, stuetzeFaerben, dachVorbereiten, dachFaerben, kennwerteBerechnen, hauptrichtungBestimmen, fensterFaerben, anbauteileZuordnen } from './fassade.js?v=20b';
 import {
@@ -7,7 +7,8 @@ import {
   farbtoeneVon, farbtonVon, farbtonSetzen, farbtoeneSammeln, farbtoeneUebernehmen, materialText,
 } from './materialien.js?v=20b';
 import { variantenLesen, varianteSpeichern, varianteLoeschen } from './varianten.js';
-import { pdfErstellen, pdfDateiname } from './pdf.js?v=11';
+import { pdfErstellen, pdfDateiname } from './pdf.js?v=22';
+import { START_SONNE, sonnenstand, himmelsrichtung, uhrzeitText, ortText, zeitText, weltzeit } from './sonne.js?v=22';
 
 const $ = (id) => document.getElementById(id);
 const ansicht = $('ansicht');
@@ -784,6 +785,8 @@ $('varianteSpeichern').addEventListener('click', async () => {
     await varianteSpeichern({
       modell: modellKennung, name, datum: Date.now(),
       einstellungen: einstellungenSammeln(), kennwerte: kennwerteMitGesamt(), bilder, drehung, blick: { ...blick },
+      // Sonne (Sitzung 15): Datum, Uhrzeit, Ort und Sonnenstand, wenn die Bilder Schatten haben; sonst null
+      sonne: sonneAn ? { ...sonne, ...sonnenstand(sonne) } : null,
     });
     $('variantenName').value = '';
     variantenStatus(`„${name}“ ist gespeichert.`);
@@ -842,6 +845,17 @@ function varianteLaden(variante) {
     Object.assign(blick, variante.blick);
     blickAnzeigen();
     blickImFenster();
+  }
+  // Sonne übernehmen: gespeichert mit Sonne → an mit deren Datum/Uhrzeit/Ort, ohne Sonne → aus
+  // (ältere Varianten vor Sitzung 15 kennen die Sonne nicht: Einstellung bleibt)
+  if (variante.sonne !== undefined) {
+    sonneAn = !!variante.sonne;
+    if (variante.sonne) {
+      const { datum, minuten, breite, laenge } = variante.sonne;
+      Object.assign(sonne, { datum, minuten, breite, laenge });
+    }
+    sonneAnzeigen();
+    sonneAnwenden();
   }
   variantenStatus(`„${variante.name}“ ist geladen.`);
 }
@@ -951,7 +965,7 @@ async function pdfSpeichern(knopf) {
   knopf.textContent = 'PDF wird erstellt …';
   try {
     const doc = await pdfErstellen({
-      varianten, modellName, standort: $('standort').value.trim(), kennzeichen: ansichtKennzeichen, blickText,
+      varianten, modellName, standort: $('standort').value.trim(), kennzeichen: ansichtKennzeichen, blickText, sonnenText,
       mitKennwerte: $('pdfKennwerte').checked,
     });
     const dateiname = pdfDateiname(modellName, varianten.length);
@@ -1047,6 +1061,12 @@ function vergleichOeffnen() {
     }
     return ansichten;
   });
+  // Sonne (Sitzung 15): nur, wenn eine der Varianten mit Schatten gespeichert ist
+  if (varianten.some((v) => v.sonne)) {
+    zeile('Schatten', (v) => (v.sonne
+      ? [textElement('span', zeitText(v.sonne)), textElement('small', ortText(v.sonne))]
+      : textElement('span', 'ohne')), 'sonne');
+  }
 
   // Material, das je Seite wirklich gilt (auch bei „Alle Seiten gleich“)
   const materialVon = (v, richtung) => {
@@ -1228,6 +1248,7 @@ async function dateiOeffnen(datei) {
     $('anleitungOeffnen').hidden = false;
     $('legende').hidden = false;
     $('stilwahl').hidden = false;
+    $('sonnenwahl').hidden = false;
     statusZeigen(datei.name);
     // Bauteil-Anzahlen: nebensächlich, deshalb zugeklappt unter „Bauteile“
     $('bauteileText').textContent =
@@ -1249,6 +1270,111 @@ for (const knopf of $('stilwahl').querySelectorAll('button')) {
     for (const k of $('stilwahl').querySelectorAll('button')) k.setAttribute('aria-pressed', String(k === knopf));
   });
 }
+
+// ---------- Sonne und Schatten (Sitzung 15) ----------
+// Knopf „Sonne“ im 3D-Fenster: an = Schatten zu Datum, Uhrzeit und Ort. Ist die Sonne beim Speichern an,
+// haben auch die 5 Bilder Schatten, und Datum/Uhrzeit/Ort werden mit der Variante gespeichert.
+let sonneAn = false;
+let sonneAufgeklappt = false; // Einstellungen nur bei Bedarf zeigen (Wunsch der Nutzerin: Feld verdeckte das Gebäude)
+const sonne = { ...START_SONNE, datum: `${new Date().getFullYear()}${START_SONNE.datum.slice(4)}` };
+
+// Uhrzeit-Regler als Tagesverlauf: Himmelsfarbe je Stunde aus der Sonnenhöhe an diesem Tag und Ort
+// (Nacht dunkelblau, Dämmerung orange, Tag hellblau). Wird nur neu gerechnet, wenn sich Datum oder Ort ändern.
+let tagesverlaufFuer = '';
+function tagesverlaufMalen() {
+  const schluessel = `${sonne.datum}|${sonne.breite}|${sonne.laenge}`;
+  if (schluessel === tagesverlaufFuer) return;
+  tagesverlaufFuer = schluessel;
+  const mischen = (a, b, t) => a.map((w, i) => Math.round(w + (b[i] - w) * Math.max(0, Math.min(1, t))));
+  const NACHT = [43, 58, 85], DAEMMERUNG = [236, 168, 108], TAG = [188, 215, 240], MITTAG = [150, 196, 238];
+  const stopps = [];
+  for (let stunde = 0; stunde <= 24; stunde++) {
+    const { hoehe } = sonnenstand({ ...sonne, minuten: Math.min(stunde * 60, 1439) });
+    const farbe = hoehe < -6 ? NACHT
+      : hoehe < 0 ? mischen(NACHT, DAEMMERUNG, (hoehe + 6) / 6)
+        : hoehe < 12 ? mischen(DAEMMERUNG, TAG, hoehe / 12)
+          : mischen(TAG, MITTAG, (hoehe - 12) / 40);
+    stopps.push(`rgb(${farbe.join(',')}) ${(stunde / 24) * 100}%`);
+  }
+  $('sonneZeit').style.setProperty('--tag', `linear-gradient(90deg, ${stopps.join(', ')})`);
+}
+
+function sonneAnzeigen() {
+  $('sonneKnopf').setAttribute('aria-pressed', String(sonneAn));
+  $('sonneKnopf').title = sonneAn ? 'Sonne und Schatten aus' : 'Sonne und Schatten an';
+  // Einstellungen zugeklappt; der kleine Pfeil neben der Sonne klappt sie auf
+  $('sonneAufklappen').hidden = !sonneAn;
+  $('sonneAufklappen').setAttribute('aria-expanded', String(sonneAufgeklappt));
+  tagesverlaufMalen();
+  $('sonnenfeld').hidden = !sonneAn || !sonneAufgeklappt;
+  $('sonneDatum').value = sonne.datum;
+  $('sonneZeit').value = String(sonne.minuten);
+  $('sonneZeitWert').textContent = uhrzeitText(sonne.minuten);
+  $('sonneBreite').value = String(sonne.breite);
+  $('sonneLaenge').value = String(sonne.laenge);
+  for (const knopf of $('sonnenfeld').querySelectorAll('[data-tag]')) {
+    knopf.setAttribute('aria-pressed', String(sonne.datum.slice(5) === knopf.dataset.tag));
+  }
+}
+
+// Sonnenstand ausrechnen und ins 3D-Fenster geben (beim Ziehen des Reglers höchstens einmal pro Bild)
+let sonneGeplant = false;
+function sonneAnwenden() {
+  if (sonneGeplant) return;
+  sonneGeplant = true;
+  requestAnimationFrame(() => {
+    sonneGeplant = false;
+    const stand = sonneAn ? sonnenstand(sonne) : null;
+    szene.sonneSetzen(stand);
+    if (stand) {
+      $('sonneInfo').textContent = stand.hoehe > 0
+        ? `Sonne ${Math.round(stand.hoehe)}° hoch, aus ${himmelsrichtung(stand.azimut)} · ${weltzeit(sonne.datum, sonne.minuten).zone}`
+        : 'Sonne untergegangen, keine Schatten.';
+      $('sonneZeit').classList.toggle('nacht', stand.hoehe <= 0); // Griff wird nachts zum Mond
+    }
+  });
+}
+
+$('sonneKnopf').addEventListener('click', () => {
+  sonneAn = !sonneAn;
+  sonneAnzeigen();
+  sonneAnwenden();
+});
+$('sonneAufklappen').addEventListener('click', () => {
+  sonneAufgeklappt = !sonneAufgeklappt;
+  sonneAnzeigen();
+});
+$('sonneZeit').addEventListener('input', () => {
+  sonne.minuten = Number($('sonneZeit').value);
+  sonneAnzeigen();
+  sonneAnwenden();
+});
+$('sonneDatum').addEventListener('change', () => {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test($('sonneDatum').value)) { sonneAnzeigen(); return; } // leer/ungültig: altes Datum
+  sonne.datum = $('sonneDatum').value;
+  sonneAnzeigen();
+  sonneAnwenden();
+});
+for (const knopf of $('sonnenfeld').querySelectorAll('[data-tag]')) {
+  knopf.addEventListener('click', () => {
+    sonne.datum = `${sonne.datum.slice(0, 4)}-${knopf.dataset.tag}`; // Jahr bleibt
+    sonneAnzeigen();
+    sonneAnwenden();
+  });
+}
+// Koordinaten: übernommen beim Bestätigen; Unsinniges wird auf das Mögliche begrenzt, Leeres zurückgesetzt
+for (const [id, schluessel, grenze] of [['sonneBreite', 'breite', 90], ['sonneLaenge', 'laenge', 180]]) {
+  $(id).addEventListener('change', () => {
+    const wert = Number($(id).value.replace(',', '.'));
+    if ($(id).value.trim() !== '' && Number.isFinite(wert)) sonne[schluessel] = Math.round(Math.max(-grenze, Math.min(grenze, wert)) * 100) / 100;
+    sonneAnzeigen();
+    sonneAnwenden();
+  });
+}
+sonneAnzeigen();
+
+// Text für Vergleich und PDF, z. B. „21.6.2026, 15:00 Uhr (MESZ) · 53,14° N, 8,21° O“; ohne Sonne: null
+const sonnenText = (variante) => (variante.sonne ? `${zeitText(variante.sonne)} · ${ortText(variante.sonne)}` : null);
 
 function statusZeigen(text, istFehler = false) {
   const status = $('status');

@@ -37,6 +37,7 @@ Entsteht in der Vibecoding KI-Werkstatt (Jade Hochschule, 16.–20.11.2026). Abg
 - `js/darstellung.js` – Zeichenstil: Farben der Bauteile (Rohmodell, Dach, Fenster …) und Kantenlinien
 - `js/materialien.js` – Fassadenmaterialien als selbst gezeichnete Texturen
 - `js/realistisch.js` – Darstellung „realistisch“ (nur im 3D-Fenster): echte Materialien, Himmel, Spiegelung
+- `js/sonne.js` – Sonnenstand aus Datum, deutscher Uhrzeit und Koordinaten (Schatten zeichnet `szene.js`)
 - `js/pdf.js` – PDF-Übersichtsseite A3 quer (1–4 Varianten), direkt als Datei gespeichert
 
 # Entscheidungen
@@ -49,7 +50,8 @@ Entsteht in der Vibecoding KI-Werkstatt (Jade Hochschule, 16.–20.11.2026). Abg
 
 # Gestaltung
 - Bisher (gebaut): Swiss Style, weiß, viel Weißraum, dünne Linien, eine Akzentfarbe (Dunkelblau).
-- **Neue Richtung (Entwurf 17.11., noch nicht gebaut):** Glassmorphism – Details in PLAN.md unter „Design-Vision“.
+- **Neue Richtung (Entwurf 17.11., kommt in Sitzung 15b):** Glassmorphism – Details in PLAN.md unter „Design-Vision“.
+- Ausnahme Akzentfarbe: Sonnenknopf und Uhrzeit-Regler der Sonne dürfen Sonnengelb (#f5b82e) haben (spielerisch, Wunsch der Nutzerin).
 - Ein Hauptbutton pro Ansicht („Variante speichern“), Akzentfarbe bleibt Dunkelblau (#1f3a68).
 - Kennwerte zurückhaltend zeigen, nicht groß oder zentral (Wunsch der Nutzerin, 17.11.).
 - PDF und Variantenbilder bleiben weiß, der neue Look gilt nur für die Bedienoberfläche.

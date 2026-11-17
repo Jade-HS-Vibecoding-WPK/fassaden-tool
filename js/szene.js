@@ -26,6 +26,11 @@ export class Szene {
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
     this.renderer.setPixelRatio(window.devicePixelRatio);
     this.renderer.setClearColor(0xffffff);
+    // Schatten (Sitzung 15): weiche Kanten; berechnet wird nur, wenn die Sonne an ist
+    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    // Schatten hängen nicht vom Blick ab: nur neu berechnen, wenn sich Sonne oder Bauteile ändern (spart viel Rechenzeit)
+    this.renderer.shadowMap.autoUpdate = false;
+    this.schattenFingerabdruck = null;
     behaelter.prepend(this.renderer.domElement);
 
     this.szene = new THREE.Scene();
@@ -44,7 +49,21 @@ export class Szene {
     this.szene.add(this.grundlicht);
     this.sonne = new THREE.DirectionalLight(0xffffff, 1.6);
     this.sonne.position.set(30, 50, 20);
-    this.szene.add(this.sonne);
+    this.szene.add(this.sonne, this.sonne.target);
+    this.sonne.shadow.mapSize.set(4096, 4096);
+    this.sonne.shadow.bias = -0.0004;
+    this.sonne.shadow.normalBias = 0.03;
+
+    // Sonnenstand und Schatten (Sitzung 15): null = Sonne aus (Licht wie bisher, keine Schatten),
+    // sonst { azimut, hoehe } in Grad. Gilt im 3D-Fenster und für die gespeicherten Bilder.
+    this.sonnenstand = null;
+    // Unsichtbarer Boden, der nur den Schatten zeigt (auch wenn die IFC kein Gelände hat)
+    this.schattenBoden = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.ShadowMaterial({ opacity: 0.22, depthWrite: false }));
+    this.schattenBoden.rotation.x = -Math.PI / 2;
+    this.schattenBoden.receiveShadow = true;
+    this.schattenBoden.visible = false;
+    this.schattenBoden.raycast = () => {};
+    this.szene.add(this.schattenBoden);
 
     // Umschalter „Zeichnung | Realistisch“: gilt nur fürs 3D-Fenster, nicht für die gespeicherten Bilder
     this.realistisch = false;
@@ -58,6 +77,7 @@ export class Szene {
 
     this.renderer.setAnimationLoop(() => {
       this.steuerung.update();
+      if (this.sonneScheint()) this.schattenBauteileMarkieren();
       if (this.realistisch && this.modell) this.realistischZeichnen();
       else this.renderer.render(this.szene, this.kamera);
     });
@@ -78,15 +98,22 @@ export class Szene {
     });
     this.szene.background = this.himmel;
     this.szene.environment = this.umgebung;
-    // Sonne tiefer und von Südwesten: Südseite hell, Ostseite im Schatten (deutliche Licht- und Schattenseiten)
+    // Sonne tiefer und von Südwesten: Südseite hell, Ostseite im Schatten (deutliche Licht- und Schattenseiten).
+    // Ist die Sonne (Sitzung 15) an, bleibt sie, wo sie laut Datum und Uhrzeit steht.
     const sonnenLage = this.sonne.position.clone();
-    this.sonne.position.set(-20, 30, 35);
-    this.grundlicht.intensity = 0.8;
+    const sonnenKraft = this.sonne.intensity;
+    const grundKraft = this.grundlicht.intensity;
+    const scheint = this.sonneScheint();
+    if (!scheint) this.sonne.position.set(-20, 30, 35);
+    this.grundlicht.intensity = scheint ? 0.7 : 0.8;
     // Himmelslicht von oben leicht kühl, vom Boden zurückgeworfenes Licht warm und dunkler (wie draußen)
     this.grundlicht.color.set(0xdfe9f7);
     this.grundlicht.groundColor.set(0x8c8270);
     this.sonne.color.set(0xfff3e2); // Sonne leicht warm
-    this.sonne.intensity = 2.8;
+    // tief stehende Sonne: wärmer (morgens/abends) – nur, wenn die Sonne an ist
+    if (scheint && this.sonnenstand.hoehe < 15) this.sonne.color.lerp(new THREE.Color(0xffc890), 1 - this.sonnenstand.hoehe / 15);
+    // Sonne an, aber untergegangen: kein Sonnenlicht
+    this.sonne.intensity = this.sonnenstand && !scheint ? 0 : 2.8;
     // weiche Belichtung wie bei einer Kamera, damit helle Flächen nicht ausbrennen
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.0;
@@ -97,11 +124,11 @@ export class Szene {
       for (const linie of linien) linie.visible = true;
       this.szene.background = null;
       this.szene.environment = null;
-      this.grundlicht.intensity = 2.2;
+      this.grundlicht.intensity = grundKraft;
       this.grundlicht.color.set(0xffffff);
       this.grundlicht.groundColor.set(0xdddddd);
       this.sonne.color.set(0xffffff);
-      this.sonne.intensity = 1.6;
+      this.sonne.intensity = sonnenKraft;
       this.sonne.position.copy(sonnenLage);
       this.renderer.toneMapping = THREE.NoToneMapping;
     }
@@ -170,6 +197,110 @@ export class Szene {
     this.hoverBauteil = null;
     this.szene.add(gruppe);
     this.kameraEinpassen();
+    this.sonneSetzen(this.sonnenstand);
+  }
+
+  // ---------- Sonne und Schatten (Sitzung 15) ----------
+
+  // Ist die Sonne an und steht sie über dem Horizont? (sonst: keine Schatten)
+  sonneScheint() {
+    return !!(this.modell && this.sonnenstand && this.sonnenstand.hoehe > 0);
+  }
+
+  // stand = { azimut, hoehe } in Grad oder null (= Sonne aus, Licht wie bisher)
+  sonneSetzen(stand) {
+    const vorher = this.renderer.shadowMap.enabled;
+    this.sonnenstand = stand;
+    const scheint = this.sonneScheint();
+    this.renderer.shadowMap.enabled = scheint;
+    this.sonne.castShadow = scheint;
+    this.schattenBoden.visible = scheint;
+    if (!this.modell || !stand) {
+      // wie bisher: Sonne fest von oben rechts, gleichmäßiges Grundlicht
+      this.sonne.position.set(30, 50, 20);
+      this.sonne.target.position.set(0, 0, 0);
+      this.sonne.intensity = 1.6;
+      this.grundlicht.intensity = 2.2;
+    } else if (!scheint) {
+      // Sonne untergegangen: nur Himmelslicht, keine Schatten
+      this.sonne.intensity = 0;
+      this.grundlicht.intensity = 2.6;
+    } else {
+      // Zeichenstil mit Sonne: etwas weniger Grundlicht, damit die Schatten ruhig, aber deutlich sind
+      this.sonne.intensity = 2.4;
+      this.grundlicht.intensity = 1.6;
+      this.schattenEinpassen();
+    }
+    this.renderer.shadowMap.needsUpdate = true; // Sonne hat sich bewegt
+    if (this.modell) this.schattenBauteileMarkieren();
+    // Gehen Schatten an oder aus, müssen die Materialien einmal neu vorbereitet werden
+    if (vorher !== scheint) {
+      this.szene.traverse((teil) => { if (teil.material) teil.material.needsUpdate = true; });
+    }
+  }
+
+  // Richtung zur Sonne (Norden = -Z = Plan-oben, Osten = +X)
+  static sonnenRichtung({ azimut, hoehe }) {
+    const a = THREE.MathUtils.degToRad(azimut), h = THREE.MathUtils.degToRad(hoehe);
+    return new THREE.Vector3(Math.cos(h) * Math.sin(a), Math.sin(h), -Math.cos(h) * Math.cos(a));
+  }
+
+  // Sonne und Schattenkamera so stellen, dass Gebäude und Schatten (bis zu einer Höchstlänge) hineinpassen
+  schattenEinpassen() {
+    const box = this.gebaeudeBox();
+    const mitte = box.getCenter(new THREE.Vector3());
+    const diagonale = box.getSize(new THREE.Vector3()).length();
+    const richtung = Szene.sonnenRichtung(this.sonnenstand);
+    const bodenHoehe = box.min.y;
+    // Ecken des Gebäudes und Schattenspitzen der Ecken auf dem Boden; sehr lange Schatten (tiefe Sonne) werden gekappt
+    const hoechstens = diagonale * 4;
+    const punkte = [];
+    for (const x of [box.min.x, box.max.x]) for (const y of [box.min.y, box.max.y]) for (const z of [box.min.z, box.max.z]) {
+      const p = new THREE.Vector3(x, y, z);
+      const laenge = Math.min(hoechstens, (y - bodenHoehe) / Math.max(richtung.y, 1e-3));
+      punkte.push(p, p.clone().addScaledVector(richtung, -laenge).setY(bodenHoehe));
+    }
+    this.sonne.target.position.copy(mitte);
+    this.sonne.position.copy(mitte).addScaledVector(richtung, diagonale * 3);
+    this.sonne.updateMatrixWorld();
+    this.sonne.target.updateMatrixWorld();
+    // Schattenkamera blickt von der Sonne zur Mitte; Ausschnitt = alle Punkte
+    const kamera = this.sonne.shadow.camera;
+    kamera.position.copy(this.sonne.position);
+    kamera.lookAt(mitte);
+    kamera.updateMatrixWorld();
+    const bild = new THREE.Box3();
+    for (const p of punkte) bild.expandByPoint(p.clone().applyMatrix4(kamera.matrixWorldInverse));
+    const rand = diagonale * 0.05;
+    kamera.left = bild.min.x - rand; kamera.right = bild.max.x + rand;
+    kamera.bottom = bild.min.y - rand; kamera.top = bild.max.y + rand;
+    kamera.near = Math.max(0.1, -bild.max.z - diagonale);
+    kamera.far = -bild.min.z + diagonale;
+    kamera.updateProjectionMatrix();
+    // Schattenboden: so groß wie der Bereich, in dem es Schatten gibt
+    const flaeche = new THREE.Box3().setFromPoints(punkte);
+    const bodenMitte = flaeche.getCenter(new THREE.Vector3());
+    const bodenGroesse = flaeche.getSize(new THREE.Vector3());
+    this.schattenBoden.position.set(bodenMitte.x, bodenHoehe - 0.01, bodenMitte.z);
+    this.schattenBoden.scale.set(bodenGroesse.x + 2 * rand, bodenGroesse.z + 2 * rand, 1);
+  }
+
+  // Alle Bauteile werfen und empfangen Schatten, durchsichtige (Glas) werfen keinen.
+  // Läuft bei jedem Bild, weil die App beim Ändern der Fenster neue Teile anlegt oder Wände ausblendet.
+  // Ein „Fingerabdruck“ der sichtbaren Teile zeigt, ob der Schatten neu berechnet werden muss.
+  schattenBauteileMarkieren() {
+    const an = this.sonneScheint();
+    this.modell.traverse((teil) => {
+      if (!teil.isMesh) return;
+      teil.castShadow = an && !teil.material.transparent;
+      teil.receiveShadow = an;
+    });
+    let abdruck = 0;
+    this.modell.traverseVisible((teil) => { if (teil.castShadow) abdruck = (abdruck * 31 + teil.id) % 2147483647; });
+    if (abdruck !== this.schattenFingerabdruck) {
+      this.schattenFingerabdruck = abdruck;
+      this.renderer.shadowMap.needsUpdate = true;
+    }
   }
 
   // Umriss des Gebäudes (Wände und Dach), nicht des oft riesigen Geländes
@@ -327,6 +458,10 @@ export class Szene {
     this.renderer.setSize(breite, hoehe, false);
 
     const bilder = {};
+    if (this.sonneScheint()) { // gerade neu gebaute Fenster und Wände werfen auch Schatten
+      this.schattenBauteileMarkieren();
+      this.renderer.shadowMap.needsUpdate = true;
+    }
     try {
       const kameras = { perspektive, ...Object.fromEntries(Object.entries(ANSICHTEN).map(([r, v]) => [r, ansichtKamera(v)])) };
       for (const [name, kamera] of Object.entries(kameras)) {

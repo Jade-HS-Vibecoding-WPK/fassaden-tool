@@ -155,7 +155,9 @@ function bild(doc, daten, alias, [x, y, b, h], kennzeichen) {
  * kennzeichen(variante, richtung): Beschriftung einer Ansicht, z. B. „N“ oder „N (NNW)“;
  * blickText(variante): Beschriftung der Perspektive, z. B. „Perspektive aus Südosten, 15°“
  */
-export async function pdfErstellen({ varianten, modellName, standort, kennzeichen, blickText, mitKennwerte = true }) {
+export async function pdfErstellen({ varianten, modellName, standort, kennzeichen, blickText, sonnenText = () => null, mitKennwerte = true }) {
+  // Sonne (Sitzung 15): Hat eine Variante Schatten, bekommt jede Spalte eine Zeile „Schatten: …“ unter dem Datum
+  const mitSonne = varianten.some((v) => sonnenText(v));
   const JsPdf = await bibliothekLaden();
   const doc = new JsPdf({ orientation: 'landscape', unit: 'mm', format: 'a3' });
   const heute = new Date().toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -178,13 +180,14 @@ export async function pdfErstellen({ varianten, modellName, standort, kennzeiche
   doc.text((mitKennwerte ? 'Flächen in m², Rohbaumaße. Fassade = Außenseite der Außenwände mit allen Öffnungen. '
     + 'Fenster = Fensteröffnungen und Glastüren. Anteil = Fenster ÷ Fassade. ' : '')
     + 'Ansichten als Parallelprojektion. Blickhöhe der Perspektive in Grad über der Waagerechten. Norden ist im Plan oben.', RAND, fussY);
+  if (mitSonne) doc.text('Schatten: Sonnenstand zu Datum und deutscher Uhrzeit am angegebenen Ort (Breite/Länge).', RAND, fussY + 3.3);
 
   // ---------- Spalten, eine je Variante ----------
   const n = varianten.length;
   const spaltenBreite = (BLATT_B - 2 * RAND - (n - 1) * SPALTENABSTAND) / n;
   const oben = RAND + 27;
   const unten = fussY - 9;
-  const kopfHoehe = 15;
+  const kopfHoehe = mitSonne ? 19.5 : 15;
 
   // Kennwerte: bei 1 Variante rechts neben den Bildern, sonst unter den Bildern
   // (Material und Fenstergrößen stehen bewusst nicht auf dem Blatt, die Bilder zeigen sie)
@@ -202,7 +205,9 @@ export async function pdfErstellen({ varianten, modellName, standort, kennzeiche
     doc.text(gekuerzt(doc, v.name, spaltenBreite), x, y + 4.5);
     doc.setFont('helvetica', 'normal').setFontSize(8).setTextColor(...LEISE);
     doc.text(new Date(v.datum).toLocaleString('de-DE', { day: 'numeric', month: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }), x, y + 9.5);
-    doc.setDrawColor(...TEXT).setLineWidth(0.25).line(x, y + 12, x + spaltenBreite, y + 12);
+    if (mitSonne) doc.text(gekuerzt(doc, `Schatten: ${sonnenText(v) ?? 'ohne'}`, spaltenBreite), x, y + 14);
+    const linieY = y + kopfHoehe - 3;
+    doc.setDrawColor(...TEXT).setLineWidth(0.25).line(x, linieY, x + spaltenBreite, linieY);
     y += kopfHoehe;
 
     // Bilder

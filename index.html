@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Fassaden-Tool</title>
-  <link rel="stylesheet" href="style.css?v=20">
+  <link rel="stylesheet" href="style.css?v=22d">
   <!-- Bibliotheken aus dem Internet: three.js (3D) und web-ifc (IFC lesen) -->
   <script type="importmap">
   {
@@ -16,7 +16,7 @@
   }
   </script>
   <!-- ?v=… erzwingt nach Änderungen die neue Fassung (sonst hält der Browser alte Dateien fest) -->
-  <script type="module" src="js/app.js?v=21b"></script>
+  <script type="module" src="js/app.js?v=22d"></script>
 </head>
 <body>
   <div class="app">
@@ -201,6 +201,43 @@
       <div class="stilwahl" id="stilwahl" role="group" aria-label="Darstellung im 3D-Fenster" hidden>
         <button type="button" data-stil="zeichnung" aria-pressed="true">Zeichnung</button>
         <button type="button" data-stil="realistisch" aria-pressed="false">Realistisch</button>
+      </div>
+      <!-- Sonne und Schatten (Sitzung 15): rundes Sonnensymbol schaltet an/aus. Ist die Sonne an, klappt der kleine Pfeil
+           daneben die Einstellungen auf (Start: zugeklappt, Wunsch der Nutzerin) -->
+      <div class="sonnenwahl" id="sonnenwahl" hidden>
+        <div class="sonnen-zeile">
+          <button type="button" class="sonnen-mehr" id="sonneAufklappen" aria-expanded="false" aria-controls="sonnenfeld"
+            aria-label="Datum, Uhrzeit und Ort einstellen" title="Datum, Uhrzeit und Ort einstellen" hidden></button>
+          <button type="button" class="sonnenknopf" id="sonneKnopf" aria-pressed="false" aria-label="Sonne und Schatten"
+            title="Sonne und Schatten an">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <g class="strahlen">
+                <line x1="12" y1="1.8" x2="12" y2="4.6"/><line x1="12" y1="19.4" x2="12" y2="22.2"/>
+                <line x1="1.8" y1="12" x2="4.6" y2="12"/><line x1="19.4" y1="12" x2="22.2" y2="12"/>
+                <line x1="4.8" y1="4.8" x2="6.8" y2="6.8"/><line x1="17.2" y1="17.2" x2="19.2" y2="19.2"/>
+                <line x1="4.8" y1="19.2" x2="6.8" y2="17.2"/><line x1="17.2" y1="6.8" x2="19.2" y2="4.8"/>
+              </g>
+              <circle cx="12" cy="12" r="4.8"/>
+            </svg>
+          </button>
+        </div>
+        <div class="sonnenfeld" id="sonnenfeld" hidden>
+          <div class="sonne-tage" role="group" aria-label="Schnelltasten Datum">
+            <button type="button" data-tag="03-21" title="Tag-und-Nacht-Gleiche">21.3.</button>
+            <button type="button" data-tag="06-21" title="längster Tag">21.6.</button>
+            <button type="button" data-tag="12-21" title="kürzester Tag">21.12.</button>
+          </div>
+          <input type="date" class="eingabe" id="sonneDatum" autocomplete="off" required aria-label="Datum">
+          <label class="sonne-uhr">
+            <input type="range" id="sonneZeit" min="0" max="1425" step="15" autocomplete="off" aria-label="Uhrzeit">
+            <output id="sonneZeitWert"></output>
+          </label>
+          <div class="sonne-ort">
+            <label title="Breitengrad"><input type="number" class="eingabe" id="sonneBreite" min="-90" max="90" step="0.01" autocomplete="off" aria-label="Breitengrad"> °N</label>
+            <label title="Längengrad"><input type="number" class="eingabe" id="sonneLaenge" min="-180" max="180" step="0.01" autocomplete="off" aria-label="Längengrad"> °O</label>
+          </div>
+          <p class="hinweis" id="sonneInfo"></p>
+        </div>
       </div>
       <p class="legende" id="legende" hidden>Drehen: linke Maustaste · Zoomen: Mausrad · Verschieben: rechte Maustaste</p>
     </main>

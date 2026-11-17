@@ -35,7 +35,7 @@ nebeneinander vergleicht und als PDF mitnimmt.
       Anzahl der Felder einstellbar (z. B. 8 breit × 3 hoch), Pfosten und Riegel werden gleichmäßig verteilt
 
 **3. Sonne & Standort** (kommt erst nach 4a + 4b, Wunsch der Nutzerin 17.11.)
-- [ ] Sonnenstand und Schatten in 3D: Datum und Uhrzeit frei wählbar, Schnelltasten 21.3. / 21.6. / 21.12.
+- [x] Sonnenstand und Schatten in 3D: Datum und Uhrzeit frei wählbar, Schnelltasten 21.3. / 21.6. / 21.12. (Sitzung 15)
 - [ ] Standort per Ortssuche (OpenStreetMap, Namensnennung in der App) – *darf notfalls zu Could*;
       Ersatz dann: Koordinaten von Hand eintippen (Schatten gibt es trotzdem)
 
@@ -119,7 +119,9 @@ Erledigte Sitzungen abhaken, die oberste offene Zeile ist dran (die Nummern blei
 - [x] 18. Should 4b: eigene Farbe pro Material (17.11.)
 - [x] 18b. Zahl der Außenwände („89 von 192 Wänden sind Außenwände“) kleiner und weiter unten zeigen, z. B. bei „Bauteile ▸“
       in Bereich 1 (Wunsch der Nutzerin 17.11.: eher unwichtig, steht zu weit oben) (17.11.)
-- [ ] 15. Should 3a: Sonnenstand und Schatten (nach hinten gestellt, Wunsch der Nutzerin 17.11.) ← **als Nächstes**
+- [x] 15. Should 3a: Sonnenstand und Schatten (nach hinten gestellt, Wunsch der Nutzerin 17.11.) (17.11.)
+- [ ] 15b. Neues Design umsetzen (Glassmorphism, s. „Design-Vision“) – vorgezogen, Wunsch der Nutzerin 17.11.:
+      „damit ich mir das Ganze besser vorstellen kann“ ← **als Nächstes**
 - [ ] 16. Should 3b: Standort per Ortssuche (darf notfalls wegfallen)
 - [ ] 19. Should 4c: PDF-Einzelseiten (fällt als Erstes weg, wenn es eng wird)
 - [ ] 20. Ab ca. 10:30: Test mit eigener IFC, Fehler beheben
@@ -131,7 +133,7 @@ Erledigte Sitzungen abhaken, die oberste offene Zeile ist dran (die Nummern blei
 Wenn es eng wird, zuerst streichen: 19 (PDF-Einzelseiten), dann 16 (Ortssuche).
 Was bis Do 10:30 nicht fertig ist, wandert zu Could.
 
-## Stand (17.11.2026, nach Sitzung 18b)
+## Stand (17.11.2026, nach Sitzung 15)
 - CLAUDE.md und PLAN.md angelegt, Plan mit der Nutzerin abgestimmt.
 - Test-IFC liegt in `testdaten/` (Einfamilienhaus, Revit 2023, IFC2x3: 192 Wände, 57 Fenster, 49 Türen).
   Quelle: Bundesingenieurkammer, Seite „BIM-Praxisbeispiele“ (Download zum Betrachten angeboten).
@@ -551,8 +553,48 @@ Was bis Do 10:30 nicht fertig ist, wandert zu Could.
   **1 Modell · 2 Fassade · 3 Fenster · 4 Kennwerte · 5 Varianten** (ältere Einträge in diesem Plan nennen noch die alten Nummern).
   Die Anleitung behält ihren Schritt „Außenwände prüfen“ (erklärt das Anklicken). Getestet mit `Test-ArchiCAD.ifc`:
   Klick auf eine Wand 4 → 3, Knopf erscheint, Zurücksetzen → 4, Knopf verschwindet. Keine Fehler. Versionsnummer `app.js?v=21b`.
+- Sitzung 15 (17.11.): Sonnenstand und Schatten. Im 3D-Fenster unter „Zeichnung | Realistisch“ der Knopf **„Sonne“** (an = dunkelblau).
+  Ist die Sonne an, erscheint darunter ein kleines Feld: Schnelltasten 21.3. / 21.6. / 21.12. (Jahr bleibt), Datum,
+  Regler Uhrzeit (0–24 Uhr, 15-min-Schritte, deutsche Uhrzeit, Sommerzeit automatisch), Breite / Länge (Start Oldenburg 53,14° N, 8,21° O;
+  übernommen beim Bestätigen, Unsinniges wird auf ±90° / ±180° begrenzt) und eine Zeile wie „Sonne 36° hoch, aus Westen (261°). MESZ.“
+  Neue Datei `js/sonne.js`: Sonnenstand nach der vereinfachten Formel des US-Wetterdienstes (genau auf ca. 1°).
+  Geprüft: 21.3. 12 Uhr Oldenburg 37° (= 90° − 53°), 21.12. 13 Uhr 13° (= 90° − 53° − 23,4°).
+  `szene.js`: Die Sonne steht laut Datum/Uhrzeit (Norden = Plan-oben), Schlagschatten in **Zeichnung und Realistisch**;
+  Glas wirft keinen Schatten. Ein unsichtbarer „Schattenboden“ unter dem Gebäude zeigt den Schatten auch ohne Gelände
+  in der IFC. Sehr lange Schatten (tiefe Sonne) werden bei 4 × Gebäudegröße abgeschnitten. Zeichenstil mit Sonne: etwas weniger
+  Grundlicht, damit die Schatten ruhig, aber deutlich sind; tiefe Sonne (unter 15°) in „realistisch“ wärmer.
+  Sonne untergegangen: Hinweis im Feld, keine Schatten, nur Himmelslicht. Sonne aus: alles wie vorher.
+  **Bilder:** Ist die Sonne beim Speichern an, haben die 5 Bilder Schatten; die Variante speichert Datum, Uhrzeit, Ort und Sonnenstand
+  (`sonne`, sonst `null`). „Laden“ stellt die Sonne wieder ein bzw. schaltet sie aus; ältere Varianten lassen die Einstellung, wie sie ist.
+  Vergleich: Zeile „Schatten“ unter den Ansichten (z. B. „21.12.2026, 13:00 Uhr (MEZ)“, darunter die Koordinaten, sonst „ohne“),
+  nur wenn eine Variante Schatten hat. PDF: Zeile „Schatten: …“ unter dem Datum jeder Spalte und eine zweite Fußzeile mit Erklärung.
+  Schnelligkeit: Der Schatten wird nur neu berechnet, wenn Sonne oder Bauteile sich ändern (nicht bei jedem Bild).
+  Einfamilienhaus: ohne Sonne ca. 52 Bilder/s, mit Sonne ca. 45 (vorher ohne diesen Kniff nur 21).
+  Getestet mit `Test-ArchiCAD.ifc` und dem Einfamilienhaus: Schattenrichtung stimmt (Sonne aus Westen → Schatten nach Osten),
+  Realistisch, Speichern mit/ohne Sonne, Vergleich, PDF-Texte, Laden, Koordinaten. Testvarianten wieder gelöscht. Keine Fehler.
+  Geändert: `szene.js`, `app.js`, `pdf.js`, `index.html`, `style.css`, neu `sonne.js`.
+  Versionsnummern: `szene.js?v=22b`, `sonne.js?v=22`, `pdf.js?v=22` (in `app.js`), `app.js?v=22b`, `style.css?v=22b`.
+  Probleme: Das PDF-Blatt wurde nur über seine Texte geprüft, nicht als Bild angesehen (der eingebaute Browser zeigt keine PDFs).
+  Im schmalen Fenster deckte das Sonnen-Feld einen Teil des Modells ab (behoben, s. u.: jetzt zugeklappt). Der Schattenboden liegt auf Höhe
+  der Gebäude-Unterkante: Bei Häusern mit Keller ohne Gelände in der IFC liegt der Bodenschatten deshalb auf Kellerhöhe.
+  Mit echter Maus nicht ausprobiert (Test über Skript). Der Standort fürs PDF-Kopffeld (Text) und die Koordinaten der Sonne
+  sind noch getrennt – das kann die Ortssuche (Sitzung 16) zusammenführen.
+  **Geändert nach Test (Wunsch der Nutzerin: Feld verdeckte das Gebäude, Sonne ist eher untergeordnet):** Das Feld ist jetzt
+  **zugeklappt**. Ist die Sonne an, steht links neben dem Knopf nur kurz Datum und Uhrzeit, z. B. „21.6. · 17:30 ▸“
+  (Tooltip mit Sonnenhöhe und Richtung); ein Klick darauf klappt die Einstellungen auf (▾), ein zweiter wieder zu.
+  Alles kleiner (Schrift 11 px, Feld 176 px statt 232 px breit): Datum ohne Beschriftung, Uhrzeit-Regler mit Zeit daneben,
+  Breite und Länge nebeneinander („°N“, „°O“, ohne Pfeile im Feld), Infozeile kürzer.
+  Getestet mit `Test-ArchiCAD.ifc` und echter Maus (Aufklappen, Regler, Zuklappen). Keine Fehler.
+  Versionsnummern `app.js?v=22c`, `style.css?v=22c`.
+  **Nochmals geändert (Wunsch der Nutzerin: auch Datum/Uhrzeit einklappen, spielerischer):** Statt „Sonne“ und der Kurzangabe
+  gibt es ein **rundes Sonnensymbol** (aus = graue Umrisslinie, Strahlen drehen sich beim Daraufzeigen; an = gelbe Sonne mit
+  leichtem Schein). Ist die Sonne an, erscheint links daneben ein kleiner runder Pfeil ▾ / ▴, der die Einstellungen auf- und zuklappt.
+  Der **Uhrzeit-Regler zeigt den Tagesverlauf** als Himmelsfarbe, aus der Sonnenhöhe zu jeder Stunde an diesem Tag und Ort
+  (Nacht dunkelblau, Dämmerung orange, Tag hellblau); der Griff ist eine kleine gelbe Sonne, nachts ein blasser Mond.
+  **Entscheidung:** Sonnengelb (#f5b82e) ist die einzige Ausnahme von „eine Akzentfarbe“, nur für die Sonne.
+  Getestet mit `Test-ArchiCAD.ifc` und Mausklicks (an, aufklappen). Keine Fehler. Versionsnummern `app.js?v=22d`, `style.css?v=22d`.
 
-## Design-Vision (Entwurf 17.11., nach Sitzung 13 – noch nicht gebaut, Zeitpunkt offen)
+## Design-Vision (Entwurf 17.11., nach Sitzung 13 – noch nicht gebaut, kommt in Sitzung 15b)
 Mit der Nutzerin als Testseite entworfen und abgestimmt („erstmal so festhalten“). Umbau später in einer eigenen Sitzung.
 - **Stil:** Glassmorphism – halbtransparente Glaskarten mit Unschärfe vor einem dunklen, farbigen Verlauf,
   feine helle Ränder, weiche Schatten, viel Luft.
@@ -576,6 +618,16 @@ Mit der Nutzerin als Testseite entworfen und abgestimmt („erstmal so festhalte
   kein Unterschied. Nur auf diesem Rechner gemessen; über dem 3D-Bild nur wenige, kleine Glas-Elemente verwenden.
 
 ## Nächste Schritte
+- **Sitzung 15 (erledigt, s. o.; Entscheidung 17.11., vor dem Bauen):** Sonnenstand und Schatten.
+  **Ort:** kleiner Knopf **„Sonne“ im 3D-Fenster** neben „Zeichnung | Realistisch“; ein Klick öffnet ein kleines Feld mit
+  Datum, Uhrzeit-Regler, Schnelltasten 21.3. / 21.6. / 21.12. und den Koordinaten. Seitenleiste bleibt unverändert.
+  **Schatten in beiden Darstellungen:** „Zeichnung“ mit ruhigen grauen Schlagschatten (wie eine kolorierte Schattenstudie),
+  „Realistisch“ mit echten Schatten. Sonne aus = wie bisher.
+  **Bilder:** Ist beim Speichern die Sonne an, bekommen die 5 Bilder Schatten; Datum, Uhrzeit und Standort werden mit der
+  Variante gespeichert und in Vergleich und PDF dazugeschrieben. Sonne aus = Bilder wie bisher ohne Schatten.
+  **Standort:** zwei Felder Breitengrad / Längengrad zum Eintippen, Start Oldenburg (53,14° N, 8,21° O).
+  Das ist zugleich der Ersatz, falls die Ortssuche (Sitzung 16) wegfällt. Sommerzeit automatisch (deutsche Uhrzeit).
+  Norden bleibt Plan-oben.
 - **Sitzung 18 (Entscheidung 17.11., vor dem Bauen):** Eigene Farbe pro Material.
   **Gilt je Material, überall:** Ändert man die Farbe z. B. von „Putz sand“, ändern sich alle Seiten, einzelnen Wände
   und Stützen mit diesem Material mit. Fugen und Struktur werden automatisch aus der neuen Farbe abgeleitet (etwas dunkler).
