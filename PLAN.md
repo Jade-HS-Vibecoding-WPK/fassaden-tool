@@ -117,9 +117,9 @@ Erledigte Sitzungen abhaken, die oberste offene Zeile ist dran (die Nummern blei
 - [x] 17. Should 4a: Umschalter „realistisch“ (umgestellt 17.11., Wunsch der Nutzerin) (17.11.)
 - [x] 17b. Dachmaterial wählbar (Wunsch der Nutzerin 17.11.: dunkle Dächer stechen heraus) (17.11.)
 - [x] 18. Should 4b: eigene Farbe pro Material (17.11.)
-- [ ] 18b. Zahl der Außenwände („89 von 192 Wänden sind Außenwände“) kleiner und weiter unten zeigen, z. B. bei „Bauteile ▸“
-      in Bereich 1 (Wunsch der Nutzerin 17.11.: eher unwichtig, steht zu weit oben) ← **als Nächstes**
-- [ ] 15. Should 3a: Sonnenstand und Schatten (nach hinten gestellt, Wunsch der Nutzerin 17.11.)
+- [x] 18b. Zahl der Außenwände („89 von 192 Wänden sind Außenwände“) kleiner und weiter unten zeigen, z. B. bei „Bauteile ▸“
+      in Bereich 1 (Wunsch der Nutzerin 17.11.: eher unwichtig, steht zu weit oben) (17.11.)
+- [ ] 15. Should 3a: Sonnenstand und Schatten (nach hinten gestellt, Wunsch der Nutzerin 17.11.) ← **als Nächstes**
 - [ ] 16. Should 3b: Standort per Ortssuche (darf notfalls wegfallen)
 - [ ] 19. Should 4c: PDF-Einzelseiten (fällt als Erstes weg, wenn es eng wird)
 - [ ] 20. Ab ca. 10:30: Test mit eigener IFC, Fehler beheben
@@ -131,7 +131,7 @@ Erledigte Sitzungen abhaken, die oberste offene Zeile ist dran (die Nummern blei
 Wenn es eng wird, zuerst streichen: 19 (PDF-Einzelseiten), dann 16 (Ortssuche).
 Was bis Do 10:30 nicht fertig ist, wandert zu Could.
 
-## Stand (17.11.2026, nach Sitzung 18)
+## Stand (17.11.2026, nach Sitzung 18b)
 - CLAUDE.md und PLAN.md angelegt, Plan mit der Nutzerin abgestimmt.
 - Test-IFC liegt in `testdaten/` (Einfamilienhaus, Revit 2023, IFC2x3: 192 Wände, 57 Fenster, 49 Türen).
   Quelle: Bundesingenieurkammer, Seite „BIM-Praxisbeispiele“ (Download zum Betrachten angeboten).
@@ -538,6 +538,19 @@ Was bis Do 10:30 nicht fertig ist, wandert zu Could.
   `szene.js`, `app.js`). Gleiche Grenze wie beim Klinker: alte Varianten mit z. B. Putz altweiß **und** Putz sand bekommen beim Laden einen Ton.
   **Außerdem (Wunsch der Nutzerin):** Farbpunkte nach Helligkeit sortiert, hell links → dunkel rechts (nur die Anzeige,
   `helligkeit` in `app.js`). Versionsnummer `app.js?v=20c`.
+- Sitzung 18b (17.11.): Die Zahl der Außenwände („4 von 14 Wänden sind Außenwände“) steht nicht mehr oben in Bereich „2 Außenwände“,
+  sondern klein und grau in Bereich „1 Modell“ in der zugeklappten Liste „Bauteile ▸“, als zweite Zeile unter den Bauteil-Anzahlen.
+  Sie zählt weiter sofort mit, wenn eine Wand außen ↔ innen umgeschaltet wird (auch zugeklappt). Bereich 2 zeigt jetzt nur noch
+  die Erklärungs-Ecke ▸ und bei Bedarf „Erkennung zurücksetzen“.
+  Getestet mit `Test-ArchiCAD.ifc`: Zahl steht unter „Bauteile“, Klick auf eine Wand 4 → 3, „Erkennung zurücksetzen“ → 4. Keine Fehler.
+  Geändert: `index.html`, `app.js`. Versionsnummer `app.js?v=21`. Probleme: keine.
+  **Geändert nach Test (Wunsch der Nutzerin: noch unauffälliger, App möglichst unkompliziert):** Den Bereich „Außenwände“
+  gibt es nicht mehr. Unter „Bauteile ▸“ steht jetzt „4 von 14 Wänden sind Außenwände (farbig). Falsch erkannt? Wand anklicken,
+  um sie umzuschalten.“ Der Textknopf heißt jetzt „Außenwände zurücksetzen“ und steht unter „Bauteile ▸“ in Bereich 1,
+  sichtbar nur, wenn eine Wand von Hand umgeschaltet wurde. Die Bereiche sind neu nummeriert:
+  **1 Modell · 2 Fassade · 3 Fenster · 4 Kennwerte · 5 Varianten** (ältere Einträge in diesem Plan nennen noch die alten Nummern).
+  Die Anleitung behält ihren Schritt „Außenwände prüfen“ (erklärt das Anklicken). Getestet mit `Test-ArchiCAD.ifc`:
+  Klick auf eine Wand 4 → 3, Knopf erscheint, Zurücksetzen → 4, Knopf verschwindet. Keine Fehler. Versionsnummer `app.js?v=21b`.
 
 ## Design-Vision (Entwurf 17.11., nach Sitzung 13 – noch nicht gebaut, Zeitpunkt offen)
 Mit der Nutzerin als Testseite entworfen und abgestimmt („erstmal so festhalten“). Umbau später in einer eigenen Sitzung.

@@ -275,9 +275,9 @@ $('erkennungZuruecksetzen').addEventListener('click', () => {
 
 function aussenwaendeAnzeigen() {
   const aussen = waende.filter((w) => w.userData.aussen).length;
+  // nebensächlich, deshalb klein und zugeklappt in Bereich 1 unter „Bauteile“ (Sitzung 18b, kein eigener Bereich mehr)
   $('aussenZaehler').textContent = `${aussen} von ${waende.length} Wänden sind Außenwände`;
   $('erkennungZuruecksetzen').hidden = waende.every((w) => w.userData.aussen === w.userData.aussenAuto);
-  $('bereichAussenwaende').hidden = waende.length === 0;
   $('bereichFassade').hidden = waende.length === 0;
 
   // Anzahl der Außenwände je Himmelsrichtung und für „Alle“

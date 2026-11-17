@@ -16,7 +16,7 @@
   }
   </script>
   <!-- ?v=… erzwingt nach Änderungen die neue Fassung (sonst hält der Browser alte Dateien fest) -->
-  <script type="module" src="js/app.js?v=20c"></script>
+  <script type="module" src="js/app.js?v=21b"></script>
 </head>
 <body>
   <div class="app">
@@ -34,21 +34,14 @@
         <p class="status" id="status"></p>
         <details class="erklaerung" id="bauteile" hidden><summary>Bauteile</summary>
           <p class="hinweis" id="bauteileText"></p>
+          <p class="hinweis"><span id="aussenZaehler"></span> (farbig). Falsch erkannt? Wand anklicken, um sie umzuschalten.</p>
         </details>
-      </section>
-
-      <section id="bereichAussenwaende" hidden>
-        <h2><span>2</span> Außenwände</h2>
-        <p class="zaehler" id="aussenZaehler"></p>
-        <details class="erklaerung"><summary class="nur-ecke" title="Erklärung aufklappen" aria-label="Erklärung"></summary>
-          <p class="hinweis">Farbig = Außenwand, weiß = Innenwand. Erkannt aus der IFC-Eigenschaft „Außenbauteil“
-          und der Lage im Gebäude. Stimmt etwas nicht? Wand anklicken, um sie umzuschalten.</p>
-        </details>
-        <button class="textknopf" id="erkennungZuruecksetzen" hidden>Erkennung zurücksetzen</button>
+        <!-- erscheint nur, wenn eine Wand von Hand umgeschaltet wurde (früher eigener Bereich „Außenwände“) -->
+        <button class="textknopf" id="erkennungZuruecksetzen" hidden>Außenwände zurücksetzen</button>
       </section>
 
       <section id="bereichFassade" hidden>
-        <h2><span>3</span> Fassade</h2>
+        <h2><span>2</span> Fassade</h2>
         <label class="schalter"><input type="checkbox" id="materialAlleGleich" autocomplete="off"> Alle Seiten gleich</label>
         <div class="materialwahl" id="materialwahl"></div>
         <div class="farbtoene" id="farbtoene" hidden></div>
@@ -74,7 +67,7 @@
       </section>
 
       <section id="bereichFenster" hidden>
-        <h2><span>4</span> Fenster</h2>
+        <h2><span>3</span> Fenster</h2>
         <label class="schalter"><input type="checkbox" id="fensterAlleGleich" autocomplete="off"> Alle Seiten gleich</label>
         <div class="fensterwahl" id="fensterwahl"></div>
         <details class="erklaerung"><summary class="nur-ecke" title="Erklärung aufklappen" aria-label="Erklärung"></summary>
@@ -101,7 +94,7 @@
       </section>
 
       <section id="bereichKennwerte" hidden>
-        <h2><span>5</span> Kennwerte</h2>
+        <h2><span>4</span> Kennwerte</h2>
         <table class="kennwerte">
           <thead><tr><th></th><th>Fassade</th><th>Fenster</th><th>Anteil</th></tr></thead>
           <tbody id="kennwerteTabelle"></tbody>
@@ -109,7 +102,7 @@
       </section>
 
       <section id="bereichVarianten" hidden>
-        <h2><span>6</span> Varianten</h2>
+        <h2><span>5</span> Varianten</h2>
         <div class="blickwahl">
           <label>Blick aus
             <select id="blickAus" autocomplete="off">
