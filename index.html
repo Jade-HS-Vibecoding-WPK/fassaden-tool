@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Fassaden-Tool</title>
-  <link rel="stylesheet" href="style.css?v=23m">
+  <link rel="stylesheet" href="style.css?v=24">
   <!-- Bibliotheken aus dem Internet: three.js (3D) und web-ifc (IFC lesen) -->
   <script type="importmap">
   {
@@ -16,7 +16,7 @@
   }
   </script>
   <!-- ?v=… erzwingt nach Änderungen die neue Fassung (sonst hält der Browser alte Dateien fest) -->
-  <script type="module" src="js/app.js?v=23g"></script>
+  <script type="module" src="js/app.js?v=24b"></script>
 </head>
 <body>
   <!-- Hintergrund: dunkler Farbverlauf mit weichen Farbflecken (Sitzung 15b, Glassmorphism) -->
@@ -170,7 +170,7 @@
             <button class="knopf" id="anleitungSchliessen" hidden>Zurück zum Modell</button>
           </div>
           <p class="anleitung-einleitung">Den eigenen Entwurf als IFC laden, die Fassade gestalten und Varianten vergleichen.
-          Alles bleibt in diesem Browser, nichts wird hochgeladen.</p>
+          Alles bleibt in diesem Browser, nichts wird hochgeladen. Nur die Ortssuche bei der Sonne fragt bei OpenStreetMap nach.</p>
           <ol class="schritte">
             <li><span>1</span><div><strong>IFC laden</strong>
               <p>Entwurf als IFC exportieren und links mit „IFC-Datei wählen“ öffnen oder ins Fenster ziehen.</p></div></li>
@@ -267,6 +267,11 @@
             <input type="range" id="sonneZeit" min="0" max="1425" step="15" autocomplete="off" aria-label="Uhrzeit">
             <output id="sonneZeitWert"></output>
           </label>
+          <form class="ortssuche" id="ortssuche" role="search">
+            <input type="search" class="eingabe" id="ortSuchfeld" maxlength="120" autocomplete="off"
+              placeholder="Ort suchen …" aria-label="Ort suchen (Enter drücken)" title="Ort oder Adresse eintippen und Enter drücken">
+          </form>
+          <div class="orttreffer" id="ortTreffer" hidden></div>
           <div class="sonne-ort">
             <label title="Breitengrad"><input type="number" class="eingabe" id="sonneBreite" min="-90" max="90" step="0.01" autocomplete="off" aria-label="Breitengrad"> °N</label>
             <label title="Längengrad"><input type="number" class="eingabe" id="sonneLaenge" min="-180" max="180" step="0.01" autocomplete="off" aria-label="Längengrad"> °O</label>

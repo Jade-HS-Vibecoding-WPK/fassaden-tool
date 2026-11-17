@@ -36,8 +36,7 @@ nebeneinander vergleicht und als PDF mitnimmt.
 
 **3. Sonne & Standort** (kommt erst nach 4a + 4b, Wunsch der Nutzerin 17.11.)
 - [x] Sonnenstand und Schatten in 3D: Datum und Uhrzeit frei wählbar, Schnelltasten 21.3. / 21.6. / 21.12. (Sitzung 15)
-- [ ] Standort per Ortssuche (OpenStreetMap, Namensnennung in der App) – *darf notfalls zu Could*;
-      Ersatz dann: Koordinaten von Hand eintippen (Schatten gibt es trotzdem)
+- [x] Standort per Ortssuche (OpenStreetMap, Namensnennung in der App); Koordinaten gehen weiter auch von Hand (Sitzung 16)
 
 **4. Darstellung & Extras**
 - [x] Darstellung umschaltbar auf „realistisch“: Texturen mit Klinkerfugen, Holzmaserung, Glasspiegelung
@@ -122,8 +121,8 @@ Erledigte Sitzungen abhaken, die oberste offene Zeile ist dran (die Nummern blei
 - [x] 15. Should 3a: Sonnenstand und Schatten (nach hinten gestellt, Wunsch der Nutzerin 17.11.) (17.11.)
 - [x] 15b. Neues Design umsetzen (Glassmorphism, s. „Design-Vision“) – vorgezogen, Wunsch der Nutzerin 17.11.:
       „damit ich mir das Ganze besser vorstellen kann“; mit Ansichtsknöpfen 3D/N/O/S/W (17.11.)
-- [ ] 16. Should 3b: Standort per Ortssuche (darf notfalls wegfallen) ← **als Nächstes**
-- [ ] 19. Should 4c: PDF-Einzelseiten (fällt als Erstes weg, wenn es eng wird)
+- [x] 16. Should 3b: Standort per Ortssuche (17.11.)
+- [ ] 19. Should 4c: PDF-Einzelseiten (fällt als Erstes weg, wenn es eng wird) ← **als Nächstes**
 - [ ] 20. Ab ca. 10:30: Test mit eigener IFC, Fehler beheben
 - [ ] 21. Auf GitHub hochladen und über GitHub Pages veröffentlichen → **12 Uhr Freeze**
 - [ ] 22. Nachmittag: README (Poster macht die Nutzerin selbst nach Moodle-Vorlage)
@@ -133,7 +132,7 @@ Erledigte Sitzungen abhaken, die oberste offene Zeile ist dran (die Nummern blei
 Wenn es eng wird, zuerst streichen: 19 (PDF-Einzelseiten), dann 16 (Ortssuche).
 Was bis Do 10:30 nicht fertig ist, wandert zu Could.
 
-## Stand (17.11.2026, nach Sitzung 15b)
+## Stand (17.11.2026, nach Sitzung 16)
 - CLAUDE.md und PLAN.md angelegt, Plan mit der Nutzerin abgestimmt.
 - Test-IFC liegt in `testdaten/` (Einfamilienhaus, Revit 2023, IFC2x3: 192 Wände, 57 Fenster, 49 Türen).
   Quelle: Bundesingenieurkammer, Seite „BIM-Praxisbeispiele“ (Download zum Betrachten angeboten).
@@ -649,6 +648,20 @@ Was bis Do 10:30 nicht fertig ist, wandert zu Could.
   (Material von „Alle“ bleibt, wie es war). Getestet: ArchiCAD-Test laden → Schalter aus → Einfamilienhaus laden → Schalter an, nur „Alle“ sichtbar.
   Versionsnummer `app.js?v=23g`.
 
+- Sitzung 16 (17.11.): Ortssuche. Im aufgeklappten Sonnen-Feld über Breite/Länge ein Suchfeld „Ort suchen …“.
+  Enter fragt OpenStreetMap (Nominatim), höchstens 1 Anfrage pro Sekunde, bis zu 5 Treffer mit voller Adresse (Tooltip zeigt alles),
+  darunter „Suche: © OpenStreetMap-Mitwirkende“ (Link zur Lizenzseite). Klick auf einen Treffer setzt Breite/Länge (Schatten sofort neu),
+  schreibt einen kurzen Namen (z. B. „Jade Hochschule, Oldenburg“) ins Suchfeld **und** in „Standort fürs PDF“ (dort frei änderbar).
+  Von Hand geänderte Koordinaten löschen den Ortsnamen (er würde nicht mehr stimmen). Ohne Internet: „Suche geht gerade nicht …“.
+  Der Ortsname wird mit der Sonne der Variante gespeichert; Vergleich und PDF zeigen z. B. „Rom (41,89° N, 12,48° O)“, ältere Varianten nur Koordinaten.
+  Anleitung: „Nur die Ortssuche bei der Sonne fragt bei OpenStreetMap nach.“
+  Getestet mit `Test-ArchiCAD.ifc`: Suche „Jade Hochschule Oldenburg“, „Rom“ (Sonne 37° → 48° hoch), „Wilhelmshaven“, echter Mausklick auf
+  einen Treffer, Speichern, Vergleich, Laden, Koordinate von Hand. Testvariante wieder gelöscht. Keine Fehler.
+  Geändert: `sonne.js`, `app.js`, `index.html`, `style.css`. Versionsnummern `sonne.js?v=24`, `app.js?v=24b`, `style.css?v=24`.
+  Probleme: Die Meldung ohne Internet und das PDF-Blatt selbst wurden nicht ausprobiert (nur die Texte). Bei 3–4 Varianten kann die
+  Schatten-Zeile im PDF gekürzt sein („…“), dann fehlen zuerst die Koordinaten. Der Standort für Sonne und PDF gilt nicht beim Neuladen
+  der Seite (wieder Oldenburg, PDF-Feld leer), nur in gespeicherten Varianten.
+
 ## Design-Vision (Entwurf 17.11., in Sitzung 15b umgesetzt)
 Mit der Nutzerin als Testseite entworfen und abgestimmt („erstmal so festhalten“). Umbau später in einer eigenen Sitzung.
 - **Stil:** Glassmorphism – halbtransparente Glaskarten mit Unschärfe vor einem dunklen, farbigen Verlauf,
@@ -675,6 +688,12 @@ Mit der Nutzerin als Testseite entworfen und abgestimmt („erstmal so festhalte
   kein Unterschied. Nur auf diesem Rechner gemessen; über dem 3D-Bild nur wenige, kleine Glas-Elemente verwenden.
 
 ## Nächste Schritte
+- **Sitzung 16 (Entscheidung 17.11., vor dem Bauen):** Ortssuche. Suchfeld im aufgeklappten Sonnen-Feld über Breite/Länge,
+  gesucht wird erst bei Enter (OpenStreetMap/Nominatim, höchstens 1 Anfrage pro Sekunde), bis zu 5 Treffer.
+  Klick auf einen Treffer setzt Breite/Länge **und** füllt „Standort fürs PDF“ (danach frei änderbar). Namensnennung
+  „© OpenStreetMap-Mitwirkende“ unter den Treffern. Ohne Internet: Hinweis, Koordinaten von Hand.
+  Anleitung ergänzt: nur die Ortssuche fragt bei OpenStreetMap nach. Der Ortsname wird mit der Variante gespeichert
+  und steht in Vergleich und PDF neben den Koordinaten.
 - **Sitzung 15 (erledigt, s. o.; Entscheidung 17.11., vor dem Bauen):** Sonnenstand und Schatten.
   **Ort:** kleiner Knopf **„Sonne“ im 3D-Fenster** neben „Zeichnung | Realistisch“; ein Klick öffnet ein kleines Feld mit
   Datum, Uhrzeit-Regler, Schnelltasten 21.3. / 21.6. / 21.12. und den Koordinaten. Seitenleiste bleibt unverändert.

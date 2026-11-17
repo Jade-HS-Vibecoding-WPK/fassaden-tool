@@ -451,6 +451,17 @@ select:hover, select:focus, .eingabe:hover, .eingabe:focus { border-color: var(-
 .sonne-ort .eingabe { width: 100%; min-width: 0; -moz-appearance: textfield; }
 .sonne-ort .eingabe::-webkit-inner-spin-button, .sonne-ort .eingabe::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 .sonnenfeld .hinweis { margin: 0; font-size: 10.5px; line-height: 1.35; }
+/* Ortssuche (Sitzung 16): Suchfeld, darunter bis zu 5 Treffer und die Namensnennung von OpenStreetMap */
+.ortssuche { margin: 0; }
+.ortssuche .eingabe { width: 100%; box-sizing: border-box; }
+.orttreffer { display: grid; gap: 1px; }
+.orttreffer button {
+  font: inherit; font-size: 11px; text-align: left; padding: 3px 6px; border: 0; border-radius: 6px;
+  background: none; color: var(--text); cursor: pointer;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.orttreffer button:hover, .orttreffer button:focus-visible { background: var(--akzent-hell); color: var(--akzent); }
+.orttreffer .hinweis a { color: inherit; }
 
 /* Maus-Legende unten links als Glas-Pille */
 .legende {

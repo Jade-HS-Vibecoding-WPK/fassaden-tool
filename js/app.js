@@ -8,7 +8,7 @@ import {
 } from './materialien.js?v=20b';
 import { variantenLesen, varianteSpeichern, varianteLoeschen } from './varianten.js';
 import { pdfErstellen, pdfDateiname } from './pdf.js?v=22';
-import { START_SONNE, sonnenstand, himmelsrichtung, uhrzeitText, ortText, zeitText, weltzeit } from './sonne.js?v=22';
+import { START_SONNE, sonnenstand, himmelsrichtung, uhrzeitText, ortMitName, zeitText, weltzeit } from './sonne.js?v=24';
 
 const $ = (id) => document.getElementById(id);
 const ansicht = $('ansicht');
@@ -867,8 +867,9 @@ function varianteLaden(variante) {
   if (variante.sonne !== undefined) {
     sonneAn = !!variante.sonne;
     if (variante.sonne) {
-      const { datum, minuten, breite, laenge } = variante.sonne;
-      Object.assign(sonne, { datum, minuten, breite, laenge });
+      const { datum, minuten, breite, laenge, ortName = '' } = variante.sonne; // ortName erst ab Sitzung 16
+      Object.assign(sonne, { datum, minuten, breite, laenge, ortName });
+      $('ortSuchfeld').value = ortName;
     }
     sonneAnzeigen();
     sonneAnwenden();
@@ -1081,7 +1082,7 @@ function vergleichOeffnen() {
   // Sonne (Sitzung 15): nur, wenn eine der Varianten mit Schatten gespeichert ist
   if (varianten.some((v) => v.sonne)) {
     zeile('Schatten', (v) => (v.sonne
-      ? [textElement('span', zeitText(v.sonne)), textElement('small', ortText(v.sonne))]
+      ? [textElement('span', zeitText(v.sonne)), textElement('small', ortMitName(v.sonne))]
       : textElement('span', 'ohne')), 'sonne');
   }
 
@@ -1444,15 +1445,97 @@ for (const knopf of $('sonnenfeld').querySelectorAll('[data-tag]')) {
 for (const [id, schluessel, grenze] of [['sonneBreite', 'breite', 90], ['sonneLaenge', 'laenge', 180]]) {
   $(id).addEventListener('change', () => {
     const wert = Number($(id).value.replace(',', '.'));
-    if ($(id).value.trim() !== '' && Number.isFinite(wert)) sonne[schluessel] = Math.round(Math.max(-grenze, Math.min(grenze, wert)) * 100) / 100;
+    if ($(id).value.trim() !== '' && Number.isFinite(wert)) {
+      const neu = Math.round(Math.max(-grenze, Math.min(grenze, wert)) * 100) / 100;
+      if (neu !== sonne[schluessel]) { // von Hand verstellt: der gesuchte Ortsname stimmt nicht mehr
+        sonne.ortName = '';
+        $('ortSuchfeld').value = '';
+      }
+      sonne[schluessel] = neu;
+    }
     sonneAnzeigen();
     sonneAnwenden();
   });
 }
 sonneAnzeigen();
 
-// Text für Vergleich und PDF, z. B. „21.6.2026, 15:00 Uhr (MESZ) · 53,14° N, 8,21° O“; ohne Sonne: null
-const sonnenText = (variante) => (variante.sonne ? `${zeitText(variante.sonne)} · ${ortText(variante.sonne)}` : null);
+// ---------- Ortssuche (Sitzung 16) ----------
+// Suchfeld im Sonnen-Feld: Enter fragt OpenStreetMap (Nominatim) nach bis zu 5 Treffern.
+// Klick auf einen Treffer setzt Breite/Länge der Sonne und füllt „Standort fürs PDF“.
+// Regeln von Nominatim: höchstens 1 Anfrage pro Sekunde, keine Suche bei jedem Buchstaben, Namensnennung zeigen.
+let letzteOrtssuche = 0;
+
+// Kurzer Name für PDF und Vergleich, z. B. „Jade Hochschule, Oldenburg“ statt der langen Adresse
+function kurzerOrtsname(treffer) {
+  const a = treffer.address ?? {};
+  const ort = a.city ?? a.town ?? a.village ?? a.municipality ?? a.hamlet ?? '';
+  const name = treffer.name || treffer.display_name.split(',').slice(0, 2).join(',').trim();
+  return (ort && !name.includes(ort) ? `${name}, ${ort}` : name).slice(0, 80);
+}
+
+function ortTrefferZeigen(inhalt) {
+  const feld = $('ortTreffer');
+  feld.replaceChildren(...inhalt);
+  feld.hidden = inhalt.length === 0;
+}
+
+// Hinweiszeile mit Namensnennung (Pflicht bei OpenStreetMap-Daten)
+function osmHinweis(text) {
+  const p = textElement('p', text);
+  p.className = 'hinweis';
+  const link = textElement('a', '© OpenStreetMap-Mitwirkende');
+  link.href = 'https://www.openstreetmap.org/copyright';
+  link.target = '_blank';
+  link.rel = 'noopener';
+  p.append(link);
+  return p;
+}
+
+$('ortssuche').addEventListener('submit', async (ereignis) => {
+  ereignis.preventDefault();
+  const suche = $('ortSuchfeld').value.trim();
+  if (!suche) { ortTrefferZeigen([]); return; }
+  const warten = 1000 - (Date.now() - letzteOrtssuche);
+  if (warten > 0) await new Promise((fertig) => setTimeout(fertig, warten));
+  letzteOrtssuche = Date.now();
+  ortTrefferZeigen([textElement('p', 'Suche …')]);
+  let treffer;
+  try {
+    const adresse = 'https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&addressdetails=1&accept-language=de&q='
+      + encodeURIComponent(suche);
+    const antwort = await fetch(adresse);
+    if (!antwort.ok) throw new Error(`Antwort ${antwort.status}`);
+    treffer = await antwort.json();
+  } catch (fehler) {
+    console.warn('Ortssuche:', fehler);
+    ortTrefferZeigen([textElement('p', 'Suche geht gerade nicht (Internet?) – Breite und Länge bitte von Hand eintragen.')]);
+    return;
+  }
+  if (!treffer.length) {
+    ortTrefferZeigen([osmHinweis('Nichts gefunden. Anders schreiben oder Stadt dazu? ')]);
+    return;
+  }
+  const knoepfe = treffer.map((t) => {
+    const knopf = textElement('button', t.display_name);
+    knopf.type = 'button';
+    knopf.title = t.display_name;
+    knopf.addEventListener('click', () => {
+      sonne.breite = Math.round(Number(t.lat) * 100) / 100;
+      sonne.laenge = Math.round(Number(t.lon) * 100) / 100;
+      sonne.ortName = kurzerOrtsname(t);
+      $('standort').value = sonne.ortName; // derselbe Ort steht auch im Kopf des PDF (dort frei änderbar)
+      $('ortSuchfeld').value = sonne.ortName;
+      ortTrefferZeigen([]);
+      sonneAnzeigen();
+      sonneAnwenden();
+    });
+    return knopf;
+  });
+  ortTrefferZeigen([...knoepfe, osmHinweis('Suche: ')]);
+});
+
+// Text für Vergleich und PDF, z. B. „21.6.2026, 15:00 Uhr (MESZ) · Oldenburg (53,14° N, 8,21° O)“; ohne Sonne: null
+const sonnenText = (variante) => (variante.sonne ? `${zeitText(variante.sonne)} · ${ortMitName(variante.sonne)}` : null);
 
 function statusZeigen(text, istFehler = false) {
   const status = $('status');

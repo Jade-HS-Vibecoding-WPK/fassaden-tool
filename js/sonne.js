@@ -3,7 +3,8 @@
 // Ergebnis: azimut = Himmelsrichtung in Grad (0 = Nord, 90 = Ost, 180 = Süd, im Uhrzeigersinn),
 //           hoehe   = Grad über dem Horizont (unter 0 = Sonne untergegangen).
 
-export const START_SONNE = { datum: '2026-03-21', minuten: 12 * 60, breite: 53.14, laenge: 8.21 }; // Oldenburg
+// ortName (Sitzung 16): Name aus der Ortssuche, leer = nur Koordinaten bekannt
+export const START_SONNE = { datum: '2026-03-21', minuten: 12 * 60, breite: 53.14, laenge: 8.21, ortName: '' }; // Oldenburg
 
 const GRAD = Math.PI / 180;
 
@@ -55,6 +56,8 @@ export const uhrzeitText = (minuten) =>
 const zahl = (wert) => wert.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 export const ortText = ({ breite, laenge }) =>
   `${zahl(Math.abs(breite))}° ${breite >= 0 ? 'N' : 'S'}, ${zahl(Math.abs(laenge))}° ${laenge >= 0 ? 'O' : 'W'}`;
+// Mit Ortsname aus der Suche: „Oldenburg (53,14° N, 8,21° O)“, sonst nur die Koordinaten
+export const ortMitName = (ort) => (ort.ortName ? `${ort.ortName} (${ortText(ort)})` : ortText(ort));
 
 // „21.6.2026, 15:00 Uhr (MESZ)“
 export function zeitText({ datum, minuten }) {
