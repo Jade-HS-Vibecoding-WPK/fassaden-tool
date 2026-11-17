@@ -1300,6 +1300,12 @@ async function dateiOeffnen(datei) {
     // Ebenso das eigene Maß einzelner Fenster
     massJeFenster.clear();
     fensterAuswahl.clear();
+    // Neues Modell: Fassade wieder mit „Alle Seiten gleich“ beginnen (Voreinstellung, Wunsch der Nutzerin)
+    materialAlleGleich = true;
+    $('materialAlleGleich').checked = true;
+    felderAlle ??= { ...felderJeRichtung.N };
+    materialZeilen.Alle.anzeigen();
+    materialwahlUmschalten();
     szene.zeigeModell(gruppe);
     fensterAktualisieren();
     aussenwaendeAnzeigen();
@@ -1315,7 +1321,8 @@ async function dateiOeffnen(datei) {
     ansichtKnoepfeMarkieren();
     // Kopfleiste: Dateiname und Schritte freigeben, los geht es mit „Fassade“ (Außenwände sind Nebensache)
     $('kopfDatei').textContent = datei.name;
-    $('kopfDatei').title = datei.name;
+    $('kopfDatei').title = `${datei.name} – klicken, um eine andere IFC-Datei zu laden`;
+    $('kopfDatei').hidden = false;
     for (const knopf of $('schrittleiste').querySelectorAll('button')) knopf.disabled = false;
     schrittZeigen('fassade');
     // Haus füllt das 3D-Fenster fast ganz: gleich mit dem eingestellten Blick der Perspektive starten

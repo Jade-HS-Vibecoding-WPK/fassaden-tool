@@ -84,11 +84,17 @@ body { background: #16243a; font-weight: 400; overflow: hidden; }
   grid-column: 1 / -1; display: flex; align-items: center; gap: 22px;
   padding: 10px 12px 10px 22px; border-radius: 22px; min-width: 0;
 }
-.marke { display: flex; align-items: baseline; gap: 14px; min-width: 0; flex: 0 1 auto; }
+.marke { display: flex; align-items: center; gap: 14px; flex: none; }
 .marke h1 { margin: 0; font-size: 19px; font-weight: 800; letter-spacing: -0.01em; white-space: nowrap; }
+/* Dateiname als kleine Glas-Pille: Klick lädt eine andere IFC */
 .dateiname {
-  font-size: 12px; color: var(--leise); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px;
+  font-size: 12px; color: var(--leise); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 240px;
+  padding: 4px 10px; border: 1px solid var(--linie); border-radius: 999px; cursor: pointer;
+  min-width: 90px; flex: 0 1 auto; /* im schmalen Fenster gekürzt („…“), aber nie ganz weg */
+  transition: color .2s, background .2s, border-color .2s;
 }
+.dateiname::after { content: " · ändern"; color: var(--akzent-text); }
+.dateiname:hover { color: var(--text); background: rgba(255, 255, 255, .1); border-color: var(--feld-rand-aktiv); }
 /* Schritte als Pillen; passen sie nicht hinein, lassen sie sich seitlich schieben (dünne Glas-Schiebeleiste) */
 .schrittleiste {
   display: flex; gap: 4px; flex: 1 1 auto; min-width: 0; overflow-x: auto; justify-content: center;
@@ -520,6 +526,13 @@ select:hover, select:focus, .eingabe:hover, .eingabe:focus { border-color: var(-
 /* Schmales Fenster: Seitenleiste enger, Beschriftungsspalte der Zeilen kleiner, damit die Listen Platz haben */
 @media (max-width: 900px) {
   .seitenleiste { padding: 18px 14px 0; }
+  .kopfleiste { gap: 12px; padding-left: 16px; }
+  .marke h1 { font-size: 16px; }
+  .dateiname { max-width: 96px; min-width: 70px; }
+  .dateiname::after { content: none; }
+  .kopf-rechts { gap: 10px; }
+  .kopf-rechts .knopf.haupt { padding: 9px 14px; }
+  .schrittleiste button { padding: 7px 12px; }
   .materialzeile { grid-template-columns: 46px 22px 1fr; gap: 7px; }
   .muster { width: 22px; height: 22px; }
   .fensterzeile { grid-template-columns: 46px 1fr; gap: 7px; }

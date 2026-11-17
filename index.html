@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Fassaden-Tool</title>
-  <link rel="stylesheet" href="style.css?v=23i">
+  <link rel="stylesheet" href="style.css?v=23m">
   <!-- Bibliotheken aus dem Internet: three.js (3D) und web-ifc (IFC lesen) -->
   <script type="importmap">
   {
@@ -16,7 +16,7 @@
   }
   </script>
   <!-- ?v=… erzwingt nach Änderungen die neue Fassung (sonst hält der Browser alte Dateien fest) -->
-  <script type="module" src="js/app.js?v=23e"></script>
+  <script type="module" src="js/app.js?v=23g"></script>
 </head>
 <body>
   <!-- Hintergrund: dunkler Farbverlauf mit weichen Farbflecken (Sitzung 15b, Glassmorphism) -->
@@ -26,7 +26,8 @@
     <header class="kopfleiste glas">
       <div class="marke">
         <h1>Fassaden-Tool</h1>
-        <span class="dateiname" id="kopfDatei"></span>
+        <!-- Klick auf den Dateinamen öffnet die Dateiauswahl: andere IFC laden -->
+        <label class="dateiname" for="datei" id="kopfDatei" hidden></label>
       </div>
       <nav class="schrittleiste" id="schrittleiste" aria-label="Schritte">
         <!-- Außenwände ganz rechts: eher Nebensache (Wunsch der Nutzerin); enthält auch „IFC-Datei wählen“ -->

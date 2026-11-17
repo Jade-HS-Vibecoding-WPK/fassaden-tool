@@ -640,6 +640,14 @@ Was bis Do 10:30 nicht fertig ist, wandert zu Could.
   (und bei Pfosten-Riegel dessen Felder); dann ändert man nur noch die Seite, die anders werden soll. Die eigene Auswahl je Seite
   im Hintergrund gibt es damit beim Material nicht mehr (Fenster-Schalter unverändert). Varianten laden stellt weiter genau den gespeicherten Stand her.
   Getestet: Alle = Putz → aus → alle vier Seiten Putz → Süd auf Klinker, 3D zeigt es sofort. Versionsnummer `app.js?v=23e`.
+  **Nachtrag (Frage der Nutzerin „wo lade ich ein anderes Modell?“):** Seit „Außenwände“ ganz rechts steht, war „IFC-Datei wählen“ versteckt.
+  Jetzt ist der **Dateiname in der Kopfleiste eine kleine Glas-Pille „Test-ArchiCAD.ifc · ändern“**; ein Klick öffnet die Dateiauswahl
+  (Tooltip „… – klicken, um eine andere IFC-Datei zu laden“). Ohne Modell ist die Pille ausgeblendet. Ins Fenster ziehen geht weiter überall.
+  Unter 900 px Fensterbreite: Kopfleiste kompakter (Titel kleiner, Dateiname gekürzt ohne „· ändern“, Schritte schmaler, seitlich schiebbar).
+  Getestet: Klick auf die Pille öffnet die Dateiauswahl; 1440 px und 664 px breit angesehen. Versionsnummern `app.js?v=23f`, `style.css?v=23m`.
+  **Nachtrag (Wunsch der Nutzerin):** Auch beim **Laden eines anderen Modells** steht die Fassade wieder auf **„Alle Seiten gleich“**
+  (Material von „Alle“ bleibt, wie es war). Getestet: ArchiCAD-Test laden → Schalter aus → Einfamilienhaus laden → Schalter an, nur „Alle“ sichtbar.
+  Versionsnummer `app.js?v=23g`.
 
 ## Design-Vision (Entwurf 17.11., in Sitzung 15b umgesetzt)
 Mit der Nutzerin als Testseite entworfen und abgestimmt („erstmal so festhalten“). Umbau später in einer eigenen Sitzung.
