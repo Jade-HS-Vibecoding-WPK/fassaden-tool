@@ -102,6 +102,13 @@ h2 span { color: var(--akzent); }
 .variantenliste .ankreuzen { margin: 2px 0 0; width: 15px; height: 15px; accent-color: var(--akzent); cursor: pointer; }
 .variantenliste .ankreuzen:disabled { cursor: not-allowed; }
 .vergleichswahl { border-top: 1px solid var(--linie); padding-top: 4px; }
+.vergleichswahl .pdfwahl { margin-top: 12px; }
+.vergleichswahl .pdfwahl .eingabe { margin-bottom: 10px; }
+.vergleichswahl .pdfwahl .schalter { margin-bottom: 0; }
+.textknoepfe { display: flex; gap: 18px; }
+.textknopf:disabled { color: var(--leise); cursor: wait; }
+.vergleich-kopf .knoepfe { display: flex; gap: 10px; }
+.knopf:disabled { opacity: .6; cursor: wait; }
 
 .hinweis { font-size: 12px; color: var(--leise); margin: 8px 0 0; line-height: 1.45; }
 .status { font-size: 13px; line-height: 1.5; margin: 16px 0 0; white-space: pre-line; }

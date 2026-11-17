@@ -16,11 +16,14 @@ Entsteht in der Vibecoding KI-Werkstatt (Jade Hochschule, 16.–20.11.2026). Abg
 
 # Technik
 - Reine statische Webseite, läuft ohne Installation und auf GitHub Pages: `index.html`, `style.css`, `js/*.js`.
-- Bibliotheken per CDN (Import-Map in `index.html`): three.js 0.160.0 (3D), web-ifc 0.0.57 (IFC lesen).
+- Bibliotheken per CDN (Import-Map in `index.html`): three.js 0.160.0 (3D), web-ifc 0.0.57 (IFC lesen);
+  jsPDF 2.5.2 (PDF) wird in `js/pdf.js` erst beim ersten Klick nachgeladen.
 - Kein Node/npm auf dem Rechner. Lokal testen mit `python -m http.server 8000` (siehe `.claude/launch.json`).
 - Git ist installiert und im Projekt eingerichtet (Zweig `main`). GitHub: https://github.com/Jade-HS-Vibecoding-WPK/fassaden-tool
   (öffentlich). Nach jedem Commit auch hochladen (`git push`), damit die Zwischenstände dort liegen.
 - Code-Namen und Kommentare auf Deutsch.
+- Nach Änderungen an einer JS-Datei die Versionsnummer an ihrem Import erhöhen (`?v=…` in `index.html` bzw. im
+  `import` in `app.js`), sonst zeigt der Browser alte Fassungen (python-Server schickt keine Zwischenspeicher-Regeln).
 
 # Aufbau
 - `js/app.js` – Bedienoberfläche, Zustand, Varianten speichern/laden
@@ -30,6 +33,7 @@ Entsteht in der Vibecoding KI-Werkstatt (Jade Hochschule, 16.–20.11.2026). Abg
 - `js/fassade.js` – Außenwände erkennen, Fassade mit Fensteröffnungen neu bauen, Flächen berechnen
 - `js/darstellung.js` – Zeichenstil: Farben der Bauteile (Rohmodell, Dach, Fenster …) und Kantenlinien
 - `js/materialien.js` – Fassadenmaterialien als selbst gezeichnete Texturen
+- `js/pdf.js` – PDF-Übersichtsseite A3 quer (1–4 Varianten), direkt als Datei gespeichert
 
 # Entscheidungen
 - Kein Beispielhaus: Die App ist fürs Studium, man lädt immer den eigenen Entwurf als einfache IFC hoch.

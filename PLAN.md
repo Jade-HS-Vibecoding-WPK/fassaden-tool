@@ -21,8 +21,8 @@ nebeneinander vergleicht und als PDF mitnimmt.
         künstlerisch, nicht realistisch
 - [ ] Varianten speichern (Name + Bilder) und nebeneinander vergleichen;
       pro Variante automatisch 5 Bilder aus fester Kamera: Perspektive + Ansichten Nord/Ost/Süd/West
-- [ ] PDF-Übersichtsseite: bis zu 4 Varianten auf **A3 quer**, mit Perspektive + 4 Ansichten,
-      Materialien, Kennwerten; im Kopf Standort und Nordpfeil
+- [x] PDF-Übersichtsseite: bis zu 4 Varianten auf **A3 quer**, mit Perspektive + 4 Ansichten,
+      Kennwerten (Materialien bewusst nicht, Wunsch der Nutzerin); im Kopf Standort (Nordpfeil gestrichen, s. Sitzung 10)
 - [ ] Für Kommiliton*innen: kurze Anleitung beim ersten Öffnen und Hinweise, wie man die IFC exportiert
 
 ## Should (wenn Must steht, Ziel Mittwoch) – in dieser Reihenfolge abarbeiten
@@ -105,7 +105,8 @@ Erledigte Sitzungen abhaken, die nächste offene Nummer ist dran.
 - [x] 8. Varianten speichern, mit 5 Bildern (Perspektive + N/O/S/W) (16.11.)
 - [x] 9. Variantenvergleich nebeneinander (17.11.)
 - [x] 9b. Ansichten gerade auf die Fassade, auch wenn das Gebäude im Plan gedreht ist (Wunsch der Nutzerin) (17.11.)
-- [ ] 10. PDF-Übersichtsseite A3 quer
+- [x] 10. PDF-Übersichtsseite A3 quer (17.11.)
+- [ ] 10b. Perspektive: Blick weniger steil von oben, und selbst einstellbar (Wunsch der Nutzerin, 17.11.)
 - [ ] 11. Kurze Anleitung beim ersten Öffnen + IFC-Export-Hinweise → **Must komplett**
 - [ ] 12. Should 1a: einzelne Wand → anderes Material
 - [ ] 13. Should 1b: einzelnes Fenster → Maße ändern
@@ -126,7 +127,7 @@ Erledigte Sitzungen abhaken, die nächste offene Nummer ist dran.
 Wenn es eng wird, zuerst streichen: 19 (PDF-Einzelseiten), dann 16 (Ortssuche).
 Was bis Do 10:30 nicht fertig ist, wandert zu Could.
 
-## Stand (17.11.2026, nach Sitzung 9b)
+## Stand (17.11.2026, nach Sitzung 10)
 - CLAUDE.md und PLAN.md angelegt, Plan mit der Nutzerin abgestimmt.
 - Test-IFC liegt in `testdaten/` (Einfamilienhaus, Revit 2023, IFC2x3: 192 Wände, 57 Fenster, 49 Türen).
   Quelle: Bundesingenieurkammer, Seite „BIM-Praxisbeispiele“ (Download zum Betrachten angeboten).
@@ -276,6 +277,32 @@ Was bis Do 10:30 nicht fertig ist, wandert zu Could.
   Probleme: Bei einem Gebäude, das fast genau 45° gedreht ist, ist die Einteilung der Wände in Nord/Ost/Süd/West
   nicht eindeutig (gab es vorher auch schon). Die Kamera beim Öffnen der Datei (3D-Bereich) bleibt ungedreht aus Südosten.
 
+- Sitzung 10 (17.11.): PDF-Übersichtsseite A3 quer. Neue Datei `js/pdf.js`, Bibliothek jsPDF 2.5.2 (wird erst beim
+  ersten Klick aus dem Internet geladen). Unter der Variantenliste: Hinweis, ab 1 Kreuz ein Feld „Standort fürs PDF“
+  und der Textknopf „Als PDF speichern“; ab 2 Kreuzen zusätzlich „Vergleichen“. Im Vergleichsfenster ein Knopf
+  „Als PDF speichern“ neben „Schließen“ (nimmt dieselbe Auswahl und denselben Standort).
+  Die Datei landet direkt im Download-Ordner: `Fassadenvariante_<Modell>_<Datum>.pdf` (1 Variante) bzw.
+  `Variantenvergleich_<Modell>_<Datum>.pdf`. Blatt: Kopf mit Titel, Modell, Standort (nur wenn eingetragen), Datum;
+  **kein Nordpfeil** (gestrichen nach Test, Wunsch der Nutzerin: gehört nicht zu Ansichten und Perspektive); eine Spalte je Variante (älteste links) mit Name, Datum, Perspektive, 4 Ansichten (Kennzeichen wie im
+  Vergleich, z. B. „N (NNW)“) und Kennwerte; unten eine Fußzeile mit den Erklärungen.
+  **Geändert (17.11., Wunsch der Nutzerin):** Material und Fenstergrößen stehen nicht auf dem PDF (die Bilder zeigen sie),
+  dadurch sind die Bilder größer. Anordnung je nach Anzahl: 1 Variante = großes Bild, Ansichten in einer Reihe darunter,
+  Kennwerte rechts; 2 = Ansichten in einer Reihe; 3 und 4 = Ansichten 2 × 2; Kennwerte jeweils darunter.
+  Zu lange Namen werden mit „…“ gekürzt. Schrift Helvetica.
+  Getestet mit `Test-ArchiCAD.ifc` und 1, 2, 3 und 4 Varianten: alles passt aufs Blatt, Umlaute und m² stimmen,
+  Knopf in der Liste und im Vergleich erzeugen die Datei, keine Fehler. Ca. 300 KB pro Variante.
+  Geändert: `app.js`, `index.html`, `style.css`, neu `pdf.js`.
+  Probleme: Bei 4 Varianten bleibt unten etwas Weißraum (die Spalten sind schmal, die Bilder können nicht breiter werden).
+  **Nachtrag (17.11.):** Schalter „Kennwerte aufs PDF“ (Start: an) unter dem Standortfeld; aus = nur Bilder, die Bilder
+  werden dann größer, die Fußzeile nennt nur noch die Ansichten. Gilt auch für den Knopf im Vergleich.
+  Der Browser hatte nach der Änderung noch die alte `pdf.js` (mit Nordpfeil) im Zwischenspeicher, auch nach Strg+Umschalt+R.
+  Deshalb jetzt Versionsnummern: `js/app.js?v=10` in `index.html` und `./pdf.js?v=10b` in `app.js`.
+  **Regel:** Nach Änderungen an einer JS-Datei die Nummer an ihrem Import erhöhen.
+  Beim Testen hing ein Testskript im Browser-Fenster der App fest und hat den Download abgefangen (Meldung „gespeichert“,
+  aber keine Datei). Behoben; nach eigenen Testskripten die Seite neu laden bzw. die Änderung zurücknehmen.
+  Der Standort wird nicht gespeichert (nach Neuladen der Seite leer). Sonderzeichen außerhalb des westeuropäischen
+  Zeichensatzes (z. B. Emojis) im Variantennamen erscheinen im PDF falsch. Ohne Internet kein PDF (Meldung erscheint).
+
 ## Nächste Schritte
 - **Sitzung 9b (erledigt, s. o.; Wunsch der Nutzerin, 17.11., nach Sitzung 9):** Die Ansichten sollen wie echte Ansichten aussehen,
   also gerade auf eine „glatte“ Wand. Bisher blickt die Kamera genau aus N/O/S/W. Ist das Gebäude im Plan gedreht
@@ -284,7 +311,17 @@ Was bis Do 10:30 nicht fertig ist, wandert zu Could.
   damit sie zu Material, Fenstern und Kennwerten passen. Bereits gespeicherte Varianten behalten ihre alten Bilder.
   **Entscheidung (17.11.):** Beschriftung mit Himmelsrichtungs-Namen, wohin die Fassade wirklich zeigt
   (z. B. „Nord – zeigt nach Nordnordwest“), keine Gradzahl. Ist das Gebäude kaum gedreht, steht nur „Nord“.
+- **Sitzung 10b (Wunsch der Nutzerin, 17.11., nach Sitzung 10):** Die Perspektive schaut zu steil von oben.
+  Sie soll flacher werden und sich selbst einstellen lassen. Vor dem Bauen klären: Wie einstellen?
+  Idee A: Regler (Blickhöhe/Winkel und Richtung, z. B. aus Südosten/Südwesten …). Idee B: den aktuellen Blick im
+  3D-Fenster als Perspektive übernehmen (Knopf „Diesen Blick verwenden“). Gilt nur für neu gespeicherte Varianten
+  (alte behalten ihre Bilder). Der Text „Perspektive aus Südosten“ in der PDF-Fußzeile muss dann angepasst werden.
 - Sitzung 10: PDF-Übersichtsseite A3 quer (bis zu 4 Varianten, nutzt die Auswahl aus dem Vergleich).
+  **Entscheidungen (17.11., vor Sitzung 10):** PDF wird direkt als Datei gespeichert (Bibliothek jsPDF per CDN),
+  nicht über den Druckdialog. Standort: Textfeld zum Eintippen (leer = Zeile fehlt), Sitzung 16 kann es später füllen.
+  PDF schon ab 1 angekreuzter Variante (Knopf unter der Liste), ab 2 zusätzlich im Vergleichsfenster.
+  Seitenaufbau: Kopf mit Titel, Modell (Dateiname), Datum, Standort; darunter je Variante eine Spalte
+  (älteste links) mit Name, Perspektive, Ansichten N/O/S/W, Kennwerte (Material und Fenster nach Test gestrichen, s. Sitzung 10).
 - **Entscheidung (16.11., vor Sitzung 7):** Neuer Bereich „5 Kennwerte“ als Tabelle Nord/Ost/Süd/West + Gesamt,
   rechnet sofort neu bei jeder Änderung. Fassadenfläche = Außenseite der Außenwände (Rohbaumaß, Öffnungen mitgezählt).
   Fensterfläche = Fensteröffnungen (Rohbaumaß). **Glastüren zählen als Fenster** (Wunsch der Nutzerin),

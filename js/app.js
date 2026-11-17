@@ -4,6 +4,7 @@ import { ifcLaden } from './ifc.js';
 import { aussenwaendeErkennen, wandFaerben, oeffnungenZuordnen, fensterAnpassen, stuetzenVorbereiten, stuetzeFaerben, kennwerteBerechnen, hauptrichtungBestimmen } from './fassade.js';
 import { MATERIALIEN, START_MATERIAL, musterBild } from './materialien.js';
 import { variantenLesen, varianteSpeichern, varianteLoeschen } from './varianten.js';
+import { pdfErstellen, pdfDateiname } from './pdf.js?v=10b';
 
 const $ = (id) => document.getElementById(id);
 const ansicht = $('ansicht');
@@ -13,6 +14,7 @@ let waende = []; // alle Wände des geladenen Modells
 let oeffnungen = []; // alle Fenster und Türen
 let stuetzen = []; // alle Stützen
 let modellKennung = null; // Dateiname + Anzahl Wände: zu welchem Modell eine Variante gehört
+let modellName = ''; // Dateiname der IFC (steht im Kopf des PDF)
 
 // Gewähltes Fassadenmaterial je Himmelsrichtung
 const RICHTUNGSNAMEN = { N: 'Nord', O: 'Ost', S: 'Süd', W: 'West' };
@@ -364,7 +366,7 @@ function varianteLaden(variante) {
 let bildAdressen = []; // Vorschaubilder der Liste, werden beim Neuzeichnen freigegeben
 let gespeicherteVarianten = []; // die Varianten des geladenen Modells, neueste zuerst
 const zumVergleich = new Set(); // Nummern (id) der angekreuzten Varianten
-const VERGLEICH_HOECHSTENS = 4; // so viele passen später auch aufs PDF (A3 quer)
+const VERGLEICH_HOECHSTENS = 4; // so viele passen auch aufs PDF (A3 quer)
 
 async function variantenAnzeigen() {
   $('bereichVarianten').hidden = waende.length === 0;
@@ -428,21 +430,61 @@ async function variantenAnzeigen() {
   vergleichswahlAnzeigen();
 }
 
-// Hinweis und Knopf „Vergleichen“ unter der Liste; ab 4 Kreuzen sind die übrigen Kästchen gesperrt
+// Hinweis, Standortfeld und Knöpfe „Vergleichen“ / „Als PDF speichern“ unter der Liste;
+// ab 4 Kreuzen sind die übrigen Kästchen gesperrt
 function vergleichswahlAnzeigen() {
-  $('vergleichswahl').hidden = gespeicherteVarianten.length < 2;
+  $('vergleichswahl').hidden = gespeicherteVarianten.length < 1;
   const anzahl = zumVergleich.size;
   const voll = anzahl >= VERGLEICH_HOECHSTENS;
   for (const kaestchen of $('variantenListe').querySelectorAll('.ankreuzen')) {
     kaestchen.disabled = voll && !kaestchen.checked;
   }
   $('vergleichHinweis').textContent =
-    anzahl < 2 ? `Zum Vergleichen 2 bis ${VERGLEICH_HOECHSTENS} Varianten ankreuzen (${anzahl} gewählt).`
-      : voll ? `${anzahl} Varianten gewählt (mehr passen nicht nebeneinander).`
-        : `${anzahl} Varianten gewählt.`;
+    anzahl === 0 ? `Zum Vergleichen oder fürs PDF 1 bis ${VERGLEICH_HOECHSTENS} Varianten ankreuzen.`
+      : anzahl === 1 ? '1 Variante gewählt. Zum Vergleichen mindestens 2 ankreuzen.'
+        : voll ? `${anzahl} Varianten gewählt (mehr passen nicht nebeneinander).`
+          : `${anzahl} Varianten gewählt.`;
   $('vergleichOeffnen').hidden = anzahl < 2;
   $('vergleichOeffnen').textContent = `${anzahl} Varianten vergleichen`;
+  $('pdfwahl').hidden = anzahl < 1;
+  $('pdfSpeichern').hidden = anzahl < 1;
 }
+
+// Angekreuzte Varianten, älteste zuerst (so stehen sie im Vergleich und im PDF von links nach rechts)
+const gewaehlteVarianten = () => gespeicherteVarianten.filter((v) => zumVergleich.has(v.id)).sort((a, b) => a.datum - b.datum);
+
+// Beschriftung einer Ansicht: „N“, bei gedrehtem Gebäude „N (NNW)“
+function ansichtKennzeichen(variante, richtung) {
+  const genau = genaueRichtung(richtung, variante.drehung);
+  return genau ? `${richtung} (${genau.kurz})` : richtung;
+}
+
+// PDF-Übersichtsseite A3 quer bauen und direkt als Datei speichern
+async function pdfSpeichern(knopf) {
+  const varianten = gewaehlteVarianten();
+  if (varianten.length < 1) return;
+  const text = knopf.textContent;
+  knopf.disabled = true;
+  knopf.textContent = 'PDF wird erstellt …';
+  try {
+    const doc = await pdfErstellen({
+      varianten, modellName, standort: $('standort').value.trim(), kennzeichen: ansichtKennzeichen,
+      mitKennwerte: $('pdfKennwerte').checked,
+    });
+    const dateiname = pdfDateiname(modellName, varianten.length);
+    doc.save(dateiname);
+    variantenStatus(`„${dateiname}“ ist im Download-Ordner gespeichert.`);
+  } catch (fehler) {
+    console.error(fehler);
+    variantenStatus(`Das PDF konnte nicht erstellt werden: ${fehler.message}`, true);
+    if (!$('vergleich').hidden) alert(`Das PDF konnte nicht erstellt werden: ${fehler.message}`);
+  } finally {
+    knopf.disabled = false;
+    knopf.textContent = text;
+  }
+}
+$('pdfSpeichern').addEventListener('click', () => pdfSpeichern($('pdfSpeichern')));
+$('vergleichPdf').addEventListener('click', () => pdfSpeichern($('vergleichPdf')));
 
 // ---------- Variantenvergleich: eine Spalte je Variante, gleiche Zeilen auf gleicher Höhe ----------
 
@@ -482,7 +524,7 @@ function vergleichsbild(variante, schluessel, titel, kennzeichen = schluessel) {
 
 function vergleichOeffnen() {
   // Älteste links, neueste rechts
-  const varianten = gespeicherteVarianten.filter((v) => zumVergleich.has(v.id)).sort((a, b) => a.datum - b.datum);
+  const varianten = gewaehlteVarianten();
   if (varianten.length < 2) return;
 
   const raster = $('vergleichRaster');
@@ -511,7 +553,7 @@ function vergleichOeffnen() {
       // Ist das Gebäude gedreht, steht dabei, wohin die Fassade wirklich zeigt (ältere Varianten: ohne)
       const genau = genaueRichtung(richtung, v.drehung);
       ansichten.append(genau
-        ? vergleichsbild(v, richtung, `Ansicht ${name} – zeigt nach ${genau.lang}`, `${richtung} (${genau.kurz})`)
+        ? vergleichsbild(v, richtung, `Ansicht ${name} – zeigt nach ${genau.lang}`, ansichtKennzeichen(v, richtung))
         : vergleichsbild(v, richtung, `Ansicht ${name}`));
     }
     return ansichten;
@@ -637,6 +679,7 @@ async function dateiOeffnen(datei) {
     fensterAktualisieren();
     aussenwaendeAnzeigen();
     modellKennung = `${datei.name} · ${anzahl.wand} Wände`;
+    modellName = datei.name;
     variantenAnzeigen();
     $('leerHinweis').hidden = true;
     $('legende').hidden = false;
