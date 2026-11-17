@@ -143,9 +143,131 @@ const MUSTER = {
   },
 };
 
+// ---------- Darstellung „realistisch“ (Umschalter im 3D-Fenster, Sitzung 17) ----------
+// Gleiche Maße wie oben, aber ohne Federstriche: durchgehende Fugen, Maserung, Poren.
+// Dazu je Muster ein Reliefbild (hell = vorne, dunkel = vertieft, z. B. Fugen) und wie rau/glänzend die Fläche ist.
+const ECHT = {
+  klinker: {
+    breite: 4, hoehe: 2.5, pixelProMeter: 256, rau: 0.9, metall: 0,
+    zeichnen(z) {
+      const stein = 0.25, schicht = 2.5 / 30, fuge = 0.01;
+      z.flaeche(0, 0, z.breite, z.hoehe, '#b9b3a8'); // Mörtel
+      z.relief(0, 0, z.breite, z.hoehe, 40);
+      for (let reihe = 0; reihe < 30; reihe++) {
+        const y = reihe * schicht;
+        const versatz = reihe % 2 ? stein / 2 : 0;
+        for (let x = -versatz; x < z.breite; x += stein) {
+          z.flaeche(x + fuge / 2, y + fuge / 2, stein - fuge, schicht - fuge, abwandeln(z.farbe, 0.1, z.zufall));
+          z.relief(x + fuge / 2, y + fuge / 2, stein - fuge, schicht - fuge, 230 + 25 * z.zufall());
+        }
+      }
+      z.koernungEcht(0.06, 60000);
+      z.wolken(0.04);
+    },
+  },
+  holz: {
+    breite: 3.6, hoehe: 4, pixelProMeter: 256, rau: 0.75, metall: 0,
+    zeichnen(z) {
+      const brett = 0.12, fuge = 0.008;
+      z.relief(0, 0, z.breite, z.hoehe, 230);
+      for (let x = 0; x < z.breite - 0.001; x += brett) {
+        const ton = abwandeln(z.farbe, 0.08, z.zufall);
+        z.flaeche(x, 0, brett, z.hoehe, ton);
+        // Maserung: einige feine, leicht gewellte Linien längs des Bretts
+        const dunkel = abdunkeln(ton, 0.82);
+        for (let i = 0; i < 7; i++) {
+          const x0 = x + fuge + z.zufall() * (brett - 2 * fuge);
+          const welle = 0.002 + 0.006 * z.zufall();
+          const k = 1 + Math.floor(z.zufall() * 3); // ganze Wellen je Kachelhöhe, damit sie lückenlos weiterläuft
+          const phase = z.zufall() * 6.3;
+          const punkte = [];
+          for (let y = 0; y <= z.hoehe + 0.001; y += 0.05) {
+            punkte.push([x0 + welle * Math.sin((y / z.hoehe) * k * 2 * Math.PI + phase), y]);
+          }
+          z.kurve(punkte, dunkel, 0.8 + z.zufall(), 0.25 + 0.3 * z.zufall());
+        }
+        // ab und zu ein Ast
+        if (z.zufall() < 0.35) {
+          z.fleck(x + 0.03 + z.zufall() * 0.06, z.zufall() * z.hoehe, 0.008, 0.018, abdunkeln(ton, 0.7), 0.6);
+        }
+        // Fuge zwischen den Brettern: schmaler, dunkler Schattenspalt
+        z.flaeche(x, 0, fuge, z.hoehe, abdunkeln(z.farbe, 0.4));
+        z.relief(x, 0, fuge, z.hoehe, 20);
+      }
+      z.wolken(0.04);
+    },
+  },
+  beton: {
+    breite: 5, hoehe: 3, pixelProMeter: 160, rau: 0.85, metall: 0,
+    zeichnen(z) {
+      z.flaeche(0, 0, z.breite, z.hoehe, z.farbe);
+      z.relief(0, 0, z.breite, z.hoehe, 220);
+      z.wolken(0.08, 2);
+      z.koernungEcht(0.05, 40000);
+      z.poren(1800, abdunkeln(z.farbe, 0.55));
+      // Tafelstöße zart, Ankerlöcher als kleine dunkle Punkte
+      const stoss = abdunkeln(z.farbe, 0.85);
+      for (let y = 0; y < z.hoehe - 0.001; y += 0.5) z.linie(0, y, z.breite, y, stoss, 1, 0.7);
+      for (let x = 0; x < z.breite - 0.001; x += 2.5) z.linie(x, 0, x, z.hoehe, stoss, 1, 0.7);
+      for (let y = 0.25; y < z.hoehe; y += 1) {
+        for (let x = 0.3125; x < z.breite; x += 0.625) z.fleck(x, y, 0.012, 0.012, abdunkeln(z.farbe, 0.5), 0.9, true);
+      }
+    },
+  },
+  putz: {
+    breite: 2, hoehe: 2, pixelProMeter: 256, rau: 0.95, metall: 0,
+    zeichnen(z) {
+      z.flaeche(0, 0, z.breite, z.hoehe, z.farbe);
+      z.relief(0, 0, z.breite, z.hoehe, 200);
+      z.koernungEcht(0.07, 90000, true);
+      z.wolken(0.035);
+    },
+  },
+  platten: {
+    breite: 5, hoehe: 2.5, pixelProMeter: 192, rau: 0.5, metall: 0.15,
+    zeichnen(z) {
+      const pb = 1.25, ph = 0.625, fuge = 0.008;
+      z.flaeche(0, 0, z.breite, z.hoehe, abdunkeln(z.farbe, 0.35));
+      z.relief(0, 0, z.breite, z.hoehe, 15);
+      for (let y = 0; y < z.hoehe - 0.001; y += ph) {
+        for (let x = 0; x < z.breite - 0.001; x += pb) {
+          z.verlauf(x + fuge / 2, y + fuge / 2, pb - fuge, ph - fuge,
+            abwandeln(aufhellen(z.farbe, 0.04), 0.03, z.zufall), abwandeln(z.farbe, 0.03, z.zufall));
+          z.relief(x + fuge / 2, y + fuge / 2, pb - fuge, ph - fuge, 240);
+        }
+      }
+      z.koernungEcht(0.02, 20000);
+    },
+  },
+  // Glas: das Bild ist nur der Grundton, die Spiegelung macht das Material selbst
+  glas: {
+    breite: 2.5, hoehe: 3, pixelProMeter: 128, rau: 0.05, metall: 0.6, glas: true,
+    zeichnen(z) {
+      for (let y = 0; y < z.hoehe - 0.001; y += 1.5) {
+        for (let x = 0; x < z.breite - 0.001; x += 1.25) z.flaeche(x, y, 1.25, 1.5, abwandeln(abdunkeln(z.farbe, 0.7), 0.04, z.zufall));
+      }
+      z.relief(0, 0, z.breite, z.hoehe, 200);
+      for (let x = 0; x < z.breite - 0.001; x += 1.25) z.flaeche(x - 0.004, 0, 0.008, z.hoehe, '#2c2f33');
+      for (let y = 0; y < z.hoehe - 0.001; y += 1.5) z.flaeche(0, y - 0.004, z.breite, 0.008, '#2c2f33');
+    },
+  },
+  pfostenRiegel: {
+    breite: 2.5, hoehe: 3, pixelProMeter: 128, rau: 0.05, metall: 0.6, glas: true,
+    zeichnen(z) {
+      for (let y = 0; y < z.hoehe - 0.001; y += 1.5) {
+        for (let x = 0; x < z.breite - 0.001; x += 1.25) z.flaeche(x, y, 1.25, 1.5, abwandeln(abdunkeln(z.farbe, 0.7), 0.04, z.zufall));
+      }
+      z.relief(0, 0, z.breite, z.hoehe, 120);
+      const profil = '#3a3d42';
+      for (let x = 0; x < z.breite - 0.001; x += 1.25) { z.flaeche(x - 0.025, 0, 0.05, z.hoehe, profil); z.relief(x - 0.025, 0, 0.05, z.hoehe, 255); }
+      for (let y = 0; y < z.hoehe - 0.001; y += 1.5) { z.flaeche(0, y - 0.025, z.breite, 0.05, profil); z.relief(0, y - 0.025, z.breite, 0.05, 255); }
+    },
+  },
+};
+
 // Zeichenstift für eine Kachel. Rechnet in Metern und wiederholt alles über den Rand hinaus,
-// damit die Kachel lückenlos aneinanderpasst.
-function stiftAnlegen(g, muster, farbe, zufall) {
+// damit die Kachel lückenlos aneinanderpasst. hg: Zeichenfläche fürs Reliefbild (nur „realistisch“)
+function stiftAnlegen(g, muster, farbe, zufall, hg = null) {
   const px = muster.pixelProMeter;
   const b = muster.breite, h = muster.hoehe;
   // Wo Fugen kräftig sind und wo sie fehlen: weiche Flecken von etwa 1 m Größe
@@ -201,6 +323,59 @@ function stiftAnlegen(g, muster, farbe, zufall) {
         g.fillStyle = abwandeln(farbe, betrag, zufall);
         g.fillRect(Math.floor(zufall() * b * px), Math.floor(zufall() * h * px), 2, 2);
       }
+    },
+    // --- nur für „realistisch“ ---
+    // Körnung, halb durchscheinend; mitRelief: auch im Reliefbild (Putz fühlt sich rau an)
+    koernungEcht(betrag, anzahl, mitRelief = false) {
+      for (let i = 0; i < anzahl; i++) {
+        const x = Math.floor(zufall() * b * px), y = Math.floor(zufall() * h * px);
+        const z = zufall();
+        g.globalAlpha = 0.6;
+        g.fillStyle = abdunkeln(farbe, 1 + (z * 2 - 1) * betrag);
+        g.fillRect(x, y, 2, 2);
+        if (mitRelief && hg) { hg.fillStyle = grau(150 + 105 * z); hg.fillRect(x, y, 2, 2); }
+      }
+      g.globalAlpha = 1;
+    },
+    // Durchgehender Strich (ohne Lücken wie bei der Feder)
+    linie(x1, y1, x2, y2, ton, dicke = 1, deckkraft = 1) {
+      this.kurve([[x1, y1], [x2, y2]], ton, dicke, deckkraft);
+    },
+    // Linienzug aus Punkten [x, y] in Metern
+    kurve(punkte, ton, dicke = 1, deckkraft = 1) {
+      g.strokeStyle = ton;
+      g.lineWidth = dicke;
+      g.globalAlpha = deckkraft;
+      ueberall(0, 0, (X, Y) => {
+        g.beginPath();
+        punkte.forEach(([x, y], i) => (i ? g.lineTo : g.moveTo).call(g, X + x * px, Y + y * px));
+        g.stroke();
+      });
+      g.globalAlpha = 1;
+    },
+    // Ovaler Fleck (Ast im Holz, Ankerloch im Beton); vertieft = auch im Reliefbild als Loch
+    fleck(x, y, rx, ry, ton, deckkraft = 1, vertieft = false) {
+      const malen = (ctx, stil, alpha) => {
+        ctx.fillStyle = stil;
+        ctx.globalAlpha = alpha;
+        ueberall(x, y, (X, Y) => { ctx.beginPath(); ctx.ellipse(X, Y, rx * px, ry * px, 0, 0, 2 * Math.PI); ctx.fill(); });
+        ctx.globalAlpha = 1;
+      };
+      malen(g, ton, deckkraft);
+      if (vertieft && hg) malen(hg, grau(30), 1);
+    },
+    // Kleine dunkle Luftporen (Sichtbeton), im Reliefbild vertieft
+    poren(anzahl, ton) {
+      for (let i = 0; i < anzahl; i++) {
+        const r = 0.001 + 0.002 * zufall() * zufall();
+        this.fleck(zufall() * b, zufall() * h, r, r, ton, 0.5 + 0.4 * zufall(), true);
+      }
+    },
+    // Rechteck im Reliefbild: wert 0 (tief) … 255 (vorne)
+    relief(x, y, w, hh, wert) {
+      if (!hg) return;
+      hg.fillStyle = grau(wert);
+      ueberall(x, y, (X, Y) => hg.fillRect(X, Y, w * px + 0.5, hh * px + 0.5));
     },
     // Ganz weiche hellere und dunklere Stellen über alles legen (betrag 0.04 = bis zu ±4 %)
     wolken(betrag, feinheit = 1) {
@@ -277,12 +452,66 @@ export function fassadenMaterial(id, hover = false) {
   const art = hover === 'auswahl' ? 'auswahl' : hover ? 'hover' : '';
   const schluessel = id + (art ? `:${art}` : '');
   if (!materialien.has(schluessel)) {
-    materialien.set(schluessel, flaeche(art ? TOENUNG[art] : 0xffffff, {
+    const material = flaeche(art ? TOENUNG[art] : 0xffffff, {
       map: textur(id),
       ...(art ? { emissive: 0x1f3a68, emissiveIntensity: SCHIMMER[art] } : {}),
-    }));
+    });
+    material.userData.materialID = id; // damit „realistisch“ das passende Gegenstück findet
+    materialien.set(schluessel, material);
   }
   return materialien.get(schluessel);
+}
+
+// ---------- „realistisch“: Texturen und 3D-Materialien ----------
+
+// Farb- und Reliefbild einer realistischen Kachel
+function echtKachelZeichnen(eintrag) {
+  const muster = ECHT[eintrag.muster];
+  const neu = () => {
+    const l = document.createElement('canvas');
+    l.width = Math.round(muster.breite * muster.pixelProMeter);
+    l.height = Math.round(muster.hoehe * muster.pixelProMeter);
+    return l;
+  };
+  const farbbild = neu(), reliefbild = neu();
+  const g = farbbild.getContext('2d', { willReadFrequently: true });
+  const hg = reliefbild.getContext('2d');
+  muster.zeichnen(stiftAnlegen(g, muster, eintrag.farbe, zufallszahlen(eintrag.id + ':echt'), hg));
+  return { farbbild, reliefbild };
+}
+
+function alsTextur(bild, muster, farbig) {
+  const t = new THREE.CanvasTexture(bild);
+  if (farbig) t.colorSpace = THREE.SRGBColorSpace;
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.repeat.set(1 / muster.breite, 1 / muster.hoehe);
+  t.anisotropy = 8;
+  return t;
+}
+
+// 3D-Material „realistisch“ zum Fassadenmaterial `original` (aus fassadenMaterial()).
+// Hervorhebung beim Überfahren/Auswählen (Tönung, Schimmer) wird übernommen.
+const echtTexturen = new Map();
+export function realistischesFassadenMaterial(original) {
+  const eintrag = eintragZu(original.userData.materialID);
+  const muster = ECHT[eintrag.muster];
+  if (!echtTexturen.has(eintrag.id)) {
+    const { farbbild, reliefbild } = echtKachelZeichnen(eintrag);
+    echtTexturen.set(eintrag.id, { map: alsTextur(farbbild, muster, true), bump: alsTextur(reliefbild, muster, false) });
+  }
+  const { map, bump } = echtTexturen.get(eintrag.id);
+  return new THREE.MeshStandardMaterial({
+    map,
+    bumpMap: bump,
+    bumpScale: muster.glas ? 0.3 : 1.5,
+    roughness: muster.rau,
+    metalness: muster.metall,
+    envMapIntensity: muster.glas ? 1.4 : 0.6,
+    color: original.color,
+    emissive: original.emissive,
+    emissiveIntensity: original.emissiveIntensity,
+    side: original.side,
+  });
 }
 
 // ---------- Hilfen für Farben und Zufall ----------
@@ -295,6 +524,7 @@ function hexAus([r, g, b]) {
   const k = (w) => Math.round(Math.min(255, Math.max(0, w))).toString(16).padStart(2, '0');
   return `#${k(r)}${k(g)}${k(b)}`;
 }
+function grau(wert) { const w = Math.round(Math.min(255, Math.max(0, wert))); return `rgb(${w},${w},${w})`; }
 function abdunkeln(hex, faktor) { return hexAus(rgb(hex).map((w) => w * faktor)); }
 function aufhellen(hex, anteil) { return hexAus(rgb(hex).map((w) => w + (255 - w) * anteil)); }
 // Farbe zufällig etwas heller oder dunkler (betrag 0.03 = bis zu ±3 %)

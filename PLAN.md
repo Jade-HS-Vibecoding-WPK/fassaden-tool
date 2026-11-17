@@ -40,7 +40,7 @@ nebeneinander vergleicht und als PDF mitnimmt.
       Ersatz dann: Koordinaten von Hand eintippen (Schatten gibt es trotzdem)
 
 **4. Darstellung & Extras**
-- [ ] Darstellung umschaltbar auf „realistisch“: Texturen mit Klinkerfugen, Holzmaserung, Glasspiegelung
+- [x] Darstellung umschaltbar auf „realistisch“: Texturen mit Klinkerfugen, Holzmaserung, Glasspiegelung
 - [ ] Eigene Farbe pro Material
 - [ ] PDF zusätzlich mit einer eigenen Seite pro Variante – *darf notfalls zu Could*
 
@@ -114,8 +114,8 @@ Erledigte Sitzungen abhaken, die oberste offene Zeile ist dran (die Nummern blei
 - [x] 14. Should 2: Pfosten-Riegel-Fassade (17.11.)
 
 **Do 19.11. – bis 12 Uhr fertig**
-- [ ] 17. Should 4a: Umschalter „realistisch“ ← **als Nächstes** (umgestellt 17.11., Wunsch der Nutzerin)
-- [ ] 18. Should 4b: eigene Farbe pro Material
+- [x] 17. Should 4a: Umschalter „realistisch“ (umgestellt 17.11., Wunsch der Nutzerin) (17.11.)
+- [ ] 18. Should 4b: eigene Farbe pro Material ← **als Nächstes**
 - [ ] 15. Should 3a: Sonnenstand und Schatten (nach hinten gestellt, Wunsch der Nutzerin 17.11.)
 - [ ] 16. Should 3b: Standort per Ortssuche (darf notfalls wegfallen)
 - [ ] 19. Should 4c: PDF-Einzelseiten (fällt als Erstes weg, wenn es eng wird)
@@ -128,7 +128,7 @@ Erledigte Sitzungen abhaken, die oberste offene Zeile ist dran (die Nummern blei
 Wenn es eng wird, zuerst streichen: 19 (PDF-Einzelseiten), dann 16 (Ortssuche).
 Was bis Do 10:30 nicht fertig ist, wandert zu Could.
 
-## Stand (17.11.2026, nach Sitzung 14)
+## Stand (17.11.2026, nach Sitzung 17)
 - CLAUDE.md und PLAN.md angelegt, Plan mit der Nutzerin abgestimmt.
 - Test-IFC liegt in `testdaten/` (Einfamilienhaus, Revit 2023, IFC2x3: 192 Wände, 57 Fenster, 49 Türen).
   Quelle: Bundesingenieurkammer, Seite „BIM-Praxisbeispiele“ (Download zum Betrachten angeboten).
@@ -446,6 +446,23 @@ Was bis Do 10:30 nicht fertig ist, wandert zu Could.
   Versionsnummern: `ifc.js?v=17`, `fassade.js?v=17e` (in `app.js`), `app.js?v=17f` (in `index.html`).
   Hinweis: Die Wand-Nummern sind jetzt die der ganzen Wand (nicht der Schichten) – bei Modellen mit Schichten
   waren vorher ohnehin keine Varianten mit Wand-Klicks möglich.
+- Sitzung 17 (17.11.): Umschalter „Zeichnung | Realistisch“ oben rechts im 3D-Fenster (erscheint, sobald ein Modell geladen ist).
+  Neue Datei `js/realistisch.js`: tauscht für jedes Bild im 3D-Fenster kurz alle Materialien gegen „echte“
+  (three.js MeshStandardMaterial), blendet die Kantenlinien aus, setzt Himmelsverlauf als Hintergrund und eine
+  vorberechnete Himmelskugel für Spiegelungen, stellt die Sonne tiefer von Südwesten (Licht- und Schattenseiten)
+  und belichtet weich (ACES), damit helle Decken nicht ausbrennen – danach sofort alles zurück.
+  Dadurch arbeiten Hervorheben, Auswahl und das Speichern unverändert weiter; **gespeicherte Bilder, Vergleich und PDF
+  bleiben im Zeichenstil** (geprüft: gespeichertes Bild weiß mit Linien, obwohl „realistisch“ an war).
+  `materialien.js`: eigene, feinere Muster je Material (durchgehende Mörtelfugen und Farbunterschiede je Stein,
+  Holzmaserung mit Ästen und Schattenfuge, Beton mit Poren und Ankerlöchern, raue Putzkörnung, Platten mit Fugen,
+  Glas dunkler und spiegelnd) plus Reliefbild (Fugen vertieft). Der Zeichenstil ist unverändert.
+  Rohmodell bleibt hellgrau, Fenster spiegeln den Himmel, Rahmen/Pfosten leicht glänzend.
+  Ruckel-Test Einfamilienhaus: Zeichnung ca. 44 Bilder/s, realistisch ca. 60 (keine Linien).
+  Getestet mit `Test-Neu.ifc` und Einfamilienhaus, keine Fehler. Die Wahl wird nicht gespeichert (beim Neuladen „Zeichnung“).
+  Versionsnummern: `materialien.js?v=18` (in `app.js`, `fassade.js`, `realistisch.js`), `realistisch.js?v=18`,
+  `szene.js?v=18b`, `fassade.js?v=18`, `app.js?v=18b`, `style.css?v=18`.
+  Hinweis: Beim Testen ist im eingebauten Browser von Claude eine Test-Variante „Variante 1“ zum Einfamilienhaus entstanden
+  (nicht in deinem normalen Browser).
 
 ## Design-Vision (Entwurf 17.11., nach Sitzung 13 – noch nicht gebaut, Zeitpunkt offen)
 Mit der Nutzerin als Testseite entworfen und abgestimmt („erstmal so festhalten“). Umbau später in einer eigenen Sitzung.
@@ -471,6 +488,13 @@ Mit der Nutzerin als Testseite entworfen und abgestimmt („erstmal so festhalte
   kein Unterschied. Nur auf diesem Rechner gemessen; über dem 3D-Bild nur wenige, kleine Glas-Elemente verwenden.
 
 ## Nächste Schritte
+- **Sitzung 17 (erledigt, s. o.; Entscheidung 17.11., vor dem Bauen):** Umschalter „realistisch“.
+  **Ort:** kleiner Umschalter **„Zeichnung | Realistisch“ im 3D-Fenster**, immer sichtbar.
+  **Look realistisch:** keine Kantenlinien, echtes Licht mit Licht- und Schattenseiten, feinere Texturen
+  (Klinkerfugen, Holzmaserung, Betonporen), Glas spiegelt den Himmel. Rohmodell bleibt hellgrau.
+  **Umgebung:** Hintergrund wird ein heller Himmelsverlauf (hellblau → weiß), kein Boden/Gras extra.
+  **Bilder, Vergleich und PDF bleiben immer im Zeichenstil** – „realistisch“ ist nur zum Anschauen im 3D-Fenster
+  (Varianten bleiben einheitlich vergleichbar). Der Umschalter wird nicht mit der Variante gespeichert.
 - **Sitzung 14 (erledigt, s. o.; Entscheidung 17.11., vor dem Bauen):** Pfosten-Riegel-Fassade als neues Material „Pfosten-Riegel“
   in der Materialliste je Himmelsrichtung (auch bei „Alle Seiten gleich“). Glas mit dunkelgrauen Pfosten und Riegeln
   (Farbe der Fensterrahmen, ca. 5 cm breit). Darunter zwei Zahlenfelder **Felder breit × hoch** (Start 8 × 3),

@@ -212,6 +212,19 @@ header .textknopf { margin-top: 10px; }
   pointer-events: none; color: var(--akzent); font-weight: 600;
 }
 
+/* Umschalter „Zeichnung | Realistisch“ oben rechts im 3D-Fenster */
+.stilwahl {
+  position: absolute; right: 16px; top: 12px; z-index: 1; display: flex;
+  background: rgba(255,255,255,.9); border: 1px solid var(--linie);
+}
+.stilwahl button {
+  font: inherit; font-size: 12px; padding: 6px 12px; border: 0; background: none;
+  color: var(--leise); cursor: pointer;
+}
+.stilwahl button + button { border-left: 1px solid var(--linie); }
+.stilwahl button:hover { color: var(--akzent); }
+.stilwahl button[aria-pressed="true"] { background: var(--akzent); color: #fff; }
+
 .legende {
   position: absolute; left: 16px; bottom: 12px; margin: 0;
   font-size: 12px; color: var(--leise);

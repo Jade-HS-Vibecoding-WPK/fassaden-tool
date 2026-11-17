@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Fassaden-Tool</title>
-  <link rel="stylesheet" href="style.css?v=16">
+  <link rel="stylesheet" href="style.css?v=18">
   <!-- Bibliotheken aus dem Internet: three.js (3D) und web-ifc (IFC lesen) -->
   <script type="importmap">
   {
@@ -16,7 +16,7 @@
   }
   </script>
   <!-- ?v=… erzwingt nach Änderungen die neue Fassung (sonst hält der Browser alte Dateien fest) -->
-  <script type="module" src="js/app.js?v=17f"></script>
+  <script type="module" src="js/app.js?v=18b"></script>
 </head>
 <body>
   <div class="app">
@@ -203,6 +203,11 @@
       </div>
       <div class="laden" id="laden" hidden><span>IFC wird gelesen …</span></div>
       <div class="ablage" id="ablage" hidden><span>IFC-Datei hier ablegen</span></div>
+      <!-- Umschalter Darstellung: nur fürs Anschauen, gespeicherte Bilder bleiben im Zeichenstil -->
+      <div class="stilwahl" id="stilwahl" role="group" aria-label="Darstellung im 3D-Fenster" hidden>
+        <button type="button" data-stil="zeichnung" aria-pressed="true">Zeichnung</button>
+        <button type="button" data-stil="realistisch" aria-pressed="false">Realistisch</button>
+      </div>
       <p class="legende" id="legende" hidden>Drehen: linke Maustaste · Zoomen: Mausrad · Verschieben: rechte Maustaste</p>
     </main>
   </div>

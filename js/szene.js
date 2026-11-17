@@ -1,6 +1,7 @@
 // 3D-Szene: Bühne, Kamera, Licht und Maussteuerung
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { realistischesMaterial, himmelHintergrund, himmelUmgebung } from './realistisch.js?v=18';
 
 // Ist das Teil zu sehen? (es selbst und alle, zu denen es gehört)
 function istSichtbar(teil) {
@@ -39,10 +40,14 @@ export class Szene {
     this.steuerung.maxPolarAngle = Math.PI * 0.495; // nicht unter den Boden schauen
 
     // Licht: weiches Grundlicht plus eine Sonne für Helligkeitsunterschiede der Seiten
-    this.szene.add(new THREE.HemisphereLight(0xffffff, 0xdddddd, 2.2));
-    const sonne = new THREE.DirectionalLight(0xffffff, 1.6);
-    sonne.position.set(30, 50, 20);
-    this.szene.add(sonne);
+    this.grundlicht = new THREE.HemisphereLight(0xffffff, 0xdddddd, 2.2);
+    this.szene.add(this.grundlicht);
+    this.sonne = new THREE.DirectionalLight(0xffffff, 1.6);
+    this.sonne.position.set(30, 50, 20);
+    this.szene.add(this.sonne);
+
+    // Umschalter „Zeichnung | Realistisch“: gilt nur fürs 3D-Fenster, nicht für die gespeicherten Bilder
+    this.realistisch = false;
 
     this.modell = null;
     this.mausAnklickenEinrichten();
@@ -53,8 +58,46 @@ export class Szene {
 
     this.renderer.setAnimationLoop(() => {
       this.steuerung.update();
-      this.renderer.render(this.szene, this.kamera);
+      if (this.realistisch && this.modell) this.realistischZeichnen();
+      else this.renderer.render(this.szene, this.kamera);
     });
+  }
+
+  // Ein Bild „realistisch“: Materialien kurz tauschen, Linien ausblenden, Himmel und Licht umstellen,
+  // zeichnen und sofort alles zurück. So merkt der Rest der App nichts davon
+  // (Hervorheben, Auswahl und die gespeicherten Bilder arbeiten weiter mit dem Zeichenstil).
+  realistischZeichnen() {
+    if (!this.himmel) {
+      this.himmel = himmelHintergrund();
+      this.umgebung = himmelUmgebung(this.renderer);
+    }
+    const netze = [], linien = [];
+    this.modell.traverse((teil) => {
+      if (teil.isMesh) { netze.push(teil, teil.material); teil.material = realistischesMaterial(teil.material); }
+      else if (teil.isLineSegments && teil.visible) { linien.push(teil); teil.visible = false; }
+    });
+    this.szene.background = this.himmel;
+    this.szene.environment = this.umgebung;
+    // Sonne tiefer und von Südwesten: Südseite hell, Ostseite im Schatten (deutliche Licht- und Schattenseiten)
+    const sonnenLage = this.sonne.position.clone();
+    this.sonne.position.set(-20, 30, 35);
+    this.grundlicht.intensity = 0.6;
+    this.sonne.intensity = 2.8;
+    // weiche Belichtung wie bei einer Kamera, damit helle Flächen nicht ausbrennen
+    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    this.renderer.toneMappingExposure = 1.0;
+    try {
+      this.renderer.render(this.szene, this.kamera);
+    } finally {
+      for (let i = 0; i < netze.length; i += 2) netze[i].material = netze[i + 1];
+      for (const linie of linien) linie.visible = true;
+      this.szene.background = null;
+      this.szene.environment = null;
+      this.grundlicht.intensity = 2.2;
+      this.sonne.intensity = 1.6;
+      this.sonne.position.copy(sonnenLage);
+      this.renderer.toneMapping = THREE.NoToneMapping;
+    }
   }
 
   // Bauteile mit der Maus anfahren und anklicken.

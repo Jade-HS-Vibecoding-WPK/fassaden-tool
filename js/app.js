@@ -1,8 +1,8 @@
 // Bedienoberfläche: Datei wählen oder hineinziehen, Modell anzeigen, Fassade gestalten
-import { Szene } from './szene.js?v=15';
+import { Szene } from './szene.js?v=18b';
 import { ifcLaden } from './ifc.js?v=17';
-import { aussenwaendeErkennen, wandFaerben, oeffnungenZuordnen, fensterAnpassen, stuetzenVorbereiten, stuetzeFaerben, kennwerteBerechnen, hauptrichtungBestimmen, fensterFaerben, anbauteileZuordnen } from './fassade.js?v=17e';
-import { MATERIALIEN, START_MATERIAL, PFOSTEN_RIEGEL, musterBild } from './materialien.js?v=16';
+import { aussenwaendeErkennen, wandFaerben, oeffnungenZuordnen, fensterAnpassen, stuetzenVorbereiten, stuetzeFaerben, kennwerteBerechnen, hauptrichtungBestimmen, fensterFaerben, anbauteileZuordnen } from './fassade.js?v=18';
+import { MATERIALIEN, START_MATERIAL, PFOSTEN_RIEGEL, musterBild } from './materialien.js?v=18';
 import { variantenLesen, varianteSpeichern, varianteLoeschen } from './varianten.js';
 import { pdfErstellen, pdfDateiname } from './pdf.js?v=11';
 
@@ -1117,6 +1117,7 @@ async function dateiOeffnen(datei) {
     anleitungZeigen(false);
     $('anleitungOeffnen').hidden = false;
     $('legende').hidden = false;
+    $('stilwahl').hidden = false;
     statusZeigen(datei.name);
     // Bauteil-Anzahlen: nebensächlich, deshalb zugeklappt unter „Bauteile“
     $('bauteileText').textContent =
@@ -1128,6 +1129,15 @@ async function dateiOeffnen(datei) {
   } finally {
     $('laden').hidden = true;
   }
+}
+
+// ---------- Umschalter „Zeichnung | Realistisch“ im 3D-Fenster ----------
+// Nur fürs Anschauen: Bilder, Vergleich und PDF bleiben immer im Zeichenstil, die Wahl wird nicht mit der Variante gespeichert.
+for (const knopf of $('stilwahl').querySelectorAll('button')) {
+  knopf.addEventListener('click', () => {
+    szene.realistisch = knopf.dataset.stil === 'realistisch';
+    for (const k of $('stilwahl').querySelectorAll('button')) k.setAttribute('aria-pressed', String(k === knopf));
+  });
 }
 
 function statusZeigen(text, istFehler = false) {
