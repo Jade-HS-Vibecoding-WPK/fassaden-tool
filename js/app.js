@@ -1,5 +1,6 @@
 // Bedienoberfläche: Datei wählen oder hineinziehen, Modell anzeigen, Fassade gestalten
-import { Szene } from './szene.js?v=45';
+import { Szene } from './szene.js?v=49';
+import { umgebungLaden, umgebungBauen } from './umgebung.js?v=4';
 import { ifcLaden } from './ifc.js?v=19';
 import { aussenwaendeErkennen, wandFaerben, oeffnungenZuordnen, fensterAnpassen, stuetzenVorbereiten, stuetzeFaerben, dachVorbereiten, dachFaerben, kennwerteBerechnen, hauptrichtungBestimmen, fensterFaerben, anbauteileZuordnen } from './fassade.js?v=25g';
 import {
@@ -7,7 +8,7 @@ import {
   farbtoeneVon, farbtonVon, farbtonSetzen, farbtoeneSammeln, farbtoeneUebernehmen, materialText,
 } from './materialien.js?v=25f';
 import { variantenLesen, varianteSpeichern, varianteLoeschen } from './varianten.js';
-import { pdfErstellen, pdfDateiname } from './pdf.js?v=26g';
+import { pdfErstellen, pdfDateiname } from './pdf.js?v=26h';
 import { START_SONNE, sonnenstand, himmelsrichtung, uhrzeitText, ortMitName, zeitText, weltzeit } from './sonne.js?v=24';
 
 const $ = (id) => document.getElementById(id);
@@ -813,6 +814,8 @@ $('varianteSpeichern').addEventListener('click', async () => {
       darstellung: szene.stil,
       // Maße der Ansichtsbilder in Metern (Sitzung 20c), damit das PDF sie maßstäblich setzen kann; ältere Varianten haben keine
       masse,
+      // Umgebung (Sitzung 23): Ort und Verschiebung, wenn die Perspektive Nachbarhäuser zeigt; sonst null
+      umgebung: umgebungAn ? { ...umgebungOrt(), ost: umgebungLage.ost, nord: umgebungLage.nord } : null,
     });
     $('variantenName').value = '';
     variantenStatus(`„${name}“ ist gespeichert.`);
@@ -884,6 +887,22 @@ function varianteLaden(variante) {
     }
     sonneAnzeigen();
     sonneAnwenden();
+  }
+  // Umgebung übernehmen (ältere Varianten vor Sitzung 23 kennen sie nicht: Einstellung bleibt)
+  if (variante.umgebung !== undefined) {
+    umgebungAn = !!variante.umgebung;
+    if (variante.umgebung) {
+      const { breite, laenge, ost, nord } = variante.umgebung;
+      ortGenau = { breite, laenge };
+      if (!variante.sonne) { // Sonne ohne eigenen Ort: denselben Ort nehmen
+        sonne.breite = Math.round(breite * 100) / 100;
+        sonne.laenge = Math.round(laenge * 100) / 100;
+        sonneAnzeigen();
+        sonneAnwenden();
+      }
+      Object.assign(umgebungLage, { ost, nord });
+    }
+    umgebungAktualisieren();
   }
   variantenStatus(`„${variante.name}“ ist geladen.`);
 }
@@ -1280,11 +1299,16 @@ for (const knopf of $('ansichtwahl').querySelectorAll('button')) {
     const drehung = hauptrichtungBestimmen(waende);
     if (knopf.dataset.ansicht === '3d') szene.blickZeigen(blick, drehung);
     else szene.blickZeigen({ aus: Number(knopf.dataset.ansicht), hoehe: 0 }, drehung);
+    // Umgebung nur in der Perspektive (Sitzung 23): in den Ansichten würden Nachbarn die Fassade verdecken
+    szene.nachbarschaftVersteckt = knopf.dataset.ansicht !== '3d';
     ansichtKnoepfeMarkieren(knopf);
   });
 }
-// Sobald man selbst dreht, zoomt oder verschiebt, ist keine Ansicht mehr „gedrückt“
-szene.steuerung.addEventListener('start', () => ansichtKnoepfeMarkieren());
+// Sobald man selbst dreht, zoomt oder verschiebt, ist keine Ansicht mehr „gedrückt“ (und die Umgebung wieder da)
+szene.steuerung.addEventListener('start', () => {
+  ansichtKnoepfeMarkieren();
+  szene.nachbarschaftVersteckt = false;
+});
 
 $('datei').addEventListener('change', (ereignis) => {
   const datei = ereignis.target.files[0];
@@ -1345,7 +1369,10 @@ async function dateiOeffnen(datei) {
     $('legende').hidden = false;
     $('stilwahl').hidden = false;
     $('sonnenwahl').hidden = false;
+    $('umgebungwahl').hidden = false;
     $('ansichtwahl').hidden = false;
+    szene.nachbarschaftVersteckt = false;
+    szene.umgebungVerschieben(umgebungLage.ost, umgebungLage.nord); // Umgebung ans neue Haus legen
     ansichtKnoepfeMarkieren();
     // Kopfleiste: Dateiname und Schritte freigeben, los geht es mit „Fassade“ (Außenwände sind Nebensache)
     $('kopfDatei').textContent = datei.name;
@@ -1527,11 +1554,14 @@ for (const [id, schluessel, grenze] of [['sonneBreite', 'breite', 90], ['sonneLa
     const wert = Number($(id).value.replace(',', '.'));
     if ($(id).value.trim() !== '' && Number.isFinite(wert)) {
       const neu = Math.round(Math.max(-grenze, Math.min(grenze, wert)) * 100) / 100;
-      if (neu !== sonne[schluessel]) { // von Hand verstellt: der gesuchte Ortsname stimmt nicht mehr
+      const geaendert = neu !== sonne[schluessel];
+      if (geaendert) { // von Hand verstellt: der gesuchte Ortsname stimmt nicht mehr
         sonne.ortName = '';
         $('ortSuchfeld').value = '';
+        $('umgebungSuchfeld').value = '';
       }
       sonne[schluessel] = neu;
+      if (geaendert) ortGeaendert(null);
     }
     sonneAnzeigen();
     sonneAnwenden();
@@ -1553,8 +1583,8 @@ function kurzerOrtsname(treffer) {
   return (ort && !name.includes(ort) ? `${name}, ${ort}` : name).slice(0, 80);
 }
 
-function ortTrefferZeigen(inhalt) {
-  const feld = $('ortTreffer');
+function ortTrefferZeigen(inhalt, feldId = 'ortTreffer') {
+  const feld = $(feldId);
   feld.replaceChildren(...inhalt);
   feld.hidden = inhalt.length === 0;
 }
@@ -1571,14 +1601,15 @@ function osmHinweis(text) {
   return p;
 }
 
-$('ortssuche').addEventListener('submit', async (ereignis) => {
-  ereignis.preventDefault();
-  const suche = $('ortSuchfeld').value.trim();
-  if (!suche) { ortTrefferZeigen([]); return; }
+// Suche ausführen; suchfeld/trefferFeld: die Felder im Sonnen-Feld oder im Umgebungs-Feld (beide setzen denselben Ort)
+async function ortSuchen(suchfeld, trefferFeld) {
+  const zeigen = (inhalt) => ortTrefferZeigen(inhalt, trefferFeld);
+  const suche = $(suchfeld).value.trim();
+  if (!suche) { zeigen([]); return; }
   const warten = 1000 - (Date.now() - letzteOrtssuche);
   if (warten > 0) await new Promise((fertig) => setTimeout(fertig, warten));
   letzteOrtssuche = Date.now();
-  ortTrefferZeigen([textElement('p', 'Suche …')]);
+  zeigen([textElement('p', 'Suche …')]);
   let treffer;
   try {
     const adresse = 'https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&addressdetails=1&accept-language=de&q='
@@ -1588,11 +1619,11 @@ $('ortssuche').addEventListener('submit', async (ereignis) => {
     treffer = await antwort.json();
   } catch (fehler) {
     console.warn('Ortssuche:', fehler);
-    ortTrefferZeigen([textElement('p', 'Suche geht gerade nicht (Internet?) – Breite und Länge bitte von Hand eintragen.')]);
+    zeigen([textElement('p', 'Suche geht gerade nicht (Internet?) – Breite und Länge bitte von Hand eintragen.')]);
     return;
   }
   if (!treffer.length) {
-    ortTrefferZeigen([osmHinweis('Nichts gefunden. Anders schreiben oder Stadt dazu? ')]);
+    zeigen([osmHinweis('Nichts gefunden. Anders schreiben oder Stadt dazu? ')]);
     return;
   }
   const knoepfe = treffer.map((t) => {
@@ -1604,14 +1635,113 @@ $('ortssuche').addEventListener('submit', async (ereignis) => {
       sonne.laenge = Math.round(Number(t.lon) * 100) / 100;
       sonne.ortName = kurzerOrtsname(t);
       $('ortSuchfeld').value = sonne.ortName;
-      ortTrefferZeigen([]);
+      $('umgebungSuchfeld').value = sonne.ortName;
+      ortTrefferZeigen([], 'ortTreffer');
+      ortTrefferZeigen([], 'umgebungTreffer');
       sonneAnzeigen();
       sonneAnwenden();
+      // Für die Umgebung zählt die genaue Lage (die Sonne rundet auf 0,01° ≈ 1 km)
+      ortGeaendert({ breite: Number(t.lat), laenge: Number(t.lon) });
     });
     return knopf;
   });
-  ortTrefferZeigen([...knoepfe, osmHinweis('Suche: ')]);
+  zeigen([...knoepfe, osmHinweis('Suche: ')]);
+}
+$('ortssuche').addEventListener('submit', (ereignis) => { ereignis.preventDefault(); ortSuchen('ortSuchfeld', 'ortTreffer'); });
+$('umgebungOrtssuche').addEventListener('submit', (ereignis) => { ereignis.preventDefault(); ortSuchen('umgebungSuchfeld', 'umgebungTreffer'); });
+
+// ---------- Umgebung aus OpenStreetMap (Sitzung 23) ----------
+// Runder Knopf unter der Sonne: an = Nachbarhäuser (helle Klötze), Straßen und Grün um den Ort,
+// nur in der Perspektive (3D-Fenster und gespeichertes Perspektivbild). Ort = Ortssuche (Sonne oder Umgebungs-Feld).
+// Das Haus lässt sich mit zwei Reglern auf dem Grundstück verschieben (Norden bleibt Plan-oben).
+let umgebungAn = false;
+let umgebungAufgeklappt = false;
+let ortGenau = null; // { breite, laenge } genau aus der Ortssuche; null = die (gerundeten) Koordinaten der Sonne
+const umgebungLage = { ost: 0, nord: 0 }; // Meter, um die das Haus vom gesuchten Ort nach Osten/Norden steht
+let umgebungGebaut = null; // { schluessel, gruppe, anzahl } – zuletzt gebaute Umgebung
+let umgebungAuftrag = 0; // zählt Anfragen, damit eine alte, späte Antwort nichts mehr überschreibt
+
+const umgebungOrt = () => ortGenau ?? { breite: sonne.breite, laenge: sonne.laenge };
+
+// Neuer Ort (aus Suche oder von Hand): Haus wieder genau auf den Ort stellen, Umgebung neu holen
+function ortGeaendert(genau) {
+  ortGenau = genau;
+  umgebungLage.ost = 0;
+  umgebungLage.nord = 0;
+  umgebungAktualisieren();
+}
+
+// Zahl mit Komma, z. B. 12,5
+const kommaZahl = (wert, stellen) => wert.toFixed(stellen).replace('.', ',');
+
+function umgebungAnzeigen(info) {
+  $('umgebungKnopf').setAttribute('aria-pressed', String(umgebungAn));
+  $('umgebungKnopf').title = umgebungAn ? 'Umgebung aus' : 'Umgebung zeigen (Nachbarhäuser, Straßen, Grün aus OpenStreetMap)';
+  $('umgebungAufklappen').hidden = !umgebungAn;
+  $('umgebungAufklappen').setAttribute('aria-expanded', String(umgebungAufgeklappt));
+  $('umgebungfeld').hidden = !umgebungAn || !umgebungAufgeklappt;
+  $('osmVermerk').hidden = !umgebungAn;
+  $('umgebungOst').value = String(umgebungLage.ost);
+  $('umgebungNord').value = String(umgebungLage.nord);
+  const meter = (wert, plus, minus) => (wert === 0 ? '0 m' : `${kommaZahl(Math.abs(wert), wert % 1 ? 1 : 0)} m ${wert > 0 ? plus : minus}`);
+  $('umgebungOstWert').textContent = meter(umgebungLage.ost, 'O', 'W');
+  $('umgebungNordWert').textContent = meter(umgebungLage.nord, 'N', 'S');
+  if (info !== undefined) $('umgebungInfo').replaceChildren(info);
+}
+
+// Umgebung holen (falls nötig), bauen und zeigen – oder ausblenden
+async function umgebungAktualisieren() {
+  const auftrag = ++umgebungAuftrag;
+  if (!umgebungAn) {
+    szene.umgebungSetzen(null);
+    $('umgebungKnopf').classList.remove('laedt');
+    umgebungAnzeigen();
+    return;
+  }
+  const { breite, laenge } = umgebungOrt();
+  const schluessel = `${breite}|${laenge}`;
+  if (umgebungGebaut?.schluessel !== schluessel) {
+    szene.umgebungSetzen(null);
+    $('umgebungKnopf').classList.add('laedt');
+    umgebungAnzeigen('Umgebung wird geladen …');
+    let daten;
+    try {
+      daten = await umgebungLaden(breite, laenge);
+    } catch (fehler) {
+      console.warn('Umgebung:', fehler);
+      if (auftrag !== umgebungAuftrag) return;
+      $('umgebungKnopf').classList.remove('laedt');
+      umgebungAufgeklappt = true; // Meldung zeigen
+      umgebungAnzeigen('OpenStreetMap ist gerade überlastet oder nicht erreichbar. Knopf aus und wieder an = neuer Versuch.');
+      return;
+    }
+    if (auftrag !== umgebungAuftrag) return; // inzwischen anderer Ort oder ausgeschaltet
+    const gruppe = umgebungBauen(daten, breite, laenge);
+    const anzahl = gruppe.children.filter((t) => t.userData.nachbar).length;
+    umgebungGebaut = { schluessel, gruppe, anzahl };
+  }
+  $('umgebungKnopf').classList.remove('laedt');
+  szene.umgebungSetzen(umgebungGebaut.gruppe, umgebungLage.ost, umgebungLage.nord);
+  const ortText = sonne.ortName || `${kommaZahl(breite, 4)}° N, ${kommaZahl(laenge, 4)}° O`;
+  umgebungAnzeigen(osmHinweis(`${ortText} · ${umgebungGebaut.anzahl} Häuser im Umkreis von 150 m. Daten: `));
+}
+
+$('umgebungKnopf').addEventListener('click', () => {
+  umgebungAn = !umgebungAn;
+  umgebungAktualisieren();
 });
+$('umgebungAufklappen').addEventListener('click', () => {
+  umgebungAufgeklappt = !umgebungAufgeklappt;
+  umgebungAnzeigen();
+});
+for (const [id, schluessel] of [['umgebungOst', 'ost'], ['umgebungNord', 'nord']]) {
+  $(id).addEventListener('input', () => {
+    umgebungLage[schluessel] = Number($(id).value);
+    szene.umgebungVerschieben(umgebungLage.ost, umgebungLage.nord);
+    umgebungAnzeigen();
+  });
+}
+umgebungAnzeigen();
 
 // Text für Vergleich und PDF, z. B. „21.6.2026, 15:00 Uhr (MESZ) · Oldenburg (53,14° N, 8,21° O)“; ohne Sonne: null
 const sonnenText = (variante) => (variante.sonne ? `${zeitText(variante.sonne)} · ${ortMitName(variante.sonne)}` : null);

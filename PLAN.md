@@ -155,6 +155,55 @@ Erledigte Sitzungen abhaken, die oberste offene Zeile ist dran (die Nummern blei
 - [x] 21. Auf GitHub hochladen und über GitHub Pages veröffentlichen (vor 20e gezogen, Wunsch der Nutzerin) (18.11.)
       Live-Demo: https://jade-hs-vibecoding-wpk.github.io/fassaden-tool/ (Pages aus Zweig `main`, Ordner `/`).
       Jeder `git push` auf `main` aktualisiert die Seite nach 1–2 Minuten von selbst. → **12 Uhr Freeze**
+- [x] 23. Umgebung aus OpenStreetMap, nur in der Perspektive (Wunsch der Nutzerin 18.11., Variante A; vor 22 gezogen) (18.11.): Nachbarhäuser als
+      schlichte helle Klötze (Höhe aus Geschosszahl/Höhe in OSM, sonst Standardwert), Straßen und Grünflächen als Flächen
+      auf dem Boden. Ort kommt aus der Ortssuche (Sitzung 16).
+      **Entscheidung (Wunsch der Nutzerin 18.11.):** eigener runder Knopf **„Umgebung“ direkt unter dem Sonnenknopf**
+      (gleiche Form/Größe, nicht im Sonnen-Feld versteckt). An = Umgebung sichtbar, aus = wie bisher.
+      **Entscheidung (Nutzerin 18.11.):** Verschieben kommt in dieser Sitzung mit: Regler Ost–West und Nord–Süd (Meter)
+      in einem aufklappbaren Feld neben dem Umgebungsknopf (wie beim Sonnen-Feld); Drehung gibt es schon (Sitzung 20e).
+      Nachbarhäuser, die das eigene Haus überdecken, werden ausgeblendet. Ohne gesuchten Ort: Oldenburg.
+      Vorher klären/beachten:
+      - Ansichten N/O/S/W bleiben ohne Nachbarn (sie würden die Fassade verdecken), nur Geländelinie wie bisher.
+      - Daten per Overpass-API (OSM) – zweite Stelle, an der etwas das Gerät verlässt (nur der Ort/Umkreis) → Anleitung und
+        CLAUDE.md anpassen; sparsam abfragen (einmal pro Ort, Ergebnis merken).
+      - Namensnennung „© OpenStreetMap-Mitwirkende“ in der App sichtbar; im PDF als einzige Schrift-Ausnahme winzig,
+        nur wenn Umgebung gezeigt wird.
+      - Haus muss richtig auf dem Grundstück stehen: wahrscheinlich Verschieben + Drehen per Regler nötig
+        (IFC-Modelle haben oft keine echte Lage) – evtl. eigene Sitzung davor.
+      - Variante B (echte Geländehöhen, Hang) vorerst nicht: steht nicht in OSM, bräuchte zweite Datenquelle.
+      **Gebaut:** neue Datei `js/umgebung.js`. Knopf mit zwei Häuschen unter der Sonne (an = Dunkelblau), Pfeil daneben
+      klappt ein Feld auf: eigene Adresssuche (setzt denselben Ort wie die Suche bei der Sonne, genau statt auf 0,01° gerundet),
+      Regler „Haus verschieben“ W–O und S–N (±100 m, 0,5-m-Schritte), Infozeile mit Anzahl Häuser und © OSM.
+      Runde Modellplatte (150 m), Nachbarn hell mit grauen Kanten, Höhe = `height` bzw. Geschosse × 3 m + 1 m, sonst 6 m
+      (Garage/Schuppen 3 m). Straßenbreite nach Art geschätzt (2–12 m). Grün und Wasser als Flächen. Alles am Plattenrand
+      rund abgeschnitten. Nachbarhäuser unter dem eigenen Haus verschwinden (auch beim Verschieben).
+      Im 3D-Fenster blenden N/O/S/W die Umgebung aus, Drehen/3D zeigt sie wieder. Gespeicherte Bilder: nur die Perspektive
+      mit Umgebung. Varianten merken Ort + Verschiebung und stellen sie beim Laden wieder her. PDF: „Umgebung © OpenStreetMap-
+      Mitwirkende“ in 6 pt links vom Maßstab, nur wenn eine Variante Umgebung hat. Anleitung + CLAUDE.md ergänzt.
+      **Korrektur zum Plan:** Eine Drehung zum Einstellen gibt es nicht – die „Drehung“ aus 20e ist nur die automatische
+      Erkennung für die Beschriftung der Ansichten. Norden bleibt Plan-oben (wie in den Export-Tipps); das Haus muss also
+      genordet exportiert sein.
+      Getestet (Test-ArchiCAD.ifc): mit Beispieldaten (37 Häuser, lange Straßen, Park) Zeichnung, Aquarell, Realistisch,
+      mit Sonne, Verschieben, Ansicht S, Variante speichern (Perspektive mit, Ansichten ohne Umgebung), Laden stellt alles
+      wieder her, PDF mit Vermerk. Testvariante wieder gelöscht. Keine neuen Fehler in der Konsole.
+      **Probleme:** Die echten Overpass-Server waren beim Test fast die ganze Zeit überlastet („at capacity“, 502/504);
+      nur kleine Abfragen kamen kurz durch. Die App fragt deshalb drei Server nacheinander (je höchstens 20 s, zwei Runden)
+      und meldet sonst „überlastet … Knopf aus und wieder an“. **Mit echten Daten noch nicht gesehen – bitte später nochmal testen.**
+      Nachbarn werfen noch keinen Schatten (nur das eigene Haus). In „Realistisch“ wirken Nachbarn auf der Schattenseite recht dunkel.
+      Versionsnummern: `umgebung.js?v=4` (in `app.js` und `szene.js`), `szene.js?v=49`, `pdf.js?v=26h`, `app.js?v=53`, `style.css?v=30b`.
+- [ ] 23b. Umgebungs-Vorlagen statt nur OpenStreetMap (Wunsch der Nutzerin 18.11.: OSM lädt oft nicht, Server überlastet).
+      Im Umgebungs-Feld eine Auswahl: **Städtisch · Ländlich · Wald · Wiese · Echter Ort (OpenStreetMap)**.
+      Vorschlag (noch abzustimmen):
+      - Vorlagen werden in der App selbst gebaut: kein Internet nötig, lädt sofort, nichts verlässt das Gerät.
+      - Gleicher Stil wie bisher: runde Modellplatte, helle Klötze, schlichte Modellbäume (Kugel auf Stamm).
+        Städtisch = Blockrand/Reihenhäuser 3–5 Geschosse an Straßen, Gehwege, Straßenbäume;
+        Ländlich = wenige Einfamilienhäuser, Feldweg, Wiese, Baumgruppen; Wald = dichte Bäume mit Lichtung ums Haus;
+        Wiese = grüne Platte mit ein paar Bäumen.
+      - Sieht jedes Mal gleich aus (feste Zufallszahlen); ums eigene Haus bleibt immer Platz.
+      - „Haus verschieben“ und der OSM-Vermerk nur bei „Echter Ort“. Schlägt OSM fehl: Hinweis auf die Vorlagen.
+      - Varianten speichern die Wahl; das PDF nennt OSM nur bei „Echter Ort“.
+      - **Entscheidung (Nutzerin 18.11.):** Beim ersten Einschalten kommt **Ländlich**.
 - [ ] 22. Nachmittag: README (Poster macht die Nutzerin selbst nach Moodle-Vorlage)
 
 **Fr 20.11.** – Polieren & präsentieren, Abgabe bis 16 Uhr

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Fassaden-Tool</title>
-  <link rel="stylesheet" href="style.css?v=29b">
+  <link rel="stylesheet" href="style.css?v=30b">
   <!-- Bibliotheken aus dem Internet: three.js (3D) und web-ifc (IFC lesen) -->
   <script type="importmap">
   {
@@ -16,7 +16,7 @@
   }
   </script>
   <!-- ?v=… erzwingt nach Änderungen die neue Fassung (sonst hält der Browser alte Dateien fest) -->
-  <script type="module" src="js/app.js?v=49"></script>
+  <script type="module" src="js/app.js?v=53"></script>
 </head>
 <body>
   <!-- Hintergrund: dunkler Farbverlauf mit weichen Farbflecken (Sitzung 15b, Glassmorphism) -->
@@ -177,7 +177,7 @@
             <button class="knopf" id="anleitungSchliessen" hidden>Zurück zum Modell</button>
           </div>
           <p class="anleitung-einleitung">Den eigenen Entwurf als IFC laden, die Fassade gestalten und Varianten vergleichen.
-          Alles bleibt in diesem Browser, nichts wird hochgeladen. Nur die Ortssuche bei der Sonne fragt bei OpenStreetMap nach.</p>
+          Alles bleibt in diesem Browser, nichts wird hochgeladen. Nur die Ortssuche und der Knopf „Umgebung“ fragen bei OpenStreetMap nach (dabei geht nur der Ort aus dem Gerät).</p>
           <ol class="schritte">
             <li><span>1</span><div><strong>IFC laden</strong>
               <p>Entwurf als IFC exportieren und links mit „IFC-Datei wählen“ öffnen oder ins Fenster ziehen.</p></div></li>
@@ -293,7 +293,42 @@
           <p class="hinweis" id="sonneInfo"></p>
         </div>
       </div>
+      <!-- Umgebung aus OpenStreetMap (Sitzung 23): runder Knopf unter der Sonne (Wunsch der Nutzerin).
+           Nachbarhäuser, Straßen, Grün nur in der Perspektive; der Pfeil daneben klappt Ort und Verschieben auf -->
+      <div class="umgebungwahl" id="umgebungwahl" hidden>
+        <div class="sonnen-zeile">
+          <button type="button" class="sonnen-mehr" id="umgebungAufklappen" aria-expanded="false" aria-controls="umgebungfeld"
+            aria-label="Ort und Lage des Hauses einstellen" title="Ort und Lage des Hauses einstellen" hidden></button>
+          <button type="button" class="umgebungknopf" id="umgebungKnopf" aria-pressed="false" aria-label="Umgebung"
+            title="Umgebung zeigen (Nachbarhäuser, Straßen, Grün aus OpenStreetMap)">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path class="hinten" d="M13.5 9.5 L17.5 6 L21.5 9.5 V17 H13.5 Z"/>
+              <path class="vorne" d="M2.5 12 L8 7.5 L13.5 12 V19.5 H2.5 Z"/>
+              <line class="boden" x1="1" y1="20.5" x2="23" y2="20.5"/>
+            </svg>
+          </button>
+        </div>
+        <div class="sonnenfeld umgebungfeld" id="umgebungfeld" hidden>
+          <form class="ortssuche" id="umgebungOrtssuche" role="search">
+            <input type="search" class="eingabe" id="umgebungSuchfeld" maxlength="120" autocomplete="off"
+              placeholder="Adresse suchen …" aria-label="Adresse suchen (Enter drücken)" title="Adresse des Grundstücks eintippen und Enter drücken">
+          </form>
+          <div class="orttreffer" id="umgebungTreffer" hidden></div>
+          <p class="umgebung-titel">Haus verschieben</p>
+          <label class="umgebung-regler" title="Haus nach Westen (links) oder Osten (rechts) schieben">
+            <span>W</span><input type="range" id="umgebungOst" min="-100" max="100" step="0.5" value="0" autocomplete="off" aria-label="Haus nach Osten verschieben (Meter)"><span>O</span>
+            <output id="umgebungOstWert">0 m</output>
+          </label>
+          <label class="umgebung-regler" title="Haus nach Süden (links) oder Norden (rechts) schieben">
+            <span>S</span><input type="range" id="umgebungNord" min="-100" max="100" step="0.5" value="0" autocomplete="off" aria-label="Haus nach Norden verschieben (Meter)"><span>N</span>
+            <output id="umgebungNordWert">0 m</output>
+          </label>
+          <p class="hinweis" id="umgebungInfo"></p>
+        </div>
       </div>
+      </div>
+      <!-- Namensnennung (Pflicht bei OpenStreetMap-Daten), sichtbar, solange die Umgebung an ist -->
+      <p class="osm-vermerk" id="osmVermerk" hidden><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap-Mitwirkende</a></p>
       <p class="legende" id="legende" hidden>Drehen: linke Maustaste · Zoomen: Mausrad · Verschieben: rechte Maustaste</p>
     </main>
   </div>

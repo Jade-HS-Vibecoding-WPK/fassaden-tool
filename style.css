@@ -328,7 +328,7 @@ select:hover, select:focus, .eingabe:hover, .eingabe:focus { border-color: var(-
 .ansicht canvas { display: block; width: 100%; height: 100%; }
 
 /* Kleine Glas-Elemente über dem 3D-Bild (hell, damit sie zum weißen Fenster passen; bewusst wenige) */
-.ansicht-glas, .ansichtwahl, .stilwahl, .sonnenknopf, .sonnen-mehr, .sonnenfeld, .legende {
+.ansicht-glas, .ansichtwahl, .stilwahl, .sonnenknopf, .umgebungknopf, .sonnen-mehr, .sonnenfeld, .legende, .osm-vermerk {
   background: rgba(255, 255, 255, .62);
   backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, .9);
@@ -479,6 +479,48 @@ select:hover, select:focus, .eingabe:hover, .eingabe:focus { border-color: var(-
 }
 .orttreffer button:hover, .orttreffer button:focus-visible { background: var(--akzent-hell); color: var(--akzent); }
 .orttreffer .hinweis a { color: inherit; }
+
+/* Umgebung aus OpenStreetMap (Sitzung 23): runder Knopf unter der Sonne, gleiche Größe; an = Dunkelblau (Akzent) */
+.umgebungwahl { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.umgebungwahl[hidden], .sonnenwahl[hidden] { display: none; }
+.umgebungknopf {
+  width: 34px; height: 34px; padding: 6px; border-radius: 50%; cursor: pointer;
+  transition: box-shadow .3s, background .3s;
+}
+.umgebungknopf svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.umgebungknopf path, .umgebungknopf line {
+  fill: none; stroke: var(--leise); stroke-width: 1.5; stroke-linejoin: round; stroke-linecap: round; transition: fill .3s, stroke .3s;
+}
+.umgebungknopf:hover path, .umgebungknopf:hover line { stroke: var(--akzent); }
+.umgebungknopf[aria-pressed="true"] { background: var(--akzent-hell); border-color: #9fb3d6; box-shadow: 0 0 0 3px rgba(31,58,104,.15); }
+.umgebungknopf[aria-pressed="true"] path, .umgebungknopf[aria-pressed="true"] line { stroke: var(--akzent); }
+.umgebungknopf[aria-pressed="true"] .vorne { fill: #fff; }
+.umgebungknopf[aria-pressed="true"] .hinten { fill: #c9d5ea; }
+/* lädt gerade: Knopf pulsiert leicht */
+.umgebungknopf.laedt { animation: umgebung-laedt 1s ease-in-out infinite alternate; }
+@keyframes umgebung-laedt { from { opacity: 1; } to { opacity: .45; } }
+.umgebung-titel { margin: 2px 0 0; color: var(--leise); }
+.umgebung-regler { display: grid; grid-template-columns: auto 1fr auto 40px; align-items: center; gap: 4px; color: var(--leise); }
+.umgebung-regler output { text-align: right; }
+/* Verschiebe-Regler schlicht (nicht wie die Uhrzeit der Sonne) */
+.sonnenfeld.umgebungfeld input[type="range"] { height: 4px; background: rgba(31,58,104,.22); }
+.sonnenfeld.umgebungfeld input[type="range"]::-webkit-slider-thumb {
+  width: 13px; height: 13px; background: var(--akzent); box-shadow: none; border: 2px solid #fff;
+}
+.sonnenfeld.umgebungfeld input[type="range"]::-moz-range-thumb {
+  width: 9px; height: 9px; background: var(--akzent); box-shadow: none; border: 2px solid #fff;
+}
+.umgebungfeld .hinweis a { color: inherit; }
+
+/* Namensnennung OpenStreetMap unten rechts im 3D-Fenster */
+.osm-vermerk {
+  position: absolute; right: 14px; bottom: 14px; margin: 0;
+  font-size: 10.5px; padding: 3px 10px; border-radius: 999px;
+}
+.osm-vermerk a { color: var(--leise); text-decoration: none; }
+/* schmales 3D-Fenster: über die Maus-Legende rücken, damit sie sich nicht überdecken */
+@media (max-width: 1300px) { .osm-vermerk { bottom: 46px; } }
+.osm-vermerk a:hover { color: var(--akzent); text-decoration: underline; }
 
 /* Maus-Legende unten links als Glas-Pille */
 .legende {

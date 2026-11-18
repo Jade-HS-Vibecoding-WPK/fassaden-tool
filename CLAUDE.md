@@ -22,7 +22,9 @@ Entsteht in der Vibecoding KI-Werkstatt (Jade Hochschule, 16.–20.11.2026). Abg
 - PDF-Schrift (Sitzung 20g): Source Sans 3 Light/Semibold als TTF in `schriften/` (SIL Open Font License, Lizenz liegt bei).
   Keine Firmenschriften (z. B. Artifakt von Autodesk) ins Repo – es ist öffentlich.
 - Ortssuche (Sitzung 16, in `app.js`): OpenStreetMap Nominatim, nur bei Enter, max. 1 Anfrage/s, Namensnennung sichtbar.
-  Einzige Stelle, an der Nutzereingaben das Gerät verlassen (steht so in der Anleitung).
+  Neben der Umgebung (Sitzung 23) die einzige Stelle, an der etwas das Gerät verlässt (steht so in der Anleitung).
+- Umgebung (Sitzung 23, `js/umgebung.js`): Overpass-API (OpenStreetMap), nur Ort + Umkreis 150 m, einmal je Ort gemerkt;
+  mehrere Server nacheinander (Hauptserver oft „at capacity“). Namensnennung im 3D-Fenster und winzig im PDF.
 - Kein Node/npm auf dem Rechner. Lokal testen mit `python -m http.server 8000` (siehe `.claude/launch.json`).
 - Git ist installiert und im Projekt eingerichtet (Zweig `main`). GitHub: https://github.com/Jade-HS-Vibecoding-WPK/fassaden-tool
   (öffentlich). Nach jedem Commit auch hochladen (`git push`), damit die Zwischenstände dort liegen.
@@ -44,6 +46,7 @@ Entsteht in der Vibecoding KI-Werkstatt (Jade Hochschule, 16.–20.11.2026). Abg
 - `js/materialien.js` – Fassadenmaterialien als selbst gezeichnete Texturen
 - `js/realistisch.js` – Darstellung „realistisch“: echte Materialien, Himmel, Spiegelung
 - `js/stile.js` – Darstellungen „Aquarell“ (mit Abendlicht bei tiefer Sonne) und „Bleistift“: übermalt das Bild im Zeichenstil
+- `js/umgebung.js` – Umgebung aus OpenStreetMap: Nachbarhäuser als Klötze, Straßen, Grün auf runder Platte (nur Perspektive)
 - `js/sonne.js` – Sonnenstand aus Datum, deutscher Uhrzeit und Koordinaten (Schatten zeichnet `szene.js`)
 - `js/pdf.js` – PDF A3 quer (1–4 Varianten, Ansichten maßstäblich, ohne Schrift), direkt als Datei gespeichert
 
@@ -51,6 +54,9 @@ Entsteht in der Vibecoding KI-Werkstatt (Jade Hochschule, 16.–20.11.2026). Abg
 - Kein Beispielhaus: Die App ist fürs Studium, man lädt immer den eigenen Entwurf als einfache IFC hoch.
 - PDF-Export des Variantenvergleichs ist Must.
 - PDF ohne Schrift (ab Sitzung 20c): nur Bild-Kennzeichen und Maßstab, Kennwerte-Tabelle nur wenn angekreuzt.
+  Ausnahme (Sitzung 23): „Umgebung © OpenStreetMap-Mitwirkende“ winzig unten, nur wenn eine Variante Umgebung zeigt.
+- Umgebung nur in der Perspektive; Ansichten N/O/S/W immer ohne Nachbarn. Verschieben bewegt in Wahrheit die Umgebung,
+  das Haus bleibt (Norden = Plan-oben, kein Drehen).
   Ansichten maßstäblich (1:50/1:100/1:200/1:500 wählbar), Perspektive ohne Maßstab.
 - Außenwand = IFC-Eigenschaft „IsExternal“ ist nicht „nein“ UND die Wand liegt am Gebäuderand (Sichtprüfung),
   weil Revit „IsExternal“ oft bei allen Wänden auf „ja“ setzt. Korrektur per Klick.

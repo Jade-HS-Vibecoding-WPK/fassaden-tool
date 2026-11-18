@@ -4,6 +4,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { realistischesMaterial, himmelHintergrund, himmelUmgebung } from './realistisch.js?v=25f';
 import { MATERIAL } from './darstellung.js?v=19';
 import { Nachbearbeitung } from './stile.js?v=14';
+import { umgebungLegen, hausFreistellen } from './umgebung.js?v=4';
 
 // Gemalte Darstellungen (Sitzung 19d): Zeichenstil wird nachträglich übermalt (stile.js)
 const GEMALT = ['aquarell', 'bleistift'];
@@ -38,6 +39,8 @@ export class Szene {
     // Schatten hängen nicht vom Blick ab: nur neu berechnen, wenn sich Sonne oder Bauteile ändern (spart viel Rechenzeit)
     this.renderer.shadowMap.autoUpdate = false;
     this.schattenFingerabdruck = null;
+    // Umgebung (Sitzung 23): runder Rand der Modellplatte über Schnittebenen
+    this.renderer.localClippingEnabled = true;
     behaelter.prepend(this.renderer.domElement);
 
     this.szene = new THREE.Scene();
@@ -77,6 +80,9 @@ export class Szene {
     this.stil = 'zeichnung';
 
     this.modell = null;
+    // Umgebung aus OpenStreetMap (Sitzung 23): Gruppe aus umgebung.js oder null; nur in der Perspektive zu sehen
+    this.nachbarschaft = null;
+    this.nachbarschaftVersteckt = false; // true, solange im 3D-Fenster eine Ansicht N/O/S/W eingestellt ist
     this.mausAnklickenEinrichten();
 
     // Größe anpassen, wenn sich das Fenster ändert
@@ -85,6 +91,7 @@ export class Szene {
 
     this.renderer.setAnimationLoop(() => {
       this.steuerung.update();
+      if (this.nachbarschaft) this.nachbarschaft.visible = !this.nachbarschaftVersteckt;
       if (this.sonneScheint()) this.schattenBauteileMarkieren();
       this.zeichnen(this.kamera);
     });
@@ -271,6 +278,7 @@ export class Szene {
       if (teil.isMesh) { netze.push(teil, teil.material); teil.material = realistischesMaterial(teil.material); }
       else if (teil.isLineSegments && teil.visible) { linien.push(teil); teil.visible = false; }
     });
+    this.nachbarschaft?.traverse((teil) => { if (teil.isLineSegments && teil.visible) { linien.push(teil); teil.visible = false; } });
     if (mitHimmel) this.szene.background = this.himmel;
     this.szene.environment = this.umgebung;
     // Sonne tiefer und von Südwesten: Südseite hell, Ostseite im Schatten (deutliche Licht- und Schattenseiten).
@@ -501,7 +509,7 @@ export class Szene {
     const richtung = new THREE.Vector3(1, 0.7, 1).normalize();
     this.kamera.position.copy(mitte).addScaledVector(richtung, abstand);
     this.kamera.near = abstand / 100;
-    this.kamera.far = abstand * 10;
+    this.kamera.far = Math.max(abstand * 10, 1500); // weit genug für die Umgebung (Sitzung 23)
     this.kamera.updateProjectionMatrix();
     this.steuerung.target.copy(mitte);
     this.steuerung.update();
@@ -552,7 +560,7 @@ export class Szene {
       kamera.position.copy(ziel).addScaledVector(richtung, abstand);
       kamera.lookAt(ziel);
       kamera.near = abstand / 100;
-      kamera.far = abstand * 10;
+      kamera.far = Math.max(abstand * 10, 1500);
       kamera.updateProjectionMatrix();
       kamera.updateMatrixWorld();
     };
@@ -600,6 +608,33 @@ export class Szene {
       this.schattenBoden.visible = false;
       this.renderer.shadowMap.needsUpdate = true;
     }
+  }
+
+  // ---------- Umgebung aus OpenStreetMap (Sitzung 23) ----------
+
+  // gruppe aus umgebungBauen (umgebung.js) zeigen oder null = keine Umgebung.
+  // ost/nord: um so viele Meter steht das Haus östlich/nördlich vom gesuchten Ort.
+  umgebungSetzen(gruppe, ost = 0, nord = 0) {
+    if (this.nachbarschaft && this.nachbarschaft !== gruppe) this.szene.remove(this.nachbarschaft);
+    this.nachbarschaft = gruppe;
+    if (gruppe) {
+      this.szene.add(gruppe);
+      this.umgebungVerschieben(ost, nord);
+    }
+  }
+
+  // Haus auf dem Grundstück verschieben – in Wahrheit wandert die Umgebung, das Haus bleibt, wo es ist
+  // (so bleiben Ansichten, Kamera und Maße unberührt). Nachbarhäuser unter dem eigenen Haus werden ausgeblendet.
+  umgebungVerschieben(ost, nord) {
+    if (!this.nachbarschaft || !this.modell) return;
+    const box = this.gebaeudeBox();
+    const mitte = box.getCenter(new THREE.Vector3());
+    // Ort in der Szene: Hausmitte minus Verschiebung (Norden = -z); Platte knapp unter der Unterkante des Hauses
+    const x = mitte.x - ost, z = mitte.z + nord;
+    umgebungLegen(this.nachbarschaft, x, box.min.y - 0.03, z);
+    hausFreistellen(this.nachbarschaft, {
+      minX: box.min.x - x, maxX: box.max.x - x, minN: -(box.max.z - z), maxN: -(box.min.z - z),
+    });
   }
 
   // 5 Bilder aus fester Kamera, unabhängig von der aktuellen Blickrichtung:
@@ -672,6 +707,8 @@ export class Szene {
       const kameras = { perspektive, ...Object.fromEntries(Object.entries(ANSICHTEN).map(([r, v]) => [r, ansichtKamera(v, r)])) };
       for (const [name, kamera] of Object.entries(kameras)) {
         if (name !== 'perspektive') this.lichtVonVorneSetzen(kamera, mitte, groesse.length());
+        // Umgebung nur in der Perspektive; die Ansichten bleiben frei, sonst verdecken Nachbarn die Fassade
+        if (this.nachbarschaft) this.nachbarschaft.visible = name === 'perspektive';
         // in der Darstellung, die gerade im 3D-Fenster eingestellt ist (Sitzung 19b), Hintergrund immer weiß
         this.zeichnen(kamera, true);
         // Bild sofort abholen, solange es noch auf der Zeichenfläche liegt
@@ -686,6 +723,7 @@ export class Szene {
       this.sonne.updateMatrixWorld();
       this.sonne.target.updateMatrixWorld();
       this.schattenBoden.visible = this.sonneScheint();
+      if (this.nachbarschaft) this.nachbarschaft.visible = !this.nachbarschaftVersteckt;
       this.schattenFingerabdruck = null; // Schatten sicher neu berechnen
       if (this.modell) this.schattenBauteileMarkieren();
       this.renderer.setClearColor(this.HINTERGRUND);

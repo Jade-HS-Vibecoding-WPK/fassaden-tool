@@ -339,6 +339,12 @@ function seiteZeichnen(doc, varianten, { bilder, kennzeichen, blickText, masssta
   const fussY = BLATT_H - RAND + 2;
   doc.setFont(SCHRIFT, 'normal').setFontSize(9).setTextColor(...TEXT);
   doc.text(`Ansichten M 1:${massstab}`, BLATT_B - RAND, fussY, { align: 'right' });
+  // Umgebung aus OpenStreetMap (Sitzung 23): Namensnennung ist Pflicht – einzige Schrift-Ausnahme, winzig, links vom Maßstab
+  if (varianten.some((v) => v.umgebung)) {
+    const massstabBreite = doc.getTextWidth(`Ansichten M 1:${massstab}`);
+    doc.setFontSize(6).setTextColor(...LEISE);
+    doc.text('Umgebung © OpenStreetMap-Mitwirkende', BLATT_B - RAND - massstabBreite - 8, fussY, { align: 'right' });
+  }
   if (mitKennwerte) {
     doc.setFontSize(7).setTextColor(...LEISE);
     doc.text('Flächen in m², Rohbaumaße. Fassade = Außenseite der Außenwände mit allen Öffnungen. '
