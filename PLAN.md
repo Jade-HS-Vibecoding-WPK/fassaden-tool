@@ -253,8 +253,14 @@ Erledigte Sitzungen abhaken, die oberste offene Zeile ist dran (die Nummern blei
       Nur der Name wird bei schmalem Fenster gekürzt, der Pfeil bleibt sichtbar.
       Getestet (Test-ArchiCAD.ifc): 3 Reiter, Start auf Fassade, Pfeil auf/zu, zurück zu Fenster, keine neuen Fehler.
       Probleme: keine. Versionsnummern: `app.js?v=57`, `style.css?v=33`.
-- [ ] 23e. Einzelnes Fenster zurücksetzen (Wunsch der Nutzerin 18.11.): Bei „Einzelne Fenster“ das angewählte Fenster
+- [x] 23e. Einzelnes Fenster zurücksetzen (Wunsch der Nutzerin 18.11.) (18.11.): Bei „Einzelne Fenster“ das angewählte Fenster
       wieder auf 100 % (Maße aus der IFC) stellen können.
+      **Gebaut:** Neben „wie die Seite“ der Knopf „wie in der IFC“: setzt jedes gewählte Fenster auf seine eigene Größe
+      aus der IFC (als eigenes Maß in cm, gilt also auch, wenn die Seite z. B. auf 50 % steht; wird mit der Variante
+      gespeichert). Knopf nur sichtbar, wenn ein gewähltes Fenster gerade nicht seine IFC-Größe hat (`ifcMass`, `nichtWieIfc` in `app.js`).
+      Getestet (Test-ArchiCAD.ifc): Breite 60 cm → Knopf erscheint; Seiten auf 50 % → Fenster 50 × 50 cm, „wie in der IFC“ →
+      100 × 100 cm, Knopf verschwindet. Keine neuen Fehler. Probleme: keine.
+      Versionsnummern: `app.js?v=58`, `style.css?v=34`.
 - [ ] 23f. PDF-Blattgröße wählbar (Wunsch der Nutzerin 18.11.): A4, A3, A2, A1, A0 (bisher fest A3 quer).
 - [ ] 23g. Eventuell weitere Darstellungsstile neben Zeichnung, Realistisch, Aquarell, Bleistift
       (Wunsch der Nutzerin 18.11., „eventuell“ – Ideen vorher mit ihr abstimmen).

@@ -167,6 +167,7 @@ h2.zweiter { font-size: 15px; margin: 26px 0 8px; padding-top: 18px; border-top:
   cursor: pointer; text-decoration: underline; text-underline-offset: 3px;
 }
 .zaehler { font-size: 13px; margin: 0; }
+#fensterEinzelWieSeite { margin-right: 14px; } /* Abstand zu „wie in der IFC“ (Sitzung 23e) */
 
 /* Schalter „Alle Seiten gleich“ */
 .schalter { display: flex; gap: 8px; align-items: center; font-size: 13px; margin-bottom: 14px; cursor: pointer; }

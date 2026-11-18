@@ -623,6 +623,22 @@ function fensterMass(oe) {
   return { breite: zentimeter(soll.breite), hoehe: zentimeter(soll.hoehe) };
 }
 
+// Größe eines Fensters in cm, so wie es in der IFC-Datei steht (in der Außenwand, in der es sitzt)
+function ifcMass(oe) {
+  const wand = oe.userData.waende.find((w) => w.userData.aussen);
+  const r0 = wand && oe.userData.rechteck.get(wand);
+  if (!r0) return null;
+  return { breite: zentimeter(r0.u1 - r0.u0), hoehe: zentimeter(r0.v1 - r0.v0) };
+}
+
+// Hat das Fenster gerade nicht seine Größe aus der IFC?
+function nichtWieIfc(oe) {
+  const ifc = ifcMass(oe);
+  if (!ifc) return false;
+  const ist = fensterMass(oe);
+  return !oe.userData.aktuell || ist.breite !== ifc.breite || ist.hoehe !== ifc.hoehe;
+}
+
 function fensterEinzelwahlAnzeigen() {
   $('fensterEinzelwahl').hidden = !einzelneFenster;
   const anzahl = fensterAuswahl.size;
@@ -652,6 +668,7 @@ function fensterEinzelwahlAnzeigen() {
     'Größer passt hier nicht: 10 cm Abstand zum Wandrand und zu den Nachbaröffnungen bleiben frei.';
 
   $('fensterEinzelWieSeite').hidden = ![...fensterAuswahl].some((oe) => massJeFenster.has(oe.userData.expressID));
+  $('fensterEinzelWieIfc').hidden = ![...fensterAuswahl].some(nichtWieIfc);
 
   const anzahlEigene = oeffnungen.filter((oe) => massJeFenster.has(oe.userData.expressID)).length;
   $('fensterEinzelZuruecksetzen').hidden = anzahlEigene === 0;
@@ -680,6 +697,15 @@ for (const [mass, feldId] of [['breite', 'fensterEinzelBreite'], ['hoehe', 'fens
 
 $('fensterEinzelWieSeite').addEventListener('click', () => {
   for (const oe of fensterAuswahl) massJeFenster.delete(oe.userData.expressID);
+  fensterAktualisieren();
+});
+
+// Gewählte Fenster auf ihre Größe aus der IFC (100 %) stellen – jedes auf seine eigene, unabhängig von der Seite
+$('fensterEinzelWieIfc').addEventListener('click', () => {
+  for (const oe of fensterAuswahl) {
+    const ifc = ifcMass(oe);
+    if (ifc) massJeFenster.set(oe.userData.expressID, ifc);
+  }
   fensterAktualisieren();
 });
 

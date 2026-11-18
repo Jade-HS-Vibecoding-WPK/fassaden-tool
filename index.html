@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Fassaden-Tool</title>
-  <link rel="stylesheet" href="style.css?v=33">
+  <link rel="stylesheet" href="style.css?v=34">
   <!-- Bibliotheken aus dem Internet: three.js (3D) und web-ifc (IFC lesen) -->
   <script type="importmap">
   {
@@ -16,7 +16,7 @@
   }
   </script>
   <!-- ?v=… erzwingt nach Änderungen die neue Fassung (sonst hält der Browser alte Dateien fest) -->
-  <script type="module" src="js/app.js?v=57"></script>
+  <script type="module" src="js/app.js?v=58"></script>
 </head>
 <body>
   <!-- Hintergrund: dunkler Farbverlauf mit weichen Farbflecken (Sitzung 15b, Glassmorphism) -->
@@ -107,6 +107,7 @@
             </div>
             <p class="hinweis" id="fensterEinzelGrenze" hidden></p>
             <button class="textknopf" id="fensterEinzelWieSeite" hidden>wie die Seite</button>
+            <button class="textknopf" id="fensterEinzelWieIfc" hidden>wie in der IFC</button>
           </div>
           <details class="erklaerung"><summary class="nur-ecke" title="Erklärung aufklappen" aria-label="Erklärung"></summary>
             <p class="hinweis">Fenster anklicken, Umschalt + Klick für mehrere. Maße in cm, mit Eingabetaste bestätigen.</p>
