@@ -41,11 +41,13 @@ Entsteht in der Vibecoding KI-Werkstatt (Jade Hochschule, 16.–20.11.2026). Abg
 - `js/realistisch.js` – Darstellung „realistisch“: echte Materialien, Himmel, Spiegelung
 - `js/stile.js` – Darstellungen „Aquarell“ (mit Abendlicht bei tiefer Sonne) und „Bleistift“: übermalt das Bild im Zeichenstil
 - `js/sonne.js` – Sonnenstand aus Datum, deutscher Uhrzeit und Koordinaten (Schatten zeichnet `szene.js`)
-- `js/pdf.js` – PDF-Übersichtsseite A3 quer (1–4 Varianten), direkt als Datei gespeichert
+- `js/pdf.js` – PDF A3 quer (1–4 Varianten, Ansichten maßstäblich, ohne Schrift), direkt als Datei gespeichert
 
 # Entscheidungen
 - Kein Beispielhaus: Die App ist fürs Studium, man lädt immer den eigenen Entwurf als einfache IFC hoch.
 - PDF-Export des Variantenvergleichs ist Must.
+- PDF ohne Schrift (ab Sitzung 20c): nur Bild-Kennzeichen und Maßstab, Kennwerte-Tabelle nur wenn angekreuzt.
+  Ansichten maßstäblich (1:50/1:100/1:200/1:500 wählbar), Perspektive ohne Maßstab.
 - Außenwand = IFC-Eigenschaft „IsExternal“ ist nicht „nein“ UND die Wand liegt am Gebäuderand (Sichtprüfung),
   weil Revit „IsExternal“ oft bei allen Wänden auf „ja“ setzt. Korrektur per Klick.
 - Varianten gehören zur IFC-Datei (Dateiname + Anzahl Wände); die Liste zeigt nur die des geladenen Modells.

@@ -130,6 +130,13 @@ Erledigte Sitzungen abhaken, die oberste offene Zeile ist dran (die Nummern blei
 - [x] 20. Ab ca. 10:30: Test mit eigener IFC, Fehler beheben (18.11.)
       (18.11.: Nutzerin testet laufend mit eigenen Dateien, alles funktioniert; dabei kam 20b auf)
 - [x] 20b. Licht hinter Pfosten-Riegel im Aquarell (Wunsch der Nutzerin 18.11.) (18.11.)
+- [x] 20c. PDF maßstäblich und ohne Schrift (Wunsch der Nutzerin 18.11.) (18.11.)
+- [x] 20d. Fehler: Varianten lassen sich nicht löschen (gemeldet 18.11.) (18.11.). Ursache vermutlich: „Löschen“ fragt mit einem
+      Browser-Fenster (`confirm`) nach, das im App-Browser von Claude nicht erscheint und dann als „Nein“ zählt.
+      Vorschlag: Nachfrage direkt im Knopf – 1. Klick macht „Wirklich löschen?“ (rot, ein paar Sekunden), 2. Klick löscht.
+- [ ] 20e. Beschriftung „Ansicht Nord“ statt „N“ (Wunsch der Nutzerin 18.11.): im PDF und im Variantenvergleich unter jeder
+      Ansicht „Ansicht Nord / Nordost / Ost …“ – die Richtung, in die die Fassade wirklich zeigt, in 8 Stufen (nicht mehr „N (NNW)“).
+      Genau dazwischen (z. B. NNW) → zur Hauptrichtung runden („Ansicht Nord“). Technisch: `ansichtKennzeichen` in `app.js`.
 - [ ] 21. Auf GitHub hochladen und über GitHub Pages veröffentlichen → **12 Uhr Freeze** ← **als Nächstes**
 - [ ] 22. Nachmittag: README (Poster macht die Nutzerin selbst nach Moodle-Vorlage)
 
@@ -737,6 +744,43 @@ Mit der Nutzerin als Testseite entworfen und abgestimmt („erstmal so festhalte
   kein Unterschied. Nur auf diesem Rechner gemessen; über dem 3D-Bild nur wenige, kleine Glas-Elemente verwenden.
 
 ## Nächste Schritte
+- **Sitzung 20d (erledigt 18.11.):** Löschen fragt jetzt im Knopf nach statt mit `confirm()`: 1. Klick → rotes „Wirklich löschen?“,
+  2. Klick innerhalb von 4 s löscht, sonst springt der Knopf zurück. Ein Doppelklick löscht nicht (2. Klick zählt erst ab 0,4 s).
+  Nur `app.js` (v=48b) und `style.css` (v=29b). Getestet im App-Browser: Nachfrage erscheint, Doppelklick löscht nicht,
+  2. Klick löscht („Test A“, „Test B“ gelöscht), nach 4 s zurück zu „Löschen“. Keine neuen Fehler in der Konsole.
+  Probleme: keine. (In der Konsole standen nur alte, erwartete Hinweise von PDF-Versuchen mit Varianten von vor 20c.)
+- **Sitzung 20c (erledigt 18.11.):** Umgesetzt wie unten geplant. `szene.bilderAufnehmen` liefert jetzt `{ bilder, masse }`
+  (je Ansicht Bildgröße und Gebäudelage in Metern), `app.js` speichert `masse` mit der Variante. `pdf.js` schneidet jede Ansicht
+  aufs Gebäude zu, setzt sie in mm (Meter × 1000 ÷ Maßstab) auf eine gemeinsame Unterkante mit dünner Geländelinie, ohne Rahmen.
+  Auswahl „Maßstab“ (1:50/1:100/1:200/1:500, Start 1:100) ersetzt das Feld „Standort fürs PDF“. Unten rechts „Ansichten M 1:…“.
+  **Zusätzlich (beim Testen nötig geworden):** Die App probiert mehrere Anordnungen und nimmt die mit der größten Perspektive –
+  Varianten nebeneinander (Spalten) oder **untereinander (Zeilen)**; bei 1 Variante steht die Kennwerte-Tabelle neben der
+  Perspektive, rechts oder darunter. Hinweis in der Anleitung: beim Drucken „Tatsächliche Größe“.
+  Versionen: `szene.js?v=44`, `pdf.js?v=26d`, `app.js?v=47`, `style.css?v=28`.
+  Getestet mit Test-Neu.ifc (Südseite 20,0 m): im PDF 1:100 genau 200 mm (+1 mm Bildrand) ✓. 1 Variante 1:100 mit Kennwerten ✓;
+  2 Varianten 1:200 mit Einzelseiten (3 Seiten) ✓; 3 Varianten 1:200 untereinander ✓; alte Variante → Hinweis „bitte neu speichern“ ✓;
+  2 Varianten 1:100 → Hinweis „bitte 1:200 wählen“ ✓; echter Knopf in der App ✓. Keine Fehler in der Konsole.
+  Probleme/Grenzen: 4 Varianten eines 20-m-Hauses passen erst in 1:500 (A3 ist dafür zu klein). Das PDF wurde über eine
+  nachgezeichnete Vorschau geprüft, nicht in einem PDF-Programm geöffnet – die Nutzerin sollte einmal ein PDF öffnen und nachmessen.
+  Beim Testen sind 4 Test-Varianten „Test A–D“ zu Test-Neu.ifc im Browser entstanden (dürfen gelöscht werden).
+- **Sitzung 20c (Planung, Wunsch der Nutzerin 18.11.):** PDF maßstäblich und ohne Schrift. Geklärt mit der Nutzerin:
+  - **Maßstab fest wählbar** beim PDF: Auswahlfeld 1:50 / 1:100 / 1:200 / 1:500 (Start 1:100). Kein „automatisch“.
+    Alle Ansichten N/O/S/W **aller Varianten auf dem Blatt** im selben Maßstab, damit man sie vergleichen kann.
+    Passt der Maßstab nicht aufs Blatt, wird kein PDF gemacht, sondern ein Hinweis: „Passt in 1:100 nicht aufs Blatt, bitte 1:200 wählen“.
+  - **Die Perspektive bleibt ohne Maßstab** (geht bei einer Perspektive nicht) und füllt den übrigen Platz.
+  - **Schrift auf den Blättern nur noch:** die Kennzeichen der Bilder (N/O/S/W bzw. „Perspektive aus Südosten, 15°“) und
+    einmal pro Blatt der Maßstab („M 1:100“). Weg fallen: Titel, Modell, Standort, Stand, „Fassaden-Tool“, Variantennamen,
+    Datum, Schatten-Zeile und Fußzeile – auf Übersicht und Einzelseiten. Das Feld „Standort fürs PDF“ verschwindet damit.
+  - **Kennwerte angekreuzt:** dann zusätzlich nur die Kennwerte-Tabelle mit ihrer kurzen Erklärung (m², Anteil = Fenster ÷ Fassade).
+  - Vorschlag zur Anordnung: Ansichten einer Variante stehen auf einer gemeinsamen Unterkante (wie in einer Bauzeichnung),
+    ohne Rahmen ums Bild (der Rahmen zeigte sonst nur den weißen Bildrand, nicht das Gebäude).
+  - Technisch: Beim Speichern einer Variante merkt sich `szene.js` (`bilderAufnehmen`), wie viele Meter jedes Ansichtsbild breit
+    und hoch ist und wo die Gebäudeunterkante liegt; `app.js` speichert das mit der Variante; `pdf.js` setzt die Bilder danach
+    in mm aufs Blatt (Meter × 1000 ÷ Maßstab). Ältere Varianten kennen diese Maße nicht → Hinweis „bitte neu speichern“.
+    `index.html` (Auswahlfeld), Versionsnummern erhöhen.
+  - Hinweis für die Anleitung: beim Drucken „Tatsächliche Größe“ wählen, nicht „An Seite anpassen“, sonst stimmt der Maßstab nicht.
+  - Testen: im PDF eine bekannte Wandlänge nachmessen (z. B. 10 m in 1:100 = 10 cm), mit 1 und 4 Varianten, mit Einzelseiten,
+    mit und ohne Kennwerte, alter Variante (Hinweis) und zu großem Maßstab (Hinweis).
 - **Sitzung 20 (erledigt 18.11.):** Die Nutzerin hat laufend mit eigenen IFC-Dateien getestet, alles funktioniert. Keine Fehler zu beheben.
 - **Sitzung 20b (erledigt 18.11.):** Umgesetzt wie unten geplant. Das Glas der Pfosten-Riegel-Wand hat Texturkoordinaten 0–1 über die
   ganze Wand und die Markierung `raumLicht` (`fassade.js`). Im Aquarell malt `raumLichtMalen()` (`szene.js`) einen kleinen Verlauf

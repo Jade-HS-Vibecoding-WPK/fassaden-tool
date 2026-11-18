@@ -1,5 +1,5 @@
 // Bedienoberfläche: Datei wählen oder hineinziehen, Modell anzeigen, Fassade gestalten
-import { Szene } from './szene.js?v=43c';
+import { Szene } from './szene.js?v=44';
 import { ifcLaden } from './ifc.js?v=19';
 import { aussenwaendeErkennen, wandFaerben, oeffnungenZuordnen, fensterAnpassen, stuetzenVorbereiten, stuetzeFaerben, dachVorbereiten, dachFaerben, kennwerteBerechnen, hauptrichtungBestimmen, fensterFaerben, anbauteileZuordnen } from './fassade.js?v=25g';
 import {
@@ -7,7 +7,7 @@ import {
   farbtoeneVon, farbtonVon, farbtonSetzen, farbtoeneSammeln, farbtoeneUebernehmen, materialText,
 } from './materialien.js?v=25f';
 import { variantenLesen, varianteSpeichern, varianteLoeschen } from './varianten.js';
-import { pdfErstellen, pdfDateiname } from './pdf.js?v=25d';
+import { pdfErstellen, pdfDateiname } from './pdf.js?v=26d';
 import { START_SONNE, sonnenstand, himmelsrichtung, uhrzeitText, ortMitName, zeitText, weltzeit } from './sonne.js?v=24';
 
 const $ = (id) => document.getElementById(id);
@@ -807,7 +807,7 @@ $('varianteSpeichern').addEventListener('click', async () => {
     fensterAuswahl.clear();
     fensterAktualisieren();
     const drehung = hauptrichtungBestimmen(waende);
-    const bilder = await szene.bilderAufnehmen(undefined, undefined, drehung, blick);
+    const { bilder, masse } = await szene.bilderAufnehmen(undefined, undefined, drehung, blick);
     await varianteSpeichern({
       modell: modellKennung, name, datum: Date.now(),
       einstellungen: einstellungenSammeln(), kennwerte: kennwerteMitGesamt(), bilder, drehung, blick: { ...blick },
@@ -815,6 +815,8 @@ $('varianteSpeichern').addEventListener('click', async () => {
       sonne: sonneAn ? { ...sonne, ...sonnenstand(sonne) } : null,
       // Darstellung der Bilder (Sitzung 19b): wie gerade im 3D-Fenster; ältere Varianten haben keinen Eintrag = Zeichnung
       darstellung: szene.stil,
+      // Maße der Ansichtsbilder in Metern (Sitzung 20c), damit das PDF sie maßstäblich setzen kann; ältere Varianten haben keine
+      masse,
     });
     $('variantenName').value = '';
     variantenStatus(`„${name}“ ist gespeichert.`);
@@ -930,8 +932,25 @@ async function variantenAnzeigen() {
     const loeschen = document.createElement('button');
     loeschen.className = 'textknopf';
     loeschen.textContent = 'Löschen';
+    // Nachfrage direkt im Knopf (Sitzung 20d): 1. Klick → „Wirklich löschen?“, 2. Klick innerhalb von 4 s löscht.
+    // (Ein Browser-Fenster mit confirm() erscheint im App-Browser von Claude nicht und zählte dort als „Nein“.)
+    // Ein Doppelklick löscht nicht: der 2. Klick zählt erst ab 0,4 s nach dem ersten.
+    let nachfrageZeitgeber = null, nachfrageSeit = 0;
     loeschen.addEventListener('click', async () => {
-      if (!confirm(`Variante „${variante.name}“ wirklich löschen? Das lässt sich nicht rückgängig machen.`)) return;
+      if (nachfrageZeitgeber && Date.now() - nachfrageSeit < 400) return;
+      if (!nachfrageZeitgeber) {
+        nachfrageSeit = Date.now();
+        loeschen.textContent = 'Wirklich löschen?';
+        loeschen.classList.add('nachfrage');
+        nachfrageZeitgeber = setTimeout(() => {
+          nachfrageZeitgeber = null;
+          loeschen.textContent = 'Löschen';
+          loeschen.classList.remove('nachfrage');
+        }, 4000);
+        return;
+      }
+      clearTimeout(nachfrageZeitgeber);
+      loeschen.disabled = true;
       await varianteLoeschen(variante.id);
       variantenStatus(`„${variante.name}“ ist gelöscht.`);
       await variantenAnzeigen();
@@ -957,7 +976,7 @@ async function variantenAnzeigen() {
   vergleichswahlAnzeigen();
 }
 
-// Hinweis, Standortfeld und Knöpfe „Vergleichen“ / „Als PDF speichern“ unter der Liste;
+// Hinweis, PDF-Einstellungen und Knöpfe „Vergleichen“ / „Als PDF speichern“ unter der Liste;
 // ab 4 Kreuzen sind die übrigen Kästchen gesperrt
 function vergleichswahlAnzeigen() {
   $('vergleichswahl').hidden = gespeicherteVarianten.length < 1;
@@ -996,7 +1015,8 @@ async function pdfSpeichern(knopf) {
   knopf.textContent = 'PDF wird erstellt …';
   try {
     const doc = await pdfErstellen({
-      varianten, modellName, standort: $('standort').value.trim(), kennzeichen: ansichtKennzeichen, blickText, sonnenText,
+      varianten, modellName, kennzeichen: ansichtKennzeichen, blickText,
+      massstab: Number($('pdfMassstab').value),
       mitKennwerte: $('pdfKennwerte').checked,
       einzelseiten: $('pdfEinzelseiten').checked,
     });
@@ -1528,7 +1548,7 @@ sonneAnzeigen();
 
 // ---------- Ortssuche (Sitzung 16) ----------
 // Suchfeld im Sonnen-Feld: Enter fragt OpenStreetMap (Nominatim) nach bis zu 5 Treffern.
-// Klick auf einen Treffer setzt Breite/Länge der Sonne und füllt „Standort fürs PDF“.
+// Klick auf einen Treffer setzt Breite/Länge der Sonne.
 // Regeln von Nominatim: höchstens 1 Anfrage pro Sekunde, keine Suche bei jedem Buchstaben, Namensnennung zeigen.
 let letzteOrtssuche = 0;
 
@@ -1590,7 +1610,6 @@ $('ortssuche').addEventListener('submit', async (ereignis) => {
       sonne.breite = Math.round(Number(t.lat) * 100) / 100;
       sonne.laenge = Math.round(Number(t.lon) * 100) / 100;
       sonne.ortName = kurzerOrtsname(t);
-      $('standort').value = sonne.ortName; // derselbe Ort steht auch im Kopf des PDF (dort frei änderbar)
       $('ortSuchfeld').value = sonne.ortName;
       ortTrefferZeigen([]);
       sonneAnzeigen();

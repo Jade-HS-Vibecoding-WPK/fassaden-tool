@@ -585,7 +585,8 @@ export class Szene {
   // Perspektive (eingestellter Blick, s. blickRichtung) und die Ansichten Nord/Ost/Süd/West als Parallelprojektion.
   // drehung: um wie viel Grad das Gebäude im Plan gedreht ist (im Uhrzeigersinn positiv).
   // Die Kameras drehen sich mit, damit die Ansichten gerade auf die Fassade schauen.
-  // Liefert { perspektive, N, O, S, W } als JPEG-Bilder (Blob).
+  // Liefert { perspektive, N, O, S, W } als JPEG-Bilder (Blob) und masse (Sitzung 20c): je Ansicht, wie viele Meter
+  // das Bild breit und hoch ist und wo das Gebäude darin liegt (Meter ab linkem und unterem Bildrand) – fürs maßstäbliche PDF.
   async bilderAufnehmen(breite = 1500, hoehe = 1000, drehung = 0, blick = { aus: 135, hoehe: 15 }) {
     const box = this.gebaeudeBox();
     const mitte = box.getCenter(new THREE.Vector3());
@@ -601,7 +602,8 @@ export class Szene {
     // Ansichten: Blick waagerecht und senkrecht auf die jeweilige Seite (Norden = -Z = Plan-oben),
     // um die Drehung des Gebäudes mitgedreht
     const ANSICHTEN = { N: 0, O: 90, S: 180, W: 270 }; // Himmelsrichtung in Grad, 0 = Nord, im Uhrzeigersinn
-    const ansichtKamera = (grad) => {
+    const masse = {};
+    const ansichtKamera = (grad, richtung) => {
       const rad = THREE.MathUtils.degToRad(grad + drehung);
       const tiefe = groesse.length();
       const kamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, tiefe * 3);
@@ -623,6 +625,11 @@ export class Szene {
       kamera.left = bildMitte.x - halbB; kamera.right = bildMitte.x + halbB;
       kamera.bottom = bildMitte.y - halbH; kamera.top = bildMitte.y + halbH;
       kamera.updateProjectionMatrix();
+      masse[richtung] = {
+        breite: 2 * halbB, hoehe: 2 * halbH,
+        links: bild.min.x - kamera.left, rechts: bild.max.x - kamera.left,
+        unten: bild.min.y - kamera.bottom, oben: bild.max.y - kamera.bottom,
+      };
       return kamera;
     };
 
@@ -639,7 +646,7 @@ export class Szene {
       this.renderer.shadowMap.needsUpdate = true;
     }
     try {
-      const kameras = { perspektive, ...Object.fromEntries(Object.entries(ANSICHTEN).map(([r, v]) => [r, ansichtKamera(v)])) };
+      const kameras = { perspektive, ...Object.fromEntries(Object.entries(ANSICHTEN).map(([r, v]) => [r, ansichtKamera(v, r)])) };
       for (const [name, kamera] of Object.entries(kameras)) {
         // in der Darstellung, die gerade im 3D-Fenster eingestellt ist (Sitzung 19b), Hintergrund immer weiß
         this.zeichnen(kamera, true);
@@ -652,6 +659,6 @@ export class Szene {
       this.renderer.setPixelRatio(alteDichte);
       this.renderer.setSize(alteGroesse.x, alteGroesse.y, false);
     }
-    return bilder;
+    return { bilder, masse };
   }
 }

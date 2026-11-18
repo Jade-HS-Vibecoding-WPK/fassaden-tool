@@ -282,11 +282,13 @@ select:hover, select:focus, .eingabe:hover, .eingabe:focus { border-color: var(-
 .variantenliste small { display: block; font-size: 11px; color: var(--leise); margin-top: 2px; }
 .variantenliste span { display: flex; gap: 14px; }
 .variantenliste .textknopf { margin-top: 6px; }
+.variantenliste .textknopf.nachfrage { color: #ffb4b4; font-weight: 600; white-space: nowrap; } /* „Wirklich löschen?“ (Sitzung 20d) */
 .variantenliste .ankreuzen { margin: 2px 0 0; width: 15px; height: 15px; accent-color: var(--regler); cursor: pointer; }
 .variantenliste .ankreuzen:disabled { cursor: not-allowed; }
 .vergleichswahl { border-top: 1px solid var(--linie); padding-top: 4px; }
 .vergleichswahl .pdfwahl { margin-top: 12px; }
-.vergleichswahl .pdfwahl .eingabe { margin-bottom: 10px; }
+.vergleichswahl .pdfwahl .massstabwahl { display: grid; grid-template-columns: 1fr 96px; gap: 8px; align-items: center; font-size: 13px; margin-bottom: 10px; }
+.vergleichswahl .pdfwahl .massstabwahl select { padding: 6px 8px; min-width: 0; cursor: pointer; }
 .vergleichswahl .pdfwahl .schalter { margin-bottom: 0; }
 .vergleichswahl .pdfwahl .schalter + .schalter { margin-top: 8px; }
 .textknoepfe { display: flex; gap: 18px; }
