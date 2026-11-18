@@ -922,8 +922,14 @@ function pfostenRiegelBauen(wand) {
   // Glas: eine Fläche im ganzen Umriss
   const kontur = ecken.map(([u, v]) => new THREE.Vector2(u, v));
   const glasForm = new THREE.ShapeGeometry(new THREE.Shape(kontur));
+  // Texturkoordinaten 0 (unten) bis 1 (oben) über die ganze Wand: für das Raumlicht im Aquarell (szene.js, Sitzung 20b)
+  const uv = glasForm.attributes.uv;
+  for (let i = 0; i < uv.count; i++) {
+    uv.setXY(i, (uv.getX(i) - uMin) / (uMax - uMin || 1), (uv.getY(i) - vMin) / (vMax - vMin || 1));
+  }
   const glas = new THREE.Mesh(glasForm, MATERIAL.fenster);
   glas.userData.rolle = 'glas';
+  glas.userData.raumLicht = true; // leuchtet im Aquarell als ganzer Raum, nicht wie ein einzelnes Fenster
   glas.position.z = wMitte;
   gruppe.add(glas);
 

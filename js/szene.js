@@ -142,6 +142,35 @@ export class Szene {
     return teil.userData.lichtZufall;
   }
 
+  // Raumlicht hinter einer Pfosten-Riegel-Fassade (Aquarell, Sitzung 20b): wie von einer Deckenlampe –
+  // oben ein warmer heller Schein, der nach unten ins Dunkelblau des unbeleuchteten Glases ausläuft.
+  // Zarter als ein leuchtendes Fenster. staerke 0 bis 1 (Ein- und Ausblenden), dunkel = Farbe des Glases ohne Licht.
+  // Ein kleines Verlaufsbild, über die Texturkoordinaten der Glaswand gespannt (0 unten, 1 oben, s. fassade.js)
+  raumLichtMalen(staerke, dunkel) {
+    if (!this.raumLicht) {
+      const bild = document.createElement('canvas');
+      bild.width = 4;
+      bild.height = 128;
+      const textur = new THREE.CanvasTexture(bild);
+      textur.colorSpace = THREE.SRGBColorSpace;
+      this.raumLicht = new THREE.MeshBasicMaterial({ side: THREE.DoubleSide, transparent: true, opacity: 0.95, map: textur });
+    }
+    const schluessel = `${staerke.toFixed(3)}|${dunkel.getHexString()}`;
+    if (this.raumLicht.userData.schluessel === schluessel) return; // schon so gemalt
+    this.raumLicht.userData.schluessel = schluessel;
+    const textur = this.raumLicht.map;
+    const stift = textur.image.getContext('2d');
+    const farbe = (warm, kraft) => dunkel.clone().lerp(new THREE.Color(warm), kraft * staerke).getStyle();
+    const verlauf = stift.createLinearGradient(0, 0, 0, textur.image.height); // oben → unten
+    verlauf.addColorStop(0, farbe(0xffd58a, 0.9));     // direkt unter der Decke: hell und warm
+    verlauf.addColorStop(0.25, farbe(0xf0b066, 0.55));
+    verlauf.addColorStop(0.6, farbe(0xc98a55, 0.2));
+    verlauf.addColorStop(1, farbe(0x9a6a4a, 0.04));    // unten: fast dunkel, nur ein Hauch Wärme
+    stift.fillStyle = verlauf;
+    stift.fillRect(0, 0, textur.image.width, textur.image.height);
+    textur.needsUpdate = true;
+  }
+
   // Aquarell oder Bleistift: Zeichenstil zeichnen und übermalen (stile.js).
   // Aquarell: Gläser dunkler; am Abend Licht kühler, Fenster leuchten warm; in der Nacht alles dunkler, Lichter gehen aus.
   // Gilt nur für dieses eine Bild, danach alles zurück.
@@ -184,9 +213,21 @@ export class Szene {
       this.fensterLicht.opacity = THREE.MathUtils.lerp(0.75, 1, leuchten);
       this.fensterDunkel.opacity = THREE.MathUtils.lerp(0.75, 1, abend);
       const anteil = this.lichterAnteil();
+      // Pfosten-Riegel: die ganze Glaswand ist ein Raum dahinter (Sitzung 20b). Er geht mit den ersten Fenstern an
+      // (voll an, wenn ein Viertel der Fenster leuchtet) und mit den letzten aus, weich ein- und ausgeblendet.
+      const raum = THREE.MathUtils.clamp(anteil / 0.25, 0, 1);
+      if (raum > 0) this.raumLichtMalen(raum, this.fensterDunkel.color);
+      // Glaswand leuchtet auch, wenn sie ausgewählt ist oder die Maus darüber steht (die Auswahl zeigen dann die Profile)
+      const glaswandGlas = [MATERIAL.fenster, MATERIAL.fensterHover, MATERIAL.fensterAuswahl];
       this.modell.traverse((teil) => {
-        if (!teil.isMesh || teil.material !== MATERIAL.fenster) return;
-        getauscht.push(teil);
+        if (!teil.isMesh) return;
+        if (teil.userData.raumLicht && glaswandGlas.includes(teil.material)) {
+          getauscht.push([teil, teil.material]);
+          teil.material = raum > 0 ? this.raumLicht : this.fensterDunkel;
+          return;
+        }
+        if (teil.material !== MATERIAL.fenster) return;
+        getauscht.push([teil, teil.material]);
         // ohne Licht: Glas mit Licht und Schatten; mit Licht: leuchtet selbst
         teil.material = Szene.fensterZufall(teil) < anteil ? this.fensterLicht : this.fensterDunkel;
       });
@@ -204,7 +245,7 @@ export class Szene {
         bodenHoehe: this.gebaeudeBox().min.y + 1.5, // tiefe waagerechte Flächen = Boden (Aquarell: Wiese)
       });
     } finally {
-      for (const teil of getauscht) teil.material = MATERIAL.fenster;
+      for (const [teil, vorher] of getauscht) teil.material = vorher;
       this.grundlicht.color.set(0xffffff);
       this.grundlicht.groundColor.set(0xdddddd);
       this.grundlicht.intensity = grundKraft;

@@ -127,8 +127,10 @@ Erledigte Sitzungen abhaken, die oberste offene Zeile ist dran (die Nummern blei
 - [x] 19c. Sonne startet mit heutigem Datum und aktueller Uhrzeit (Wunsch der Nutzerin 18.11.) (18.11.)
 - [x] 19d. Weitere Zeichenstile neben „Zeichnung“: Aquarell und Bleistiftzeichnung (Wunsch der Nutzerin 18.11.) (18.11.)
 - [x] 19e. Sonnenverlauf als Animation (Could, vorgezogen, Wunsch der Nutzerin 18.11.) (18.11.)
-- [ ] 20. Ab ca. 10:30: Test mit eigener IFC, Fehler beheben ← **als Nächstes**
-- [ ] 21. Auf GitHub hochladen und über GitHub Pages veröffentlichen → **12 Uhr Freeze**
+- [x] 20. Ab ca. 10:30: Test mit eigener IFC, Fehler beheben (18.11.)
+      (18.11.: Nutzerin testet laufend mit eigenen Dateien, alles funktioniert; dabei kam 20b auf)
+- [x] 20b. Licht hinter Pfosten-Riegel im Aquarell (Wunsch der Nutzerin 18.11.) (18.11.)
+- [ ] 21. Auf GitHub hochladen und über GitHub Pages veröffentlichen → **12 Uhr Freeze** ← **als Nächstes**
 - [ ] 22. Nachmittag: README (Poster macht die Nutzerin selbst nach Moodle-Vorlage)
 
 **Fr 20.11.** – Polieren & präsentieren, Abgabe bis 16 Uhr
@@ -136,7 +138,7 @@ Erledigte Sitzungen abhaken, die oberste offene Zeile ist dran (die Nummern blei
 Wenn es eng wird, zuerst streichen: 19d (Aquarell/Bleistift), dann 19c (Sonne mit aktueller Uhrzeit).
 Was bis Do 10:30 nicht fertig ist, wandert zu Could.
 
-## Stand (18.11.2026, nach Sitzung 19d)
+## Stand (18.11.2026, nach Sitzung 20b)
 - CLAUDE.md und PLAN.md angelegt, Plan mit der Nutzerin abgestimmt.
 - Test-IFC liegt in `testdaten/` (Einfamilienhaus, Revit 2023, IFC2x3: 192 Wände, 57 Fenster, 49 Türen).
   Quelle: Bundesingenieurkammer, Seite „BIM-Praxisbeispiele“ (Download zum Betrachten angeboten).
@@ -735,6 +737,31 @@ Mit der Nutzerin als Testseite entworfen und abgestimmt („erstmal so festhalte
   kein Unterschied. Nur auf diesem Rechner gemessen; über dem 3D-Bild nur wenige, kleine Glas-Elemente verwenden.
 
 ## Nächste Schritte
+- **Sitzung 20 (erledigt 18.11.):** Die Nutzerin hat laufend mit eigenen IFC-Dateien getestet, alles funktioniert. Keine Fehler zu beheben.
+- **Sitzung 20b (erledigt 18.11.):** Umgesetzt wie unten geplant. Das Glas der Pfosten-Riegel-Wand hat Texturkoordinaten 0–1 über die
+  ganze Wand und die Markierung `raumLicht` (`fassade.js`). Im Aquarell malt `raumLichtMalen()` (`szene.js`) einen kleinen Verlauf
+  (oben warm, unten fast Dunkelblau), Stärke = Anteil leuchtender Fenster ÷ 0,25 (voll an, sobald ein Viertel der Fenster leuchtet).
+  Versionsnummern `fassade.js?v=25g`, `szene.js?v=43c`, `app.js?v=46c`.
+  **Nachtrag (Wunsch der Nutzerin: soll immer gehen, auch bei einzelnen Wänden):** Einzelne Wände mit Pfosten-Riegel leuchten genauso.
+  Bisher blieb eine Glaswand dunkel, solange sie ausgewählt war oder die Maus darüber stand; jetzt leuchtet sie auch dann
+  (die Auswahl zeigen die dunkelblauen Profile). Getestet: einzelne Wand gewählt, Pfosten-Riegel, 18:30 → leuchtet; Zeichnung zeigt
+  die blaue Auswahl wie bisher. Normale Fenster bleiben ausgewählt weiter blau (unverändert).
+  Getestet mit Test-Neu.ifc, alle Seiten Pfosten-Riegel, Aquarell mit Sonne, 18.11. in Oldenburg: 15:00 zarter Schimmer,
+  18:30 warmer Raum mit Verlauf, 03:00 dunkel. Keine Fehler in der Konsole.
+  Probleme: Bei Test-Neu.ifc ist jede Wand ein Geschoss hoch, dort sitzt das Licht richtig unter jeder Decke. Geht eine Wand
+  über mehrere Geschosse, wirkt sie wie eine hohe Halle. Die Animation wurde nur über den Regler geprüft, nicht über ▶.
+- **Sitzung 20b (Planung, Wunsch der Nutzerin 18.11.):** Licht hinter der Pfosten-Riegel-Fassade im Aquarell.
+  Bisher: Die ganze Glaswand zählt wie **ein** Fenster – sie ist entweder ganz dunkel oder auf einmal ganz hell
+  (meist dunkelblau, weil eine einzige Zufallszahl über die ganze Wand entscheidet).
+  Vorschlag (geändert nach Rückmeldung: nicht jedes Feld einzeln, sondern **ein ganzer Raum hinter der Fassade**):
+  - **Die ganze Glaswand leuchtet zusammen**, wie ein beleuchteter Raum dahinter. Sie geht abends schon mit den
+    ersten Fenstern an (nicht per Zufall erst spät) und nachts zusammen mit den letzten wieder aus, jeweils weich ein- und ausgeblendet.
+  - **Zarter als die Fenster:** warm, aber schwächer leuchtend, Pfosten und Riegel bleiben dunkel davor.
+  - **Wie von einer Deckenlampe:** oben heller warmer Schein, der nach unten ins Dunkelblau ausläuft (Verlauf über die ganze Wandhöhe).
+    Geht die Glaswand über mehrere Geschosse, wirkt sie wie eine hohe Halle (Geschosse kennt die Wand nicht).
+  - Nur im Aquarell, wie die Fensterlichter. Zeichnung, Realistisch, Bleistift, Kennwerte und PDF bleiben unverändert.
+  - Technisch: `szene.js` (Leuchten im Aquarell), evtl. kleine Markierung des Glases in `fassade.js`; Versionsnummern erhöhen.
+  - Testen mit Test-Neu.ifc/Einfamilienhaus, eine Seite Pfosten-Riegel, Animation über den Abend laufen lassen.
 - **Nachtrag 2 zu 19e (erledigt 18.11.):** Umgesetzt wie unten geplant, nur `szene.js` (v=42, `app.js` v=45).
   Leuchtende Fenster mindestens 60 % warm getönt. Getestet am 18.11. in Oldenburg: 14:15 (Sonne 13°) erstes Fenster an,
   15:45 (Sonne 4°) mehrere, 23:00 einige wieder aus. Keine Fehler in der Konsole. Probleme: keine.
