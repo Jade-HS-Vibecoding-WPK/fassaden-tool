@@ -4,7 +4,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { realistischesMaterial, himmelHintergrund, himmelUmgebung } from './realistisch.js?v=26';
 import { MATERIAL } from './darstellung.js?v=19';
 import { Nachbearbeitung } from './stile.js?v=22';
-import { umgebungLegen, hausFreistellen } from './umgebung.js?v=5f';
+import { umgebungLegen, hausFreistellen } from './umgebung.js?v=6';
 
 // Gemalte Darstellungen (Sitzung 19d): Zeichenstil wird nachträglich übermalt (stile.js)
 const GEMALT = ['aquarell', 'bleistift', 'marker', 'collage'];
@@ -83,6 +83,7 @@ export class Szene {
     // Umgebung aus OpenStreetMap (Sitzung 23): Gruppe aus umgebung.js oder null; nur in der Perspektive zu sehen
     this.nachbarschaft = null;
     this.nachbarschaftVersteckt = false; // true, solange im 3D-Fenster eine Ansicht N/O/S/W eingestellt ist
+    this.umgebungsLage = { ost: 0, nord: 0 }; // Meter, um die das Haus gerade verschoben ist
     this.mausAnklickenEinrichten();
 
     // Größe anpassen, wenn sich das Fenster ändert
@@ -339,18 +340,83 @@ export class Szene {
     const maus = new THREE.Vector2();
     let gedrueckt = null;
 
-    const bauteilUnterMaus = (e) => {
-      if (!this.modell) return null;
+    const strahlSetzen = (e) => {
       const rahmen = leinwand.getBoundingClientRect();
       maus.set(((e.clientX - rahmen.left) / rahmen.width) * 2 - 1, -((e.clientY - rahmen.top) / rahmen.height) * 2 + 1);
       strahl.setFromCamera(maus, this.kamera);
-      // Ausgeblendete Teile (z. B. Original-Wand hinter einer nachgebauten Scheibe) zählen nicht
-      const treffer = strahl.intersectObject(this.modell, true).find((t) => istSichtbar(t.object));
+    };
+    // Erster sichtbarer Treffer im Modell (ausgeblendete Teile, z. B. Original-Wand hinter einer nachgebauten Scheibe, zählen nicht)
+    const trefferUnterMaus = (e) => {
+      if (!this.modell) return null;
+      strahlSetzen(e);
+      return strahl.intersectObject(this.modell, true).find((t) => istSichtbar(t.object)) ?? null;
+    };
+    const bauteilVonTreffer = (treffer) => {
       // Bauteil = das nächste übergeordnete Teil mit einer Art (neu gezeichnete Fenster liegen eine Ebene tiefer)
       let bauteil = treffer?.object.parent;
       while (bauteil && !bauteil.userData.art) bauteil = bauteil.parent;
       return bauteil && this.istAnklickbar(bauteil) ? bauteil : null;
     };
+    const bauteilUnterMaus = (e) => bauteilVonTreffer(trefferUnterMaus(e));
+
+    // Haus mit der Maus verschieben (Sitzung 23h): nur, wenn eine Umgebung zu sehen ist (Perspektive).
+    // Linke Taste auf dem Haus kurz gedrückt halten (HALTEN ms, ohne zu bewegen), dann ziehen = verschieben.
+    // Gleich ziehen dreht wie immer die Kamera (sonst ginge das kaum, wenn das Haus das Bild füllt),
+    // ein kurzer Klick bleibt Klick (Wand/Fenster wählen).
+    // Wie bei den Reglern wandert in Wahrheit die Umgebung; die Kamera wandert mit ihr, so sieht es aus,
+    // als ob das Haus unter der Maus mitgeht. app.js setzt beiHausZiehen(ost, nord) und verschiebt dort.
+    const HALTEN = 450;
+    this.beiHausZiehen = () => {};
+    const hausZiehbar = () => !!(this.modell && this.nachbarschaft && !this.nachbarschaftVersteckt);
+    const boden = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+    const bodenPunkt = (e) => { strahlSetzen(e); return strahl.ray.intersectPlane(boden, new THREE.Vector3()); };
+    let ziehen = null; // { x, y, uhr, gegriffen, qx, qz, ost, nord }
+    let griffBeendet = false; // true direkt nach dem Greifen: das Loslassen ist dann kein Klick
+    const greifenAbbrechen = () => { if (ziehen) clearTimeout(ziehen.uhr); ziehen = null; };
+    leinwand.addEventListener('pointerdown', (e) => {
+      greifenAbbrechen();
+      griffBeendet = false;
+      if (e.button !== 0 || !hausZiehbar() || !trefferUnterMaus(e)) return;
+      boden.constant = -this.gebaeudeBox().min.y; // Ebene auf Höhe der Hausunterkante
+      const punkt = bodenPunkt(e);
+      if (!punkt) return;
+      const ort = this.nachbarschaft.position;
+      // Punkt im Maß der Umgebung (wandert mit ihr), damit es beim Ziehen nicht ruckelt
+      ziehen = { x: e.clientX, y: e.clientY, gegriffen: false, qx: punkt.x - ort.x, qz: punkt.z - ort.z, ...this.umgebungsLage };
+      ziehen.uhr = setTimeout(() => { // lange genug still gehalten: Haus ist gegriffen, Kamera hält still
+        if (!ziehen) return;
+        ziehen.gegriffen = true;
+        this.steuerung.enabled = false;
+        leinwand.style.cursor = 'grabbing';
+      }, HALTEN);
+    });
+    window.addEventListener('pointermove', (e) => {
+      if (!ziehen) return;
+      if (!ziehen.gegriffen) { // vor dem Greifen bewegt: das war Drehen
+        if (Math.hypot(e.clientX - ziehen.x, e.clientY - ziehen.y) > 4) greifenAbbrechen();
+        return;
+      }
+      const punkt = bodenPunkt(e);
+      if (!punkt || !this.nachbarschaft) return;
+      const vorher = this.nachbarschaft.position.clone();
+      const qx = punkt.x - vorher.x, qz = punkt.z - vorher.z;
+      this.beiHausZiehen(ziehen.ost + (qx - ziehen.qx), ziehen.nord - (qz - ziehen.qz));
+      // Kamera um genau so viel mitnehmen, wie die Umgebung gewandert ist
+      const weg = this.nachbarschaft.position.clone().sub(vorher);
+      weg.y = 0;
+      this.kamera.position.add(weg);
+      this.steuerung.target.add(weg);
+    });
+    window.addEventListener('pointerup', () => {
+      if (!ziehen) return;
+      if (ziehen.gegriffen) {
+        griffBeendet = true;
+        this.steuerung.enabled = true;
+        leinwand.style.cursor = '';
+        this.hoverBauteil = null;
+      }
+      greifenAbbrechen();
+    }, true); // Einfangphase: vor dem Klick-Prüfer unten, damit griffBeendet schon stimmt
 
     leinwand.addEventListener('pointermove', (e) => {
       if (e.buttons !== 0) return; // beim Drehen nicht hervorheben
@@ -364,6 +430,7 @@ export class Szene {
     leinwand.addEventListener('pointerup', (e) => {
       // Nur ein Klick, wenn die Maus dabei kaum bewegt wurde (sonst war es Drehen)
       if (!gedrueckt || Math.hypot(e.clientX - gedrueckt.x, e.clientY - gedrueckt.y) > 4) return;
+      if (griffBeendet) { gedrueckt = null; return; } // Haus gegriffen und losgelassen: kein Klick
       gedrueckt = null;
       // Auch ein Klick ins Leere wird gemeldet (bauteil = null), z. B. um eine Auswahl aufzuheben
       this.beiKlick(bauteilUnterMaus(e), e);
@@ -634,6 +701,7 @@ export class Szene {
   // Haus auf dem Grundstück verschieben – in Wahrheit wandert die Umgebung, das Haus bleibt, wo es ist
   // (so bleiben Ansichten, Kamera und Maße unberührt). Nachbarhäuser unter dem eigenen Haus werden ausgeblendet.
   umgebungVerschieben(ost, nord) {
+    this.umgebungsLage = { ost, nord }; // gemerkt fürs Ziehen mit der Maus (Sitzung 23h)
     if (!this.nachbarschaft || !this.modell) return;
     const box = this.gebaeudeBox();
     const mitte = box.getCenter(new THREE.Vector3());

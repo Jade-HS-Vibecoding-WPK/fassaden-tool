@@ -60,6 +60,8 @@ Entsteht in der Vibecoding KI-Werkstatt (Jade Hochschule, 16.–20.11.2026). Abg
   Ausnahme (Sitzung 23): „Umgebung © OpenStreetMap-Mitwirkende“ winzig unten, nur wenn eine Variante Umgebung zeigt.
 - Umgebung nur in der Perspektive; Ansichten N/O/S/W immer ohne Nachbarn. Verschieben bewegt in Wahrheit die Umgebung,
   das Haus bleibt (Norden = Plan-oben, kein Drehen).
+  Haus mit der Maus verschieben (Sitzung 23h): auf dem Haus kurz gedrückt halten, dann ziehen (gleich ziehen = Kamera drehen);
+  geht bei allen Umgebungsarten, je Art eigene Lage.
   Ansichten maßstäblich (1:50/1:100/1:200/1:500 wählbar), Perspektive ohne Maßstab.
 - Außenwand = IFC-Eigenschaft „IsExternal“ ist nicht „nein“ UND die Wand liegt am Gebäuderand (Sichtprüfung),
   weil Revit „IsExternal“ oft bei allen Wänden auf „ja“ setzt. Korrektur per Klick.

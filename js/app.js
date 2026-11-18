@@ -1,6 +1,6 @@
 // Bedienoberfläche: Datei wählen oder hineinziehen, Modell anzeigen, Fassade gestalten
-import { Szene } from './szene.js?v=55';
-import { umgebungLaden, umgebungBauen, vorlageBauen, VORLAGEN } from './umgebung.js?v=5f';
+import { Szene } from './szene.js?v=56c';
+import { umgebungLaden, umgebungBauen, vorlageBauen, VORLAGEN } from './umgebung.js?v=6';
 import { ifcLaden } from './ifc.js?v=19';
 import { aussenwaendeErkennen, wandFaerben, oeffnungenZuordnen, fensterAnpassen, stuetzenVorbereiten, stuetzeFaerben, dachVorbereiten, dachFaerben, kennwerteBerechnen, hauptrichtungBestimmen, fensterFaerben, anbauteileZuordnen } from './fassade.js?v=26';
 import {
@@ -850,10 +850,10 @@ $('varianteSpeichern').addEventListener('click', async () => {
       // Maße der Ansichtsbilder in Metern (Sitzung 20c), damit das PDF sie maßstäblich setzen kann; ältere Varianten haben keine
       masse,
       // Umgebung (Sitzung 23): Ort und Verschiebung, wenn die Perspektive Nachbarhäuser zeigt; sonst null.
-      // Sitzung 23b: art = Vorlage oder „osm“; bei einer Vorlage nur die Art (kein Ort, keine Verschiebung)
+      // Sitzung 23b: art = Vorlage oder „osm“; bei einer Vorlage kein Ort
       umgebung: !umgebungAn ? null
-        : umgebungArt === 'osm' ? { art: 'osm', ...umgebungOrt(), ost: umgebungLage.ost, nord: umgebungLage.nord }
-          : { art: umgebungArt },
+        : umgebungArt === 'osm' ? { art: 'osm', ...umgebungOrt(), ...lageJetzt() }
+          : { art: umgebungArt, ...lageJetzt() }, // Sitzung 23h: auch bei Vorlagen die Lage des Hauses
     });
     $('variantenName').value = '';
     variantenStatus(`„${name}“ ist gespeichert.`);
@@ -940,7 +940,9 @@ function varianteLaden(variante) {
         sonneAnzeigen();
         sonneAnwenden();
       }
-      Object.assign(umgebungLage, { ost, nord });
+      umgebungLagen.osm = { ost, nord };
+    } else if (variante.umgebung) { // Vorlage: ältere Varianten (vor Sitzung 23h) haben keine Lage = Mitte
+      umgebungLagen[umgebungArt] = { ost: variante.umgebung.ost ?? 0, nord: variante.umgebung.nord ?? 0 };
     }
     umgebungAktualisieren();
   }
@@ -1427,6 +1429,8 @@ async function dateiOeffnen(datei) {
     $('umgebungwahl').hidden = false;
     $('ansichtwahl').hidden = false;
     szene.nachbarschaftVersteckt = false;
+    // Neues Haus steht in den Vorlagen wieder in der Mitte (dort ist Platz eingeplant); beim echten Ort bleibt die Lage
+    for (const art of Object.keys(VORLAGEN)) delete umgebungLagen[art];
     umgebungAktualisieren(); // Umgebung ans neue Haus legen (Vorlagen passen ihren freien Platz ans Haus an)
     ansichtKnoepfeMarkieren();
     // Kopfleiste: Dateiname und Schritte freigeben, los geht es mit „Fassade“ (Außenwände sind Nebensache)
@@ -1709,7 +1713,7 @@ $('umgebungOrtssuche').addEventListener('submit', (ereignis) => { ereignis.preve
 // ---------- Umgebung aus OpenStreetMap (Sitzung 23) ----------
 // Runder Knopf unter der Sonne: an = Nachbarhäuser (helle Klötze), Straßen und Grün um den Ort,
 // nur in der Perspektive (3D-Fenster und gespeichertes Perspektivbild). Ort = Ortssuche (Sonne oder Umgebungs-Feld).
-// Das Haus lässt sich mit zwei Reglern auf dem Grundstück verschieben (Norden bleibt Plan-oben).
+// Das Haus lässt sich mit zwei Reglern (echter Ort) oder seit Sitzung 23h mit der Maus verschieben (Norden bleibt Plan-oben).
 let umgebungAn = false;
 let umgebungAufgeklappt = false;
 // Sitzung 23b: Art der Umgebung – eine Vorlage (s. VORLAGEN in umgebung.js) oder 'osm' = echter Ort.
@@ -1717,7 +1721,11 @@ let umgebungAufgeklappt = false;
 let umgebungArt = 'laendlich';
 let umgebungSchonAn = false; // erstes Einschalten: Feld aufklappen, damit man die Auswahl sieht
 let ortGenau = null; // { breite, laenge } genau aus der Ortssuche; null = die (gerundeten) Koordinaten der Sonne
-const umgebungLage = { ost: 0, nord: 0 }; // Meter, um die das Haus vom gesuchten Ort nach Osten/Norden steht
+// Meter, um die das Haus vom gesuchten Ort (bzw. von der Mitte der Vorlage) nach Osten/Norden steht.
+// Seit Sitzung 23h je Art eine eigene Lage (Haus mit der Maus verschiebbar, auch bei den Vorlagen)
+const umgebungLagen = {};
+const lageJetzt = () => (umgebungLagen[umgebungArt] ??= { ost: 0, nord: 0 });
+const LAGE_GRENZE = 100; // so weit darf das Haus von der Mitte der Platte weg (Platte: 150 m Halbmesser)
 let umgebungGebaut = null; // { schluessel, gruppe, anzahl } – zuletzt gebaute Umgebung
 let umgebungAuftrag = 0; // zählt Anfragen, damit eine alte, späte Antwort nichts mehr überschreibt
 
@@ -1726,8 +1734,7 @@ const umgebungOrt = () => ortGenau ?? { breite: sonne.breite, laenge: sonne.laen
 // Neuer Ort (aus Suche oder von Hand): Haus wieder genau auf den Ort stellen, Umgebung neu holen
 function ortGeaendert(genau) {
   ortGenau = genau;
-  umgebungLage.ost = 0;
-  umgebungLage.nord = 0;
+  umgebungLagen.osm = { ost: 0, nord: 0 };
   umgebungAktualisieren();
 }
 
@@ -1743,11 +1750,13 @@ function umgebungAnzeigen(info) {
   $('umgebungAufklappen').setAttribute('aria-expanded', String(umgebungAufgeklappt));
   $('umgebungfeld').hidden = !umgebungAn || !umgebungAufgeklappt;
   $('osmVermerk').hidden = !umgebungAn || umgebungArt !== 'osm';
-  $('umgebungOst').value = String(umgebungLage.ost);
-  $('umgebungNord').value = String(umgebungLage.nord);
+  $('legendeHaus').hidden = !umgebungAn; // Sitzung 23h: Haus mit der Maus versetzen
+  const lage = lageJetzt();
+  $('umgebungOst').value = String(lage.ost);
+  $('umgebungNord').value = String(lage.nord);
   const meter = (wert, plus, minus) => (wert === 0 ? '0 m' : `${kommaZahl(Math.abs(wert), wert % 1 ? 1 : 0)} m ${wert > 0 ? plus : minus}`);
-  $('umgebungOstWert').textContent = meter(umgebungLage.ost, 'O', 'W');
-  $('umgebungNordWert').textContent = meter(umgebungLage.nord, 'N', 'S');
+  $('umgebungOstWert').textContent = meter(lage.ost, 'O', 'W');
+  $('umgebungNordWert').textContent = meter(lage.nord, 'N', 'S');
   if (info !== undefined) $('umgebungInfo').replaceChildren(info);
 }
 
@@ -1770,11 +1779,12 @@ async function umgebungAktualisieren() {
       const anzahl = gruppe.children.filter((t) => t.userData.nachbar).length;
       umgebungGebaut = { schluessel, gruppe, anzahl, baeume: gruppe.userData.baeume };
     }
-    szene.umgebungSetzen(umgebungGebaut.gruppe, 0, 0);
+    szene.umgebungSetzen(umgebungGebaut.gruppe, lageJetzt().ost, lageJetzt().nord);
     const teile = [];
     if (umgebungGebaut.anzahl) teile.push(`${umgebungGebaut.anzahl} Häuser`);
     if (umgebungGebaut.baeume) teile.push(`${umgebungGebaut.baeume} Bäume`);
-    umgebungAnzeigen(textElement('span', `Vorlage „${VORLAGEN[umgebungArt]}“: frei erfunden, ohne Internet. ${teile.join(', ')}.`));
+    umgebungAnzeigen(textElement('span', `Vorlage „${VORLAGEN[umgebungArt]}“: frei erfunden, ohne Internet. ${teile.join(', ')}. `
+      + 'Haus verschieben: Maus auf dem Haus kurz gedrückt halten, dann ziehen.'));
     return;
   }
   const { breite, laenge } = umgebungOrt();
@@ -1801,9 +1811,10 @@ async function umgebungAktualisieren() {
     umgebungGebaut = { schluessel, gruppe, anzahl };
   }
   $('umgebungKnopf').classList.remove('laedt');
-  szene.umgebungSetzen(umgebungGebaut.gruppe, umgebungLage.ost, umgebungLage.nord);
+  szene.umgebungSetzen(umgebungGebaut.gruppe, lageJetzt().ost, lageJetzt().nord);
   const ortText = sonne.ortName || `${kommaZahl(breite, 4)}° N, ${kommaZahl(laenge, 4)}° O`;
-  umgebungAnzeigen(osmHinweis(`${ortText} · ${umgebungGebaut.anzahl} Häuser im Umkreis von 150 m. Daten: `));
+  umgebungAnzeigen(osmHinweis(`${ortText} · ${umgebungGebaut.anzahl} Häuser im Umkreis von 150 m. `
+    + 'Haus verschieben: Maus auf dem Haus kurz gedrückt halten und ziehen – oder mit den Reglern. Daten: '));
 }
 
 $('umgebungKnopf').addEventListener('click', () => {
@@ -1823,11 +1834,21 @@ $('umgebungAufklappen').addEventListener('click', () => {
 });
 for (const [id, schluessel] of [['umgebungOst', 'ost'], ['umgebungNord', 'nord']]) {
   $(id).addEventListener('input', () => {
-    umgebungLage[schluessel] = Number($(id).value);
-    szene.umgebungVerschieben(umgebungLage.ost, umgebungLage.nord);
+    lageJetzt()[schluessel] = Number($(id).value);
+    szene.umgebungVerschieben(lageJetzt().ost, lageJetzt().nord);
     umgebungAnzeigen();
   });
 }
+// Haus mit der Maus ziehen (Sitzung 23h, s. szene.js): auf 10 cm runden und auf der Platte halten
+szene.beiHausZiehen = (ost, nord) => {
+  const abstand = Math.hypot(ost, nord);
+  if (abstand > LAGE_GRENZE) { ost *= LAGE_GRENZE / abstand; nord *= LAGE_GRENZE / abstand; }
+  const lage = lageJetzt();
+  lage.ost = Math.round(ost * 10) / 10;
+  lage.nord = Math.round(nord * 10) / 10;
+  szene.umgebungVerschieben(lage.ost, lage.nord);
+  umgebungAnzeigen();
+};
 umgebungAnzeigen();
 
 // Text für Vergleich und PDF, z. B. „21.6.2026, 15:00 Uhr (MESZ) · Oldenburg (53,14° N, 8,21° O)“; ohne Sonne: null

@@ -284,6 +284,19 @@ export function hausFreistellen(gruppe, box) {
       || ecken.some(([x, n]) => imUmriss(x, n, punkte));
     haus.visible = !ueberlappt;
   }
+  // Bäume der Vorlagen (Sitzung 23h, seit das Haus sich verschieben lässt): wer mit der Krone
+  // über dem Haus stünde, verschwindet; alle Bäume einer Wuchsform sind ein InstancedMesh
+  for (const teil of gruppe.children) {
+    const liste = teil.userData.baumListe;
+    if (!liste) continue;
+    const lagen = teil.instanceMatrix.array, ur = teil.userData.urLagen;
+    liste.forEach((b, i) => {
+      const abstand = Math.hypot(Math.max(box.minX - b.x, 0, b.x - box.maxX), Math.max(box.minN - b.n, 0, b.n - box.maxN));
+      const weg = abstand < b.krone * 0.8 + 0.5;
+      for (let k = i * 16; k < i * 16 + 16; k++) lagen[k] = weg ? 0 : ur[k]; // Nullmatrix = unsichtbar
+    });
+    teil.instanceMatrix.needsUpdate = true;
+  }
 }
 
 // ---------- Umgebungs-Vorlagen (Sitzung 23b) ----------
@@ -536,7 +549,13 @@ export function vorlageBauen(art, haus) {
       kronen.setMatrixAt(i, lage);
       staemme.setMatrixAt(i, lage);
     });
-    for (const teil of [kronen, staemme]) { teil.receiveShadow = true; teil.frustumCulled = false; gruppe.add(teil); }
+    for (const teil of [kronen, staemme]) {
+      teil.receiveShadow = true;
+      teil.frustumCulled = false;
+      teil.userData.baumListe = liste; // fürs Ausblenden unter dem Haus (hausFreistellen)
+      teil.userData.urLagen = teil.instanceMatrix.array.slice();
+      gruppe.add(teil);
+    }
   }
   gruppe.userData.baeume = baeume.length;
   randAbschneiden(gruppe, material);

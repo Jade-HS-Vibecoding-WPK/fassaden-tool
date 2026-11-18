@@ -356,7 +356,7 @@ Erledigte Sitzungen abhaken, die oberste offene Zeile ist dran (die Nummern blei
       `szene.js`, `himmelStimmung`/`wieseStimmung` in `stile.js`). Marker legt abends/nachts mehr Hintergrund an.
       Bleistift bleibt ohne Stimmung. Getestet: Collage 16:45 und 21:00, Marker nachts – keine Fehler.
       Versionsnummern: `stile.js?v=22`, `szene.js?v=55`, `app.js?v=64`.
-- [ ] 23h. Haus mit der Maus verschieben (Wunsch der Nutzerin 18.11.): Haus als Ganzes anklicken und auf der
+- [x] 23h. Haus mit der Maus verschieben (Wunsch der Nutzerin 18.11.): Haus als Ganzes anklicken und auf der
       Umgebungs-Platte ziehen, statt über die Regler „Haus verschieben“. Soll auch bei den Vorlagen gehen
       (bisher steht das Haus dort fest in der Mitte).
       Vorschlag (noch abzustimmen):
@@ -366,6 +366,20 @@ Erledigte Sitzungen abhaken, die oberste offene Zeile ist dran (die Nummern blei
       - Vorlagen: Verschieben innerhalb der Platte; Nachbarhäuser/Bäume unter dem Haus verschwinden
         (bei den Vorlagen heißt das: Platz ums Haus nicht mehr fest eingeplant).
       - Regler bei „Echter Ort“ bleiben zum Feinjustieren; Varianten merken die Lage auch bei Vorlagen.
+      Gebaut (18.11.): In der Perspektive mit Umgebung: Maus auf dem Haus ca. ½ s still gedrückt halten (Zeiger wird
+      zur greifenden Hand), dann ziehen. Gleich ziehen dreht wie immer die Kamera – erster Versuch ohne Halten ging nicht:
+      Nach „3D“ füllt das Haus fast das Bild, dann konnte man kaum noch drehen. Kurzer Klick bleibt Klick.
+      Die Kamera wandert beim Ziehen mit der Umgebung mit, so bleibt die Umgebung im Bild stehen und das Haus geht mit
+      der Maus. Grenze: 100 m von der Mitte der Platte. Jede Umgebungsart hat ihre eigene Lage; neue IFC = Vorlagen
+      wieder Mitte (dort ist Platz eingeplant), neuer Ort = Mitte. Unter dem Haus verschwinden Nachbarhäuser und jetzt
+      auch Bäume (`hausFreistellen` in `umgebung.js`). Varianten speichern die Lage auch bei Vorlagen.
+      Hinweis in der Legende unten und im Umgebungsfeld.
+      Getestet mit Test-Neu.ifc: Ländlich (schnell ziehen dreht, Halten + Ziehen verschiebt, Nachbar unter dem Haus
+      verschwindet, alter Platz kommt wieder), Wald (Bäume unter dem Haus weg). Keine Fehler.
+      Probleme: Nach dem Ziehen dreht die Kamera um die alte Stelle, nicht ums Haus – Knopf „3D“ holt das Haus
+      wieder in die Mitte. „Echter Ort“ (OSM) und Speichern/Laden einer Variante mit verschobenem Haus nicht extra
+      getestet – bitte einmal ausprobieren.
+      Versionsnummern: `szene.js?v=56c`, `umgebung.js?v=6`, `app.js?v=65c`.
 - [ ] 22. Nachmittag: README (Poster macht die Nutzerin selbst nach Moodle-Vorlage)
 
 **Fr 20.11.** – Polieren & präsentieren, Abgabe bis 16 Uhr
