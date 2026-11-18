@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Fassaden-Tool</title>
-  <link rel="stylesheet" href="style.css?v=31">
+  <link rel="stylesheet" href="style.css?v=33">
   <!-- Bibliotheken aus dem Internet: three.js (3D) und web-ifc (IFC lesen) -->
   <script type="importmap">
   {
@@ -16,7 +16,7 @@
   }
   </script>
   <!-- ?v=… erzwingt nach Änderungen die neue Fassung (sonst hält der Browser alte Dateien fest) -->
-  <script type="module" src="js/app.js?v=55"></script>
+  <script type="module" src="js/app.js?v=57"></script>
 </head>
 <body>
   <!-- Hintergrund: dunkler Farbverlauf mit weichen Farbflecken (Sitzung 15b, Glassmorphism) -->
@@ -26,15 +26,14 @@
     <header class="kopfleiste glas">
       <div class="marke">
         <h1>Fassaden-Tool</h1>
-        <!-- Klick auf den Dateinamen öffnet die Dateiauswahl: andere IFC laden -->
-        <label class="dateiname" for="datei" id="kopfDatei" hidden></label>
+        <!-- Dateiname mit Pfeil (Sitzung 23d): klappt links den Bereich „Modell“ auf (Außenwände prüfen, andere IFC laden) -->
+        <button type="button" class="dateiname" id="kopfDatei" aria-expanded="false" aria-controls="seitenleiste" hidden></button>
       </div>
       <nav class="schrittleiste" id="schrittleiste" aria-label="Schritte">
-        <!-- Außenwände ganz rechts: eher Nebensache (Wunsch der Nutzerin); enthält auch „IFC-Datei wählen“ -->
+        <!-- „Außenwände“ ist kein Reiter mehr (Sitzung 23d), sondern hängt am Dateinamen -->
         <button type="button" data-schritt="fassade" disabled>Fassade</button>
         <button type="button" data-schritt="fenster" disabled>Fenster</button>
         <button type="button" data-schritt="varianten" disabled>Varianten</button>
-        <button type="button" data-schritt="aussenwaende" aria-current="step">Außenwände</button>
       </nav>
       <div class="kopf-rechts">
         <button class="textknopf" id="anleitungOeffnen" hidden>Anleitung</button>
@@ -48,7 +47,7 @@
     <aside class="seitenleiste glas" id="seitenleiste" data-schritt="aussenwaende">
       <section data-schritt="aussenwaende">
         <h2>Modell</h2>
-        <label class="knopf">IFC-Datei wählen<input type="file" id="datei" accept=".ifc" hidden></label>
+        <label class="knopf"><span id="dateiKnopfText">IFC-Datei wählen</span><input type="file" id="datei" accept=".ifc" hidden></label>
         <p class="hinweis">… oder die Datei einfach ins Fenster ziehen.</p>
         <p class="status" id="status"></p>
         <div id="aussenBlock" hidden>
@@ -182,7 +181,8 @@
             <li><span>1</span><div><strong>IFC laden</strong>
               <p>Entwurf als IFC exportieren und links mit „IFC-Datei wählen“ öffnen oder ins Fenster ziehen.</p></div></li>
             <li><span>2</span><div><strong>Außenwände prüfen</strong>
-              <p>Farbig = Außenwand. Falsch erkannte Wände einfach anklicken, dann schalten sie um.</p></div></li>
+              <p>Farbig = Außenwand. Falsch erkannte Wände einfach anklicken, dann schalten sie um.
+              Später erreichst du das über den Pfeil ▾ beim Dateinamen oben links.</p></div></li>
             <li><span>3</span><div><strong>Gestalten</strong>
               <p>Je Himmelsrichtung ein Material wählen und die Fenster mit den Reglern größer oder kleiner machen.
               Die Kennwerte rechnen sofort mit.</p></div></li>

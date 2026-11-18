@@ -67,7 +67,8 @@ Entsteht in der Vibecoding KI-Werkstatt (Jade Hochschule, 16.–20.11.2026). Abg
 # Gestaltung
 - **Glassmorphism (gebaut in Sitzung 15b):** dunkler Farbverlauf, Kopf- und Seitenleiste aus Glas, fast weißes 3D-Fenster –
   Details in PLAN.md unter „Design-Vision“. Farben auf Glas über die Variablen in `.glas` (style.css), helle Flächen über `:root`.
-- Seitenleiste zeigt nur den aktuellen Schritt (Außenwände · Fassade · Fenster · Varianten, Umschalten in der Kopfleiste).
+- Seitenleiste zeigt nur den aktuellen Schritt (Reiter Fassade · Fenster · Varianten in der Kopfleiste; „Modell/Außenwände“
+  klappt seit Sitzung 23d über den Pfeil ▾ am Dateinamen auf, ist kein eigener Reiter).
 - Ausnahme Akzentfarbe: Sonnenknopf und Uhrzeit-Regler der Sonne dürfen Sonnengelb (#f5b82e) haben (spielerisch, Wunsch der Nutzerin).
 - Ein Hauptbutton pro Ansicht („Variante speichern“), Akzentfarbe bleibt Dunkelblau (#1f3a68).
 - Kennwerte zurückhaltend zeigen, nicht groß oder zentral (Wunsch der Nutzerin, 17.11.).

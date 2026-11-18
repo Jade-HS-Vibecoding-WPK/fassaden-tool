@@ -86,14 +86,19 @@ body { background: #16243a; font-weight: 400; overflow: hidden; }
 }
 .marke { display: flex; align-items: center; gap: 14px; flex: none; }
 .marke h1 { margin: 0; font-size: 19px; font-weight: 800; letter-spacing: -0.01em; white-space: nowrap; }
-/* Dateiname als kleine Glas-Pille: Klick lädt eine andere IFC */
+/* Dateiname als kleine Glas-Pille mit Pfeil: Klick klappt links den Bereich „Modell“ auf (Sitzung 23d) */
 .dateiname {
-  font-size: 12px; color: var(--leise); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 240px;
+  font: inherit; background: none; text-align: left; display: inline-flex; align-items: baseline;
+  font-size: 12px; color: var(--leise); white-space: nowrap; max-width: 240px;
   padding: 4px 10px; border: 1px solid var(--linie); border-radius: 999px; cursor: pointer;
   min-width: 90px; flex: 0 1 auto; /* im schmalen Fenster gekürzt („…“), aber nie ganz weg */
   transition: color .2s, background .2s, border-color .2s;
 }
-.dateiname::after { content: " · ändern"; color: var(--akzent-text); }
+/* nur der Name wird gekürzt („…“), der Pfeil bleibt immer sichtbar */
+.dateiname span { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.dateiname::after { content: "▾"; color: var(--akzent-text); margin-left: 5px; flex: none; }
+.dateiname[aria-expanded="true"] { color: #fff; background: rgba(255, 255, 255, .22); border-color: rgba(255, 255, 255, .35); }
+.dateiname[aria-expanded="true"]::after { content: "▴"; }
 .dateiname:hover { color: var(--text); background: rgba(255, 255, 255, .1); border-color: var(--feld-rand-aktiv); }
 /* Schritte als Pillen; passen sie nicht hinein, lassen sie sich seitlich schieben (dünne Glas-Schiebeleiste) */
 .schrittleiste {
@@ -610,7 +615,6 @@ select:hover, select:focus, .eingabe:hover, .eingabe:focus { border-color: var(-
   .kopfleiste { gap: 12px; padding-left: 16px; }
   .marke h1 { font-size: 16px; }
   .dateiname { max-width: 96px; min-width: 70px; }
-  .dateiname::after { content: none; }
   .kopf-rechts { gap: 10px; }
   .kopf-rechts .knopf.haupt { padding: 9px 14px; }
   .schrittleiste button { padding: 7px 12px; }

@@ -244,8 +244,15 @@ Erledigte Sitzungen abhaken, die oberste offene Zeile ist dran (die Nummern blei
       Keine neuen Fehler. Probleme: keine.
       Versionsnummern: `materialien.js?v=26` (in `app.js`, `fassade.js`, `realistisch.js`), `fassade.js?v=26`, `realistisch.js?v=26`,
       `szene.js?v=51`, `app.js?v=55`.
-- [ ] 23d. „Außenwände“ aus der Kopfleiste nehmen (Wunsch der Nutzerin 18.11.): Ein eigener Reiter wirkt, als könne man
+- [x] 23d. „Außenwände“ aus der Kopfleiste nehmen (Wunsch der Nutzerin 18.11.) (18.11.): Ein eigener Reiter wirkt, als könne man
       dort etwas gestalten. Stattdessen beim Dateinamen oben ein kleiner Pfeil zum Aufklappen.
+      **Gebaut:** Kopfleiste nur noch Fassade · Fenster · Varianten. Dateiname-Pille mit Pfeil ▾ klappt links den Bereich
+      „Modell“ auf (Außenwände prüfen, „Andere IFC-Datei laden“, Bauteile); dann ist kein Reiter markiert, Pfeil ▴, Pille hell.
+      Zweiter Klick auf den Pfeil → zurück zum letzten Reiter. Neu: Klick auf den Dateinamen öffnet nicht mehr direkt die
+      Dateiauswahl (kein versehentliches Neuladen). Vor dem Laden unverändert („IFC-Datei wählen“). Anleitung Schritt 2 ergänzt.
+      Nur der Name wird bei schmalem Fenster gekürzt, der Pfeil bleibt sichtbar.
+      Getestet (Test-ArchiCAD.ifc): 3 Reiter, Start auf Fassade, Pfeil auf/zu, zurück zu Fenster, keine neuen Fehler.
+      Probleme: keine. Versionsnummern: `app.js?v=57`, `style.css?v=33`.
 - [ ] 23e. Einzelnes Fenster zurücksetzen (Wunsch der Nutzerin 18.11.): Bei „Einzelne Fenster“ das angewählte Fenster
       wieder auf 100 % (Maße aus der IFC) stellen können.
 - [ ] 23f. PDF-Blattgröße wählbar (Wunsch der Nutzerin 18.11.): A4, A3, A2, A1, A0 (bisher fest A3 quer).

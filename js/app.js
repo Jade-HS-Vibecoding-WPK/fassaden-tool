@@ -1282,8 +1282,13 @@ function variantenStatus(text, istFehler = false) {
 // ---------- Schritte in der Kopfleiste (Sitzung 15b) ----------
 // Die Seitenleiste zeigt nur den aktuellen Schritt. Beim Wechsel gehen „Einzelne Wände“ / „Einzelne Fenster“ aus,
 // damit ein Klick ins Modell nicht unbemerkt etwas auswählt, das man gerade nicht sieht.
+// „aussenwaende“ ist seit Sitzung 23d kein Reiter mehr: Es klappt über den Pfeil beim Dateinamen auf (dann ist kein
+// Reiter markiert); ein zweiter Klick auf den Pfeil geht zurück zum letzten Reiter.
+let letzterReiter = 'fassade';
 function schrittZeigen(schritt) {
+  if (schritt !== 'aussenwaende') letzterReiter = schritt;
   $('seitenleiste').dataset.schritt = schritt;
+  $('kopfDatei').setAttribute('aria-expanded', String(schritt === 'aussenwaende'));
   $('seitenleiste').scrollTop = 0;
   $('bereichKennwerte').open = false; // Kennwerte-Tabelle beim Wechsel wieder zuklappen
   for (const knopf of $('schrittleiste').querySelectorAll('button')) {
@@ -1301,6 +1306,9 @@ function schrittZeigen(schritt) {
 for (const knopf of $('schrittleiste').querySelectorAll('button')) {
   knopf.addEventListener('click', () => schrittZeigen(knopf.dataset.schritt));
 }
+$('kopfDatei').addEventListener('click', () => {
+  schrittZeigen($('seitenleiste').dataset.schritt === 'aussenwaende' ? letzterReiter : 'aussenwaende');
+});
 
 // ---------- Ansichtsknöpfe 3D / N / O / S / W im 3D-Fenster (Sitzung 15b) ----------
 // 3D = der unter „Varianten“ eingestellte Blick; N/O/S/W = waagerecht und gerade auf die Fassade
@@ -1389,8 +1397,9 @@ async function dateiOeffnen(datei) {
     umgebungAktualisieren(); // Umgebung ans neue Haus legen (Vorlagen passen ihren freien Platz ans Haus an)
     ansichtKnoepfeMarkieren();
     // Kopfleiste: Dateiname und Schritte freigeben, los geht es mit „Fassade“ (Außenwände sind Nebensache)
-    $('kopfDatei').textContent = datei.name;
-    $('kopfDatei').title = `${datei.name} – klicken, um eine andere IFC-Datei zu laden`;
+    $('kopfDatei').replaceChildren(Object.assign(document.createElement('span'), { textContent: datei.name }));
+    $('kopfDatei').title = `${datei.name} – Außenwände prüfen oder andere IFC-Datei laden`;
+    $('dateiKnopfText').textContent = 'Andere IFC-Datei laden';
     $('kopfDatei').hidden = false;
     for (const knopf of $('schrittleiste').querySelectorAll('button')) knopf.disabled = false;
     schrittZeigen('fassade');
