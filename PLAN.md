@@ -7,19 +7,19 @@ Fassadenmaterialien belegen, Fenstergrößen ändern und daraus Varianten machen
 nebeneinander vergleicht und als PDF mitnimmt.
 
 ## Must (läuft spätestens Do 12 Uhr)
-- [ ] IFC-Datei des eigenen Entwurfs hochladen (Button oder Datei ins Fenster ziehen) und in 3D ansehen
+- [x] IFC-Datei des eigenen Entwurfs hochladen (Button oder Datei ins Fenster ziehen) und in 3D ansehen
 - [x] Außenwände automatisch erkennen (IFC-Eigenschaft „IsExternal“ + Lage im Gebäude), per Klick korrigierbar
 - [x] Norden = Plan-oben (keine Einstellung)
 - [x] Material pro Himmelsrichtung (N/O/S/W): Klinker, Holz, Sichtbeton, Putz, Metall (je 1–2 Farbtöne); Glas seit 18.11. gestrichen, dafür Pfosten-Riegel
 - [x] Fenster pro Himmelsrichtung: Breite und Höhe in % (Sturz bleibt, Brüstung wandert, 0 % = Fenster zu)
 - [x] Kennwerte je Himmelsrichtung und gesamt: Fassadenfläche, Fensterfläche, Fensterflächenanteil
-- [ ] Darstellung mit klarem Unterschied zwischen Rohmodell und Entwurf:
+- [x] Darstellung mit klarem Unterschied zwischen Rohmodell und Entwurf:
       - Alles aus der IFC (Decken, Innenwände, nicht gestaltete Wände) hellgrau-weiß wie ein Arbeitsmodell
       - Dächer in einem festen, ruhigen Dunkelgrau mit Zeichenlinien (nicht weiß) – **seit Sitzung 17b wählbar, Start hellgrau**
       - Gestaltete Fassade „farbig + Zeichenlinien“: gedeckte, ruhige Materialfarben (nicht knallig), dunkle Kantenlinien
         und gezeichnete Struktur (Fugen, Bretter, Raster), wie eine kolorierte Architekturzeichnung –
         künstlerisch, nicht realistisch
-- [ ] Varianten speichern (Name + Bilder) und nebeneinander vergleichen;
+- [x] Varianten speichern (Name + Bilder) und nebeneinander vergleichen;
       pro Variante automatisch 5 Bilder aus fester Kamera: Perspektive + Ansichten Nord/Ost/Süd/West
 - [x] PDF-Übersichtsseite: bis zu 4 Varianten auf **A3 quer**, mit Perspektive + 4 Ansichten,
       Kennwerten (Materialien bewusst nicht, Wunsch der Nutzerin); im Kopf Standort (Nordpfeil gestrichen, s. Sitzung 10)
@@ -49,7 +49,7 @@ nebeneinander vergleicht und als PDF mitnimmt.
 - [ ] Varianten als Arbeitsdatei sichern und später wieder laden (ein PDF kann die App nicht zurücklesen)
 - [x] Sonnenverlauf als Animation über den Tag (Sitzung 19e)
 - [ ] Grobe Kosten und CO₂ pro Variante
-- [ ] Geänderte Fassade wieder als IFC speichern
+- [–] ~~Geänderte Fassade wieder als IFC speichern~~ (gestrichen 18.11., Wunsch der Nutzerin)
 
 ## Wie es technisch gelöst wird (einfach erklärt)
 - **Webseite ohne Installation:** eine `index.html` mit Aussehen (`style.css`) und Logik (`js/`).
@@ -380,6 +380,9 @@ Erledigte Sitzungen abhaken, die oberste offene Zeile ist dran (die Nummern blei
       wieder in die Mitte. „Echter Ort“ (OSM) und Speichern/Laden einer Variante mit verschobenem Haus nicht extra
       getestet – bitte einmal ausprobieren.
       Versionsnummern: `szene.js?v=56c`, `umgebung.js?v=6`, `app.js?v=65c`.
+- [–] 23l. ~~Variante wieder als IFC speichern~~ – **gestrichen (18.11., Wunsch der Nutzerin)**.
+      War schon gebaut und getestet (Knopf „Als IFC speichern“, `js/ifcexport.js`), die Nutzerin will den
+      Rückweg nach Archicad dann doch nicht. Alles wieder entfernt, nichts davon committet.
 - [ ] 22. Nachmittag: README (Poster macht die Nutzerin selbst nach Moodle-Vorlage)
 
 **Fr 20.11.** – Polieren & präsentieren, Abgabe bis 16 Uhr

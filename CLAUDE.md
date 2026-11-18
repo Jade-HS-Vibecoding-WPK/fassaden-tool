@@ -66,6 +66,7 @@ Entsteht in der Vibecoding KI-Werkstatt (Jade Hochschule, 16.–20.11.2026). Abg
 - Außenwand = IFC-Eigenschaft „IsExternal“ ist nicht „nein“ UND die Wand liegt am Gebäuderand (Sichtprüfung),
   weil Revit „IsExternal“ oft bei allen Wänden auf „ja“ setzt. Korrektur per Klick.
 - Varianten gehören zur IFC-Datei (Dateiname + Anzahl Wände); die Liste zeigt nur die des geladenen Modells.
+- Kein Rückweg nach Archicad (18.11.): weder Plugin noch „Als IFC speichern“ – gebaut und auf Wunsch der Nutzerin wieder entfernt.
 - Oberfläche schlank: nur zeigen, was schon funktioniert; jeder Bereich kommt in seiner Sitzung dazu.
 
 # Gestaltung
