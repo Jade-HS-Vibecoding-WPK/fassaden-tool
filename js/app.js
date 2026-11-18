@@ -1,5 +1,5 @@
 // Bedienoberfläche: Datei wählen oder hineinziehen, Modell anzeigen, Fassade gestalten
-import { Szene } from './szene.js?v=52';
+import { Szene } from './szene.js?v=53f';
 import { umgebungLaden, umgebungBauen, vorlageBauen, VORLAGEN } from './umgebung.js?v=5f';
 import { ifcLaden } from './ifc.js?v=19';
 import { aussenwaendeErkennen, wandFaerben, oeffnungenZuordnen, fensterAnpassen, stuetzenVorbereiten, stuetzeFaerben, dachVorbereiten, dachFaerben, kennwerteBerechnen, hauptrichtungBestimmen, fensterFaerben, anbauteileZuordnen } from './fassade.js?v=26';
@@ -748,7 +748,7 @@ const blickKurz = (variante) => {
   return `${BLICK_KURZ[b.aus]} · ${b.hoehe}°${realistischVermerk(variante)}`;
 };
 // Kleiner Vermerk, wenn die Bilder nicht im Zeichenstil gemacht wurden (Sitzung 19b, Aquarell/Bleistift seit 19d)
-const STIL_VERMERK = { realistisch: ' · realistisch', aquarell: ' · Aquarell', bleistift: ' · Bleistift' };
+const STIL_VERMERK = { realistisch: ' · realistisch', aquarell: ' · Aquarell', bleistift: ' · Bleistift', marker: ' · Marker' };
 const realistischVermerk = (variante) => STIL_VERMERK[variante.darstellung] ?? '';
 
 function blickAnzeigen() {
@@ -1451,7 +1451,7 @@ async function dateiOeffnen(datei) {
   }
 }
 
-// ---------- Umschalter „Zeichnung | Realistisch | Aquarell | Bleistift“ im 3D-Fenster ----------
+// ---------- Umschalter „Zeichnung | Realistisch | Aquarell | Bleistift | Marker“ im 3D-Fenster ----------
 // Gilt fürs 3D-Fenster und für die Bilder beim Speichern einer Variante (Sitzung 19b/19d); das PDF vermerkt den Stil.
 for (const knopf of $('stilwahl').querySelectorAll('button')) {
   knopf.addEventListener('click', () => {

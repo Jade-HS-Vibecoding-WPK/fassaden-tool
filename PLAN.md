@@ -296,8 +296,40 @@ Erledigte Sitzungen abhaken, die oberste offene Zeile ist dran (die Nummern blei
       - Schon gespeicherte Varianten bleiben unscharf, bis man sie lädt und neu speichert.
       Probleme: Das PDF wurde nur im Browser erzeugt, nicht angesehen – bitte einmal echt speichern und auf A1/A0 anschauen.
       Versionsnummern: `szene.js?v=52`, `app.js?v=61`.
-- [ ] 23g. Eventuell weitere Darstellungsstile neben Zeichnung, Realistisch, Aquarell, Bleistift
-      (Wunsch der Nutzerin 18.11., „eventuell“ – Ideen vorher mit ihr abstimmen).
+- [x] 23g. Neuer Darstellungsstil „Marker“ (Wunsch der Nutzerin 18.11., abgestimmt: erst Marker, dann Collage 23k):
+      Aussehen wie eine schnelle Entwurfsskizze mit Copic-Markern.
+      - Kräftige, aber wenige Farbflächen (Farben vereinfacht, in Stufen); sichtbare, parallele Markerstriche
+        mit etwas dunkleren Überlappungen, wo zwei Striche übereinander liegen.
+      - Striche malen manchmal leicht über den Umriss hinaus oder lassen weiße Lücken (locker aus der Hand).
+      - Schatten = zweite Lage desselben Markers (dunkler), schwarze Fineliner-Kanten darüber.
+      - Hintergrund: weißes Papier, nur ein paar lockere Striche Himmel (blau) und Wiese (grün) ums Haus.
+      - Gilt im 3D-Fenster, in den gespeicherten Bildern und im PDF. Neuer Knopf „Marker“ neben Bleistift.
+      Code: dritter Stil im vorhandenen Übermal-Programm in `js/stile.js` (wie Aquarell/Bleistift), Vermerk „· Marker“.
+      Gebaut (18.11.): `marker()` in `stile.js` – Fläche weich gemittelt (keine einzelnen Ziegel), Farben kräftiger und
+      in Stufen, Tinte durchscheinend (eine Lage hell, Überlappung dunkler). Schatten = was deutlich dunkler ist als ringsum.
+      Glas im Marker kräftig blau (`szene.js`). Erster Versuch war zu dunkel (Klinker fast schwarzrot) → Tinte aufgehellt.
+      Getestet mit Test-Neu.ifc (Klinker), ohne und mit Sonne: keine Fehler.
+      Probleme: Varianten-Bilder und PDF im Marker-Stil nicht extra getestet (gleicher Weg wie Aquarell/Bleistift) –
+      bitte einmal eine Variante speichern und anschauen. Schattenseite ohne Sonne bekommt keine 2. Lage.
+      Überarbeitet (Wunsch der Nutzerin, gleiche Sitzung): keine weißen Lücken und keine einzelnen dunklen Striche mehr,
+      statt feiner Parallelschraffur breite, weiche, geschwungene Bahnen (ca. 42 px), Überlappung nur sanft.
+      Lockerer: Farbe stärker gegen die Linien verschoben, Linien wackeln leicht. Umrisse dünner und grau statt schwarz.
+      Farbstufen entfernt (machten helle Flecken im Klinker). Getestet mit Test-Neu.ifc, keine Fehler.
+      2. Überarbeitung (Nutzerin: „zu schwammig und verwischt“, Bahnen wirkten noch wie Parallelschraffur,
+      Umrisse etwas stärker): weniger weichgezeichnet (1,5 statt 4 px) und weniger Versatz (24 statt 40 px);
+      keine Bahnen in festem Abstand mehr, sondern lang gezogenes Rauschen = unregelmäßige Strichspuren;
+      Umrisse etwas dicker und dunkler (dunkelgrau, nicht schwarz). Getestet, keine Fehler.
+      3. Schlagschatten (Wunsch der Nutzerin): Der Schatten des Hauses auf dem Boden ist jetzt mit grauem Marker
+      dunkel gefüllt (mit Strichspuren) und hat keinen Umriss mehr. Vorher war er nur als Linie zu sehen, weil er ohne
+      Gelände in der IFC auf dem „Hintergrund“ liegt. Auf Boden und Hintergrund zeichnet der Marker nur noch echte
+      Umrisse (Tiefensprung, `markerUmriss`), keine Helligkeitssprünge. Getestet mit Sonne, keine Fehler.
+      Versionsnummern: `stile.js?v=20`, `szene.js?v=53f`, `app.js?v=62f`.
+- [ ] 23k. Neuer Darstellungsstil „Collage“ – Zeitungs-Collage (Wunsch der Nutzerin 18.11.):
+      - Flächen wie aus Zeitschriften ausgerissen: Rasterpunkte (wie im Druck), ausgefranste weiße Reißkanten,
+        Stücke leicht verdreht/versetzt, kleiner Schatten darunter. Ab und zu ein Streifen Klebeband.
+      - Himmel und Wiese als große ausgerissene Papierstücke, Fenster eher dunkel und glänzend.
+      - Keine echten Fotos aus dem Internet (Rechte, Repo öffentlich): Alles wird im Programm selbst gezeichnet.
+      Code: vierter Stil in `js/stile.js`, Knopf „Collage“, Vermerk „· Collage“.
 - [ ] 23h. Haus mit der Maus verschieben (Wunsch der Nutzerin 18.11.): Haus als Ganzes anklicken und auf der
       Umgebungs-Platte ziehen, statt über die Regler „Haus verschieben“. Soll auch bei den Vorlagen gehen
       (bisher steht das Haus dort fest in der Mitte).

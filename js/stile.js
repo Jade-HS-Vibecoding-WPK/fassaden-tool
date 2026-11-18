@@ -1,4 +1,4 @@
-// Gemalte Darstellungen „Aquarell“ und „Bleistift“ (Sitzung 19d).
+// Gemalte Darstellungen „Aquarell“ und „Bleistift“ (Sitzung 19d), „Marker“ (Sitzung 23g).
 // Ablauf: Das 3D-Bild wird erst ganz normal im Zeichenstil gezeichnet, aber nicht auf den Bildschirm,
 // sondern in ein unsichtbares Bild (mit Tiefe: wie weit weg ist jeder Punkt). Danach „übermalt“ ein kleines
 // Grafikkarten-Programm (Shader) dieses Bild: Kanten finden, Farbe blasser und weicher machen, Papier,
@@ -15,7 +15,7 @@ uniform sampler2D tFarbe;   // 3D-Bild im Zeichenstil
 uniform sampler2D tTiefe;   // Tiefe (0 = nah, 1 = Hintergrund)
 uniform vec2 aufloesung;    // Bildgröße in Pixeln
 uniform float nah, fern, ortho;
-uniform int stil;           // 1 = Aquarell, 2 = Bleistift
+uniform int stil;           // 1 = Aquarell, 2 = Bleistift, 3 = Marker (Sitzung 23g)
 uniform float abend;        // 0 = Tag, 1 = Abend (nur Aquarell)
 uniform float nacht;        // 0 = Abend, 1 = tiefe Nacht (nur Aquarell)
 uniform vec3 papier;
@@ -215,11 +215,110 @@ vec3 bleistift(vec2 q, vec2 px, float s) {
   return mix(vec3(0.2, 0.21, 0.23), papier, wert);
 }
 
+// ---------- Marker (Sitzung 23g) ----------
+// Eine Lage Marker: flächig angelegt, nur mit unregelmäßigen Strichspuren in Zugrichtung
+// (Wunsch der Nutzerin: keine Parallelschraffur, keine weißen Lücken, keine einzelnen dunklen Striche).
+// Statt Bahnen in festem Abstand: Rauschen, das in Zugrichtung lang gezogen ist – so entstehen Spuren
+// verschiedener Breite an zufälligen Stellen, wie wenn der Marker mal mehr, mal weniger Farbe abgibt.
+// Ergebnis: wie viel Farbe hier liegt (etwa 0,9 … 1,15; 1 = eine Lage).
+float markerBahnen(vec2 p, float winkel, float abst, float saat) {
+  vec2 r = vec2(cos(winkel), sin(winkel));
+  vec2 n = vec2(-r.y, r.x);
+  vec2 z = vec2(dot(p, r) / (abst * 12.0), dot(p, n) / abst); // längs gestreckt, quer fein
+  z.y += (wolkig(p * 0.003 + saat) - 0.5) * 1.5;               // Spuren geschwungen, nicht gerade
+  float spur = wolkig(z + saat);
+  return 0.9 + 0.25 * smoothstep(0.35, 0.75, spur);
+}
+// Nur der Umriss (Sprung in der Tiefe), ohne Helligkeitssprünge: für den Boden, damit Schatten keinen Rand bekommen
+float markerUmriss(vec2 uv, vec2 d) {
+  float tm = tiefe(uv);
+  float tl = tiefe(uv - vec2(d.x, 0.0)), tr = tiefe(uv + vec2(d.x, 0.0));
+  float to = tiefe(uv + vec2(0.0, d.y)), tu = tiefe(uv - vec2(0.0, d.y));
+  float umriss = (abs(tl + tr - 2.0 * tm) + abs(to + tu - 2.0 * tm)) / min(tm, min(min(tl, tr), min(to, tu)));
+  return smoothstep(0.02, 0.08, umriss);
+}
+// Farbe kräftiger (wie ein Marker). Keine harten Farbstufen: die machten helle Flecken in Ziegeln und Holz.
+vec3 markerFarbe(vec3 c) {
+  float l = hell(c);
+  return clamp(vec3(l) + (c - vec3(l)) * 1.7, 0.0, 1.0);
+}
+vec3 marker(vec2 q, vec2 px, float s) {
+  vec2 p = q * 1000.0; // Strichgrößen wie in einem 1000 Pixel hohen Bild
+  // locker aus der Hand (Wunsch der Nutzerin: lockerer): Farbe gegenüber den Linien deutlich verschoben,
+  // malt mal über den Rand, mal bleibt ein Spalt; Linien selbst wackeln leicht
+  vec2 wackel = (vec2(wolkig(q * 8.0), wolkig(q * 8.0 + 4.1)) - 0.5) * px * 5.0 * s;
+  vec2 versatz = (vec2(wolkig(q * 2.0 + 4.0), wolkig(q * 2.0 + 9.0)) - 0.5) * px * 24.0 * s;
+  vec2 uv = vUv + versatz;
+  // weich gemittelt: Marker zeigt keine einzelnen Ziegel, nur die Farbe der Fläche
+  vec3 c = vec3(0.0);
+  for (int i = -2; i <= 2; i++) for (int j = -2; j <= 2; j++) c += farbe(uv + vec2(float(i), float(j)) * px * 1.5 * s);
+  c /= 25.0;
+  float l = hell(c);
+  // Markertinte ist durchscheinend: eine Lage eher hell, erst übereinander wird es dunkel
+  vec3 tinte = mix(markerFarbe(c), vec3(1.0), 0.3);
+  float da = bauteil(uv);
+  // Helligkeit der weiteren Umgebung: was deutlich dunkler ist als ringsum, ist Schatten oder eine Schattenseite
+  float lUmg = 0.0;
+  for (int k = 0; k < 8; k++) {
+    float w = float(k) * 0.785;
+    lUmg += hell(farbe(uv + vec2(cos(w), sin(w)) * px * 40.0 * s));
+  }
+  lUmg /= 8.0;
+
+  // erste Lage: die Fläche selbst, steile Bahnen; ganz helle Flächen bleiben Papier (Glanzlicht)
+  float frei = smoothstep(0.93, 0.97, l);
+  float lage1 = markerBahnen(p, 1.25, 42.0, 0.0) * (1.0 - frei);
+  // zweite Lage: Schatten und dunkle Seiten noch einmal mit demselben Marker, weich und flacher gezogen
+  float schatten = max(smoothstep(0.05, 0.18, lUmg - l), smoothstep(0.2, 0.1, l));
+  float lage2 = markerBahnen(p, 0.4, 50.0, 30.0) * schatten * 0.6;
+  vec3 bild = papier * pow(tinte, vec3(lage1 + lage2)); // jede Lage Farbe darüber macht dunkler
+  bild = mix(papier, bild, da);
+
+  // Hintergrund: ein paar lockere Striche Himmel (blau, oben ums Haus) und Wiese (grün, unten)
+  vec2 mitte = vUv + (vec2(wolkig(q * 2.0), wolkig(q * 2.0 + 5.0)) - 0.5) * 0.06;
+  float nahe = 0.0;
+  for (int k = 0; k < 12; k++) {
+    float w = float(k) * 0.5236;
+    vec2 rr = vec2(cos(w) * aufloesung.y / aufloesung.x, sin(w));
+    nahe += bauteil(mitte + rr * 0.05) + bauteil(mitte + rr * 0.11);
+  }
+  nahe = smoothstep(0.15, 0.45, nahe / 24.0);
+  float oben = 0.0, unten = 0.0;
+  for (int k = 1; k <= 4; k++) {
+    oben += bauteil(mitte + vec2(0.0, float(k) * 0.06));
+    unten += bauteil(mitte - vec2(0.0, float(k) * 0.06));
+  }
+  float boden = clamp((oben - unten) * 0.5, 0.0, 1.0);
+  boden = max(boden, smoothstep(0.3, 0.15, vUv.y + (wolkig(q * vec2(3.0, 1.0) + 2.0) - 0.5) * 0.15) * step(0.01, nahe));
+  float himmelStriche = min(markerBahnen(p, 0.12, 45.0, 50.0), 1.0) * nahe * (1.0 - boden);
+  float wiesenStriche = min(markerBahnen(p, 0.05, 35.0, 60.0), 1.0) * nahe * boden;
+  vec3 himmel = vec3(0.70, 0.84, 0.95), wiese = vec3(0.70, 0.84, 0.58);
+  vec3 hinten = papier * mix(vec3(1.0), himmel, himmelStriche) * mix(vec3(1.0), wiese, wiesenStriche);
+  // Schlagschatten auf dem Boden (Wunsch der Nutzerin): dunkel mit dem grauen Marker gefüllt, ohne Umriss.
+  // Ohne Gelände in der IFC liegt der Schatten auf dem „Hintergrund“: dort ist das Bild dunkler als weiß.
+  float bodenSchatten = smoothstep(0.08, 0.35, 1.0 - hell(farbe(uv))) * (1.0 - da);
+  float schattenLage = markerBahnen(p, 0.5, 30.0, 70.0);
+  hinten *= mix(vec3(1.0), pow(vec3(0.58, 0.6, 0.68), vec3(schattenLage)), bodenSchatten);
+  bild = mix(hinten, bild, da);
+
+  // Fineliner: feine, graue Kanten (Wunsch der Nutzerin: nicht so schwarz und dick), nicht ganz durchgezogen.
+  // Helligkeitssprünge zählen nur auf dem Gebäude, nicht auf dem Boden – sonst bekäme der Schatten einen Umriss.
+  vec2 kuv = vUv + wackel * 0.5;
+  vec2 kd = px * 0.85 * s;
+  float aufBoden = max(1.0 - bauteil(kuv), bodenFlaeche(kuv, kd * 2.0));
+  float linie = mix(kante(kuv, kd), markerUmriss(kuv, kd), aufBoden) * (0.75 + 0.25 * rauschen(q * 45.0));
+  bild = mix(bild, vec3(0.2, 0.2, 0.23), smoothstep(0.3, 0.75, linie) * 0.78);
+  float rand = randAuslauf(q);
+  bild = mix(papier, bild, rand);
+  bild *= 0.99 + 0.02 * rauschen(p * 0.7); // Papierkorn
+  return bild;
+}
+
 void main() {
   vec2 px = 1.0 / aufloesung;
   float s = aufloesung.y / 1000.0; // Pinsel- und Strichgrößen wie in einem 1000 Pixel hohen Bild
   vec2 q = vUv * vec2(aufloesung.x / aufloesung.y, 1.0);
-  vec3 c = stil == 1 ? aquarell(q, px, s) : bleistift(q, px, s);
+  vec3 c = stil == 1 ? aquarell(q, px, s) : stil == 2 ? bleistift(q, px, s) : marker(q, px, s);
   gl_FragColor = vec4(c, 1.0);
 }
 `;
@@ -278,7 +377,7 @@ export class Nachbearbeitung {
     u.nah.value = kamera.near;
     u.fern.value = kamera.far;
     u.ortho.value = kamera.isOrthographicCamera ? 1 : 0;
-    u.stil.value = stil === 'aquarell' ? 1 : 2;
+    u.stil.value = { aquarell: 1, bleistift: 2, marker: 3 }[stil] ?? 2;
     u.abend.value = abend;
     u.nacht.value = nacht;
     u.projInv.value.copy(kamera.projectionMatrixInverse);

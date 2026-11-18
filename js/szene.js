@@ -3,11 +3,11 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { realistischesMaterial, himmelHintergrund, himmelUmgebung } from './realistisch.js?v=26';
 import { MATERIAL } from './darstellung.js?v=19';
-import { Nachbearbeitung } from './stile.js?v=14';
+import { Nachbearbeitung } from './stile.js?v=20';
 import { umgebungLegen, hausFreistellen } from './umgebung.js?v=5f';
 
 // Gemalte Darstellungen (Sitzung 19d): Zeichenstil wird nachträglich übermalt (stile.js)
-const GEMALT = ['aquarell', 'bleistift'];
+const GEMALT = ['aquarell', 'bleistift', 'marker'];
 
 // Ist das Teil zu sehen? (es selbst und alle, zu denen es gehört)
 function istSichtbar(teil) {
@@ -237,6 +237,16 @@ export class Szene {
         getauscht.push([teil, teil.material]);
         // ohne Licht: Glas mit Licht und Schatten; mit Licht: leuchtet selbst
         teil.material = Szene.fensterZufall(teil) < anteil ? this.fensterLicht : this.fensterDunkel;
+      });
+    }
+    // Marker: Glas kräftig blau, damit die Fenster wie mit einem blauen Marker angelegt wirken
+    if (this.stil === 'marker') {
+      this.fensterDunkel.color.set(0x6f93bd);
+      this.fensterDunkel.opacity = 0.85;
+      this.modell.traverse((teil) => {
+        if (!teil.isMesh || teil.material !== MATERIAL.fenster) return;
+        getauscht.push([teil, teil.material]);
+        teil.material = this.fensterDunkel;
       });
     }
     if (abend > 0) {
