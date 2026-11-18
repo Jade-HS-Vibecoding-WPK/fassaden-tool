@@ -7,7 +7,7 @@ import {
   farbtoeneVon, farbtonVon, farbtonSetzen, farbtoeneSammeln, farbtoeneUebernehmen, materialText,
 } from './materialien.js?v=25f';
 import { variantenLesen, varianteSpeichern, varianteLoeschen } from './varianten.js';
-import { pdfErstellen, pdfDateiname } from './pdf.js?v=26e';
+import { pdfErstellen, pdfDateiname } from './pdf.js?v=26g';
 import { START_SONNE, sonnenstand, himmelsrichtung, uhrzeitText, ortMitName, zeitText, weltzeit } from './sonne.js?v=24';
 
 const $ = (id) => document.getElementById(id);

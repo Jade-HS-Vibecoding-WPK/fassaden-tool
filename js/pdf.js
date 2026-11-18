@@ -1,6 +1,7 @@
 // PDF-Übersichtsseite: 1 bis 4 Varianten nebeneinander auf A3 quer, wird direkt als Datei gespeichert.
 // Auf Wunsch folgt danach je Variante eine eigene Seite (Sitzung 19).
 // Seit Sitzung 20c: Ansichten maßstäblich, keine Schrift außer Kennzeichen, Maßstab und (auf Wunsch) Kennwerte.
+// Seit Sitzung 20g: Schriftart Source Sans 3 (Light, für Hervorhebungen Semibold) statt Helvetica.
 // Die Bibliothek jsPDF wird erst beim ersten Klick aus dem Internet geladen (die App startet dadurch nicht langsamer).
 const JSPDF_ADRESSE = 'https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js';
 
@@ -18,6 +19,41 @@ const LINIE = [226, 226, 226];
 const AKZENT = [31, 58, 104];
 
 const RICHTUNGSNAMEN = { N: 'Nord', O: 'Ost', S: 'Süd', W: 'West' };
+
+// ---------- Schrift (Sitzung 20g): Source Sans 3, frei unter SIL Open Font License (siehe schriften/LICENSE.md) ----------
+// jsPDF kennt nur Helvetica & Co. Eigene Schriften müssen als TTF ins PDF eingebettet werden (dann klappen auch Umlaute).
+// Die Dateien werden erst beim ersten PDF geladen. Klappt das nicht, nimmt das PDF Helvetica.
+const SCHRIFTDATEIEN = {
+  normal: new URL('../schriften/SourceSans3-Light.ttf', import.meta.url),
+  bold: new URL('../schriften/SourceSans3-Semibold.ttf', import.meta.url),
+};
+let schriftDaten = null; // Promise → { normal: base64, bold: base64 } oder null
+function schriftLaden() {
+  schriftDaten ??= Promise.all(Object.entries(SCHRIFTDATEIEN).map(async ([stil, adresse]) => {
+    const antwort = await fetch(adresse);
+    if (!antwort.ok) throw new Error(`Schrift fehlt: ${adresse}`);
+    const bytes = new Uint8Array(await antwort.arrayBuffer());
+    let text = '';
+    for (let i = 0; i < bytes.length; i += 0x8000) text += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+    return [stil, btoa(text)];
+  })).then(Object.fromEntries).catch((fehler) => {
+    console.warn('PDF-Schrift nicht geladen, nehme Helvetica.', fehler);
+    schriftDaten = null; // beim nächsten Mal neu versuchen
+    return null;
+  });
+  return schriftDaten;
+}
+
+let SCHRIFT = 'helvetica'; // wird zu 'SourceSans3', sobald die Schrift im Dokument steckt
+function schriftEinbetten(doc, daten) {
+  if (!daten) { SCHRIFT = 'helvetica'; return; }
+  for (const [stil, base64] of Object.entries(daten)) {
+    const datei = `SourceSans3-${stil}.ttf`;
+    doc.addFileToVFS(datei, base64);
+    doc.addFont(datei, 'SourceSans3', stil);
+  }
+  SCHRIFT = 'SourceSans3';
+}
 
 let bibliothek = null;
 function bibliothekLaden() {
@@ -41,7 +77,7 @@ const anteilText = ({ fassade, fenster }) => (fassade > 0 ? `${Math.round((fenst
 
 // Eine Tabelle zeichnen: Zwischentitel und Zeilen; gibt die Unterkante zurück
 function abschnitt(doc, titel, x, y, breite, zeilen) {
-  doc.setFont('helvetica', 'bold').setFontSize(7.5).setTextColor(...AKZENT);
+  doc.setFont(SCHRIFT, 'bold').setFontSize(7.5).setTextColor(...AKZENT);
   doc.text(titel.toUpperCase(), x, y + 3, { charSpace: 0.35 });
   y += 5.5;
   for (const zeichnen of zeilen) {
@@ -55,7 +91,7 @@ function abschnitt(doc, titel, x, y, breite, zeilen) {
 function zeilenkopf(doc, x, y, breite, beschriftung, kraeftig = false) {
   doc.setDrawColor(...(kraeftig ? TEXT : LINIE)).setLineWidth(kraeftig ? 0.25 : 0.2);
   doc.line(x, y, x + breite, y);
-  doc.setFont('helvetica', kraeftig ? 'bold' : 'normal').setFontSize(8).setTextColor(...(kraeftig ? TEXT : LEISE));
+  doc.setFont(SCHRIFT, kraeftig ? 'bold' : 'normal').setFontSize(8).setTextColor(...(kraeftig ? TEXT : LEISE));
   doc.text(beschriftung, x, y + 3.7);
 }
 
@@ -65,7 +101,7 @@ function tabelleKennwerte(doc, v, x, y, breite) {
   const spalte = (breite - LABEL) / 3;
   const rechts = (i) => x + LABEL + (i + 1) * spalte;
   const zeilen = [(zy) => {
-    doc.setFont('helvetica', 'normal').setFontSize(7).setTextColor(...LEISE);
+    doc.setFont(SCHRIFT, 'normal').setFontSize(7).setTextColor(...LEISE);
     ['Fassade m²', 'Fenster m²', 'Anteil'].forEach((t, i) => doc.text(t, rechts(i), zy + 3.4, { align: 'right' }));
   }];
   for (const [schluessel, name] of [...Object.entries(RICHTUNGSNAMEN), ['gesamt', 'Gesamt']]) {
@@ -73,7 +109,7 @@ function tabelleKennwerte(doc, v, x, y, breite) {
     zeilen.push((zy) => {
       zeilenkopf(doc, x, zy, breite, name, gesamt);
       const k = v.kennwerte[schluessel];
-      doc.setFont('helvetica', gesamt ? 'bold' : 'normal').setFontSize(8.5).setTextColor(...TEXT);
+      doc.setFont(SCHRIFT, gesamt ? 'bold' : 'normal').setFontSize(8.5).setTextColor(...TEXT);
       [quadratmeter(k.fassade), quadratmeter(k.fenster), anteilText(k)].forEach((t, i) => doc.text(t, rechts(i), zy + 3.7, { align: 'right' }));
     });
   }
@@ -154,7 +190,7 @@ function spalteAnordnen(groessen, breite, hoehe, linksErlaubt, neben = 0) {
 
 // Kennzeichen klein unter ein Bild schreiben
 function kennzeichenSchreiben(doc, text, x, y) {
-  doc.setFont('helvetica', 'normal').setFontSize(7).setTextColor(...TEXT);
+  doc.setFont(SCHRIFT, 'normal').setFontSize(7).setTextColor(...TEXT);
   doc.text(text, x, y + 3.4);
 }
 
@@ -196,7 +232,7 @@ function spalteZeichnen(doc, v, bilder, lage, x, y, kennzeichen, blickText) {
 export async function pdfErstellen({ varianten, modellName, kennzeichen, blickText, massstab = 100, mitKennwerte = true, einzelseiten = false }) {
   const alt = varianten.find((v) => !v.masse);
   if (alt) throw new Error(`„${alt.name}“ wurde vor dem Update gespeichert und kennt ihre Maße nicht. Bitte die Variante laden und neu speichern.`);
-  const JsPdf = await bibliothekLaden();
+  const [JsPdf, schrift] = await Promise.all([bibliothekLaden(), schriftLaden()]);
 
   // Bilder vorbereiten: Perspektive unverändert, Ansichten zugeschnitten und in mm umgerechnet
   const bilder = new Map();
@@ -215,6 +251,7 @@ export async function pdfErstellen({ varianten, modellName, kennzeichen, blickTe
   }
 
   const doc = new JsPdf({ orientation: 'landscape', unit: 'mm', format: 'a3' });
+  schriftEinbetten(doc, schrift);
   doc.setProperties({ title: `${varianten.length === 1 ? 'Fassadenvariante' : 'Variantenvergleich'} – ${modellName}`, creator: 'Fassaden-Tool' });
   const angaben = { bilder, kennzeichen, blickText, massstab };
   seiteZeichnen(doc, varianten, { ...angaben, mitKennwerte });
@@ -300,7 +337,7 @@ function seiteZeichnen(doc, varianten, { bilder, kennzeichen, blickText, masssta
   }
 
   const fussY = BLATT_H - RAND + 2;
-  doc.setFont('helvetica', 'normal').setFontSize(9).setTextColor(...TEXT);
+  doc.setFont(SCHRIFT, 'normal').setFontSize(9).setTextColor(...TEXT);
   doc.text(`Ansichten M 1:${massstab}`, BLATT_B - RAND, fussY, { align: 'right' });
   if (mitKennwerte) {
     doc.setFontSize(7).setTextColor(...LEISE);

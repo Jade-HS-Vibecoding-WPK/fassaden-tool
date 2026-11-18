@@ -19,6 +19,8 @@ Entsteht in der Vibecoding KI-Werkstatt (Jade Hochschule, 16.–20.11.2026). Abg
 - Reine statische Webseite, läuft ohne Installation und auf GitHub Pages: `index.html`, `style.css`, `js/*.js`.
 - Bibliotheken per CDN (Import-Map in `index.html`): three.js 0.160.0 (3D), web-ifc 0.0.57 (IFC lesen);
   jsPDF 2.5.2 (PDF) wird in `js/pdf.js` erst beim ersten Klick nachgeladen.
+- PDF-Schrift (Sitzung 20g): Source Sans 3 Light/Semibold als TTF in `schriften/` (SIL Open Font License, Lizenz liegt bei).
+  Keine Firmenschriften (z. B. Artifakt von Autodesk) ins Repo – es ist öffentlich.
 - Ortssuche (Sitzung 16, in `app.js`): OpenStreetMap Nominatim, nur bei Enter, max. 1 Anfrage/s, Namensnennung sichtbar.
   Einzige Stelle, an der Nutzereingaben das Gerät verlassen (steht so in der Anleitung).
 - Kein Node/npm auf dem Rechner. Lokal testen mit `python -m http.server 8000` (siehe `.claude/launch.json`).

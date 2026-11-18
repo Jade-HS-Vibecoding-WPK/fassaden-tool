@@ -141,10 +141,17 @@ Erledigte Sitzungen abhaken, die oberste offene Zeile ist dran (die Nummern blei
 - [x] 20e. (18.11.) Beschriftung „Ansicht Nord“ statt „N“ (Wunsch der Nutzerin 18.11.): im PDF und im Variantenvergleich unter jeder
       Ansicht „Ansicht Nord / Nordost / Ost …“ – die Richtung, in die die Fassade wirklich zeigt, in 8 Stufen (nicht mehr „N (NNW)“).
       Genau dazwischen (z. B. NNW) → zur Hauptrichtung runden („Ansicht Nord“). Technisch: `ansichtKennzeichen` in `app.js`.
-- [ ] 20g. Schriftart im PDF „Artifakt Element Light“ (Wunsch der Nutzerin 18.11.) statt Helvetica – für Kennzeichen,
+- [x] 20g. (18.11.) Schriftart im PDF „Artifakt Element Light“ (Wunsch der Nutzerin 18.11.) statt Helvetica – für Kennzeichen,
       Maßstab und Kennwerte-Tabelle. Technisch: jsPDF braucht die Schrift als TTF-Datei, die ins PDF eingebettet wird
       (`addFileToVFS` + `addFont` in `pdf.js`), sonst fehlen auch Umlaute. Vorher klären: Artifakt ist eine Schrift von
       Autodesk – darf die Datei in unser öffentliches GitHub-Repo und in PDFs eingebettet werden? Wenn nein: ähnliche freie Schrift.
+      **Entschieden 18.11.:** Artifakt ist eine Firmenschrift (nicht frei) → stattdessen **Source Sans 3 Light** (Adobe,
+      SIL Open Font License, darf ins Repo und ins PDF). Für Hervorhebungen eine kräftigere Stufe derselben Schrift.
+      TTF-Dateien + Lizenz in eigenem Ordner im Projekt ablegen.
+      **Gebaut:** `schriften/` (Light + Semibold + LICENSE.md), `pdf.js` lädt sie beim ersten PDF und bettet nur die
+      benutzten Zeichen ein (PDF bleibt klein). Fehlt die Schrift, nimmt das PDF wie früher Helvetica.
+      Getestet mit Test-Variante: alle Texte im PDF in Source Sans 3. Offen: Aussehen am echten PDF ansehen
+      (im Browserfenster von Claude ließ sich das PDF nicht anzeigen).
 - [x] 21. Auf GitHub hochladen und über GitHub Pages veröffentlichen (vor 20e gezogen, Wunsch der Nutzerin) (18.11.)
       Live-Demo: https://jade-hs-vibecoding-wpk.github.io/fassaden-tool/ (Pages aus Zweig `main`, Ordner `/`).
       Jeder `git push` auf `main` aktualisiert die Seite nach 1–2 Minuten von selbst. → **12 Uhr Freeze**
