@@ -287,13 +287,15 @@ Erledigte Sitzungen abhaken, die oberste offene Zeile ist dran (die Nummern blei
       passt es nicht, kommt wie bisher der Vorschlag (Maßstab oder Blatt). Seitenleiste angesehen, Maßstab graut aus. Keine neuen Fehler.
       Probleme: Das PDF selbst ließ sich im eingebauten Browser wieder nicht ansehen – bitte einmal echt speichern und anschauen.
       Versionsnummern: `pdf.js?v=29`, `app.js?v=60`, `style.css?v=35c`.
-- [ ] 23j. Höhere Auflösung der Bilder im PDF (Wunsch der Nutzerin 18.11., nach 23i): Bisher macht „Variante speichern“
-      jedes der 5 Bilder 1500 × 1000 Pixel als JPEG 85 % (`bilderAufnehmen` in `szene.js`), auf A3–A0 wirkt das unscharf.
-      Vorschlag (noch abzustimmen):
-      - Bilder doppelt so groß aufnehmen (3000 × 2000), JPEG 92 %. Die Liste/der Vergleich zeigen sie einfach verkleinert.
-      - Aquarell und Bleistift (`stile.js`) prüfen: Pinsel- und Strichbreiten in Pixeln mitwachsen lassen, sonst sehen sie anders aus.
-      - Achtung: Speichern dauert etwas länger, jede Variante braucht ca. 3–4 × so viel Browser-Speicher.
-        Schon gespeicherte Varianten bleiben unscharf, bis man sie lädt und neu speichert.
+- [x] 23j. Höhere Auflösung der Bilder im PDF (Wunsch der Nutzerin 18.11., nach 23i): „Variante speichern“ macht die
+      5 Bilder jetzt 3000 × 2000 Pixel als JPEG 92 % (vorher 1500 × 1000, 85 %; `bilderAufnehmen` in `szene.js`).
+      - Aquarell und Bleistift brauchten nichts: `stile.js` rechnet Pinsel/Striche schon relativ zur Bildhöhe.
+      - Kantenlinien bleiben 1 Pixel dick, wirken im PDF also feiner (wie geplottet). Falls zu blass: später kräftiger machen.
+      - Getestet (Test-Neu.ifc): Zeichnung + Aquarell gespeichert, alle 5 Bilder 3000 × 2000, zusammen ca. 1,7 MB je Variante;
+        Speichern weiterhin ca. 1–2 s. PDF A1 „beides“ mit 2 Varianten: 3 Seiten, 3,4 MB, unter 1 s, keine Fehler.
+      - Schon gespeicherte Varianten bleiben unscharf, bis man sie lädt und neu speichert.
+      Probleme: Das PDF wurde nur im Browser erzeugt, nicht angesehen – bitte einmal echt speichern und auf A1/A0 anschauen.
+      Versionsnummern: `szene.js?v=52`, `app.js?v=61`.
 - [ ] 23g. Eventuell weitere Darstellungsstile neben Zeichnung, Realistisch, Aquarell, Bleistift
       (Wunsch der Nutzerin 18.11., „eventuell“ – Ideen vorher mit ihr abstimmen).
 - [ ] 23h. Haus mit der Maus verschieben (Wunsch der Nutzerin 18.11.): Haus als Ganzes anklicken und auf der

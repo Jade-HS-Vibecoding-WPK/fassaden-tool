@@ -643,7 +643,8 @@ export class Szene {
   // Die Kameras drehen sich mit, damit die Ansichten gerade auf die Fassade schauen.
   // Liefert { perspektive, N, O, S, W } als JPEG-Bilder (Blob) und masse (Sitzung 20c): je Ansicht, wie viele Meter
   // das Bild breit und hoch ist und wo das Gebäude darin liegt (Meter ab linkem und unterem Bildrand) – fürs maßstäbliche PDF.
-  async bilderAufnehmen(breite = 1500, hoehe = 1000, drehung = 0, blick = { aus: 135, hoehe: 15 }) {
+  // Bildgröße seit Sitzung 23j 3000 × 2000 (vorher 1500 × 1000), damit das PDF auch auf A3–A0 scharf ist.
+  async bilderAufnehmen(breite = 3000, hoehe = 2000, drehung = 0, blick = { aus: 135, hoehe: 15 }) {
     const box = this.gebaeudeBox();
     const mitte = box.getCenter(new THREE.Vector3());
     const groesse = box.getSize(new THREE.Vector3());
@@ -713,7 +714,7 @@ export class Szene {
         this.zeichnen(kamera, true);
         // Bild sofort abholen, solange es noch auf der Zeichenfläche liegt
         // (toDataURL statt toBlob: toBlob braucht in manchen Browsern ca. 1 s pro Bild)
-        bilder[name] = alsBlob(this.renderer.domElement.toDataURL('image/jpeg', 0.85));
+        bilder[name] = alsBlob(this.renderer.domElement.toDataURL('image/jpeg', 0.92));
       }
     } finally {
       // Sonne und Schatten wieder wie im 3D-Fenster
