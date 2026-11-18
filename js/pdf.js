@@ -1,4 +1,5 @@
 // PDF-Übersichtsseite: 1 bis 4 Varianten nebeneinander auf A3 quer, wird direkt als Datei gespeichert.
+// Auf Wunsch folgt danach je Variante eine eigene Seite (Sitzung 19).
 // Die Bibliothek jsPDF wird erst beim ersten Klick aus dem Internet geladen (die App startet dadurch nicht langsamer).
 const JSPDF_ADRESSE = 'https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js';
 
@@ -149,22 +150,54 @@ function bild(doc, daten, alias, [x, y, b, h], kennzeichen) {
 }
 
 /**
- * Baut die Übersichtsseite und liefert das fertige PDF-Dokument (zum Speichern: doc.save(name)).
+ * Baut die Übersichtsseite (auf Wunsch + Einzelseiten) und liefert das fertige PDF-Dokument (zum Speichern: doc.save(name)).
  * varianten: 1–4 gespeicherte Varianten (älteste zuerst); modellName: Dateiname der IFC;
  * standort: Text oder leer; mitKennwerte: Tabelle „Kennwerte“ zeigen (sonst nur Bilder);
+ * einzelseiten: ab 2 Varianten nach der Übersicht je Variante eine eigene Seite;
  * kennzeichen(variante, richtung): Beschriftung einer Ansicht, z. B. „N“ oder „N (NNW)“;
  * blickText(variante): Beschriftung der Perspektive, z. B. „Perspektive aus Südosten, 15°“
  */
-export async function pdfErstellen({ varianten, modellName, standort, kennzeichen, blickText, sonnenText = () => null, mitKennwerte = true }) {
-  // Sonne (Sitzung 15): Hat eine Variante Schatten, bekommt jede Spalte eine Zeile „Schatten: …“ unter dem Datum
-  const mitSonne = varianten.some((v) => sonnenText(v));
+export async function pdfErstellen({ varianten, modellName, standort, kennzeichen, blickText, sonnenText = () => null, mitKennwerte = true, einzelseiten = false }) {
   const JsPdf = await bibliothekLaden();
   const doc = new JsPdf({ orientation: 'landscape', unit: 'mm', format: 'a3' });
+  doc.setProperties({ title: `${varianten.length === 1 ? 'Fassadenvariante' : 'Variantenvergleich'} – ${modellName}`, creator: 'Fassaden-Tool' });
+  const angaben = { modellName, standort, kennzeichen, blickText, sonnenText, mitKennwerte };
+
+  // Einzelseiten (Sitzung 19): nach der Übersicht je Variante eine eigene Seite, aufgebaut wie das 1-Varianten-PDF.
+  // Bei nur 1 Variante wäre sie doppelt, deshalb dann keine.
+  const mitEinzelseiten = einzelseiten && varianten.length > 1;
+  await seiteZeichnen(doc, varianten, { ...angaben, titel: varianten.length === 1 ? 'Fassadenvariante' : 'Variantenvergleich' });
+  if (mitEinzelseiten) {
+    for (const v of varianten) {
+      doc.addPage('a3', 'landscape');
+      // Einzelseiten nur mit Bildern und ihren Kennzeichen (Wunsch der Nutzerin 18.11.):
+      // kein Kopf, kein Fuß, kein Name, keine Kennwerte – das steht alles schon auf der Übersicht
+      await seiteZeichnen(doc, [v], { ...angaben, mitKennwerte: false, nurBilder: true });
+    }
+  }
+  return doc;
+}
+
+// Eine Seite A3 quer: Kopf, Fuß und eine Spalte je Variante (1 Variante = großes Bild, Kennwerte rechts).
+// nurBilder: nur die 5 Bilder mit Kennzeichen, mittig auf dem ganzen Blatt (Einzelseiten)
+async function seiteZeichnen(doc, varianten, { titel, modellName, standort, kennzeichen, blickText, sonnenText, mitKennwerte, nurBilder = false }) {
+  if (nurBilder) {
+    const [v] = varianten;
+    const lage = bilderAnordnen(BLATT_B - 2 * RAND, BLATT_H - 2 * RAND);
+    const x = (BLATT_B - lage.breite) / 2, y = (BLATT_H - lage.hoehe) / 2;
+    const verschoben = ([bx, by, b, h]) => [x + bx, y + by, b, h];
+    bild(doc, new Uint8Array(await v.bilder.perspektive.arrayBuffer()), `v${v.id}-p`, verschoben(lage.perspektive), blickText(v));
+    for (const [j, richtung] of Object.keys(RICHTUNGSNAMEN).entries()) {
+      bild(doc, new Uint8Array(await v.bilder[richtung].arrayBuffer()), `v${v.id}-${richtung}`, verschoben(lage.ansichten[j]), kennzeichen(v, richtung));
+    }
+    return;
+  }
+
+  // Sonne (Sitzung 15): Hat eine Variante Schatten, bekommt jede Spalte eine Zeile „Schatten: …“ unter dem Datum
+  const mitSonne = varianten.some((v) => sonnenText(v));
   const heute = new Date().toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' });
-  doc.setProperties({ title: `Variantenvergleich – ${modellName}`, creator: 'Fassaden-Tool' });
 
   // ---------- Kopf ----------
-  const titel = varianten.length === 1 ? 'Fassadenvariante' : 'Variantenvergleich';
   doc.setFont('helvetica', 'bold').setFontSize(20).setTextColor(...TEXT);
   doc.text(titel, RAND, RAND + 7);
   const angaben = [`Modell: ${modellName}`, standort ? `Standort: ${standort}` : null, `Stand: ${heute}`].filter(Boolean);
@@ -223,7 +256,6 @@ export async function pdfErstellen({ varianten, modellName, standort, kennzeiche
     if (tabelleRechts) tabelleKennwerte(doc, v, x + spaltenBreite - TABELLE_B, oben + kopfHoehe, TABELLE_B);
     else tabelleKennwerte(doc, v, x, y, TABELLE_B);
   }
-  return doc;
 }
 
 // Dateiname wie „Variantenvergleich_Entwurf_2026-11-17.pdf“ (ohne Zeichen, die Windows nicht mag)

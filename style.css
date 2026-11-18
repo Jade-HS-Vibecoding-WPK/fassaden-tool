@@ -288,6 +288,7 @@ select:hover, select:focus, .eingabe:hover, .eingabe:focus { border-color: var(-
 .vergleichswahl .pdfwahl { margin-top: 12px; }
 .vergleichswahl .pdfwahl .eingabe { margin-bottom: 10px; }
 .vergleichswahl .pdfwahl .schalter { margin-bottom: 0; }
+.vergleichswahl .pdfwahl .schalter + .schalter { margin-top: 8px; }
 .textknoepfe { display: flex; gap: 18px; }
 .textknopf:disabled { color: var(--leise); cursor: wait; }
 .vergleich-kopf .knoepfe { display: flex; gap: 10px; }

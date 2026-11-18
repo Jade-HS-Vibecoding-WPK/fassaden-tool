@@ -10,7 +10,7 @@ nebeneinander vergleicht und als PDF mitnimmt.
 - [ ] IFC-Datei des eigenen Entwurfs hochladen (Button oder Datei ins Fenster ziehen) und in 3D ansehen
 - [x] Außenwände automatisch erkennen (IFC-Eigenschaft „IsExternal“ + Lage im Gebäude), per Klick korrigierbar
 - [x] Norden = Plan-oben (keine Einstellung)
-- [x] Material pro Himmelsrichtung (N/O/S/W): Klinker, Holz, Sichtbeton, Putz, Metall, Glas (je 1–2 Farbtöne)
+- [x] Material pro Himmelsrichtung (N/O/S/W): Klinker, Holz, Sichtbeton, Putz, Metall (je 1–2 Farbtöne); Glas seit 18.11. gestrichen, dafür Pfosten-Riegel
 - [x] Fenster pro Himmelsrichtung: Breite und Höhe in % (Sturz bleibt, Brüstung wandert, 0 % = Fenster zu)
 - [x] Kennwerte je Himmelsrichtung und gesamt: Fassadenfläche, Fensterfläche, Fensterflächenanteil
 - [ ] Darstellung mit klarem Unterschied zwischen Rohmodell und Entwurf:
@@ -41,7 +41,7 @@ nebeneinander vergleicht und als PDF mitnimmt.
 **4. Darstellung & Extras**
 - [x] Darstellung umschaltbar auf „realistisch“: Texturen mit Klinkerfugen, Holzmaserung, Glasspiegelung
 - [x] Eigene Farbe pro Material (Farbtöne zum Anklicken, Sitzung 18)
-- [ ] PDF zusätzlich mit einer eigenen Seite pro Variante – *darf notfalls zu Could*
+- [x] PDF zusätzlich mit einer eigenen Seite pro Variante (Schalter „Einzelseiten je Variante“, Sitzung 19)
 
 ## Could (wenn Zeit bleibt)
 - [ ] Zusätzlicher Kennwert: Fensterfläche / Grundfläche (z. B. Belichtung nach 1/8-Regel);
@@ -122,17 +122,18 @@ Erledigte Sitzungen abhaken, die oberste offene Zeile ist dran (die Nummern blei
 - [x] 15b. Neues Design umsetzen (Glassmorphism, s. „Design-Vision“) – vorgezogen, Wunsch der Nutzerin 17.11.:
       „damit ich mir das Ganze besser vorstellen kann“; mit Ansichtsknöpfen 3D/N/O/S/W (17.11.)
 - [x] 16. Should 3b: Standort per Ortssuche (17.11.)
-- [ ] 19. Should 4c: PDF-Einzelseiten (fällt als Erstes weg, wenn es eng wird) ← **als Nächstes**
+- [x] 19. Should 4c: PDF-Einzelseiten (18.11.)
+- [ ] 19b. PDF auch in der Darstellung „realistisch“ (Wunsch der Nutzerin 18.11.) ← **als Nächstes**
 - [ ] 20. Ab ca. 10:30: Test mit eigener IFC, Fehler beheben
 - [ ] 21. Auf GitHub hochladen und über GitHub Pages veröffentlichen → **12 Uhr Freeze**
 - [ ] 22. Nachmittag: README (Poster macht die Nutzerin selbst nach Moodle-Vorlage)
 
 **Fr 20.11.** – Polieren & präsentieren, Abgabe bis 16 Uhr
 
-Wenn es eng wird, zuerst streichen: 19 (PDF-Einzelseiten), dann 16 (Ortssuche).
+Wenn es eng wird, zuerst streichen: 19b (PDF realistisch).
 Was bis Do 10:30 nicht fertig ist, wandert zu Could.
 
-## Stand (17.11.2026, nach Sitzung 16)
+## Stand (18.11.2026, nach Sitzung 19)
 - CLAUDE.md und PLAN.md angelegt, Plan mit der Nutzerin abgestimmt.
 - Test-IFC liegt in `testdaten/` (Einfamilienhaus, Revit 2023, IFC2x3: 192 Wände, 57 Fenster, 49 Türen).
   Quelle: Bundesingenieurkammer, Seite „BIM-Praxisbeispiele“ (Download zum Betrachten angeboten).
@@ -662,6 +663,33 @@ Was bis Do 10:30 nicht fertig ist, wandert zu Could.
   Schatten-Zeile im PDF gekürzt sein („…“), dann fehlen zuerst die Koordinaten. Der Standort für Sonne und PDF gilt nicht beim Neuladen
   der Seite (wieder Oldenburg, PDF-Feld leer), nur in gespeicherten Varianten.
 
+- Sitzung 19 (18.11.): PDF-Einzelseiten. Unter „Kennwerte aufs PDF“ der Schalter **„Einzelseiten je Variante“** (Start aus),
+  sichtbar erst ab 2 angekreuzten Varianten. An: nach der Übersichtsseite folgt je Variante eine eigene Seite A3 quer,
+  aufgebaut wie das 1-Varianten-PDF (große Perspektive, Ansichten in einer Reihe, Kennwerte rechts bzw. ohne, wenn
+  „Kennwerte aufs PDF“ aus ist). Titel der Einzelseite „Fassadenvariante 2 von 3“, Kopf und Fußzeile wie auf der Übersicht,
+  unten rechts „Seite 3 von 4“ (nur bei mehreren Seiten). Gilt auch für den PDF-Knopf im Vergleich. Dateiname unverändert.
+  Technik: `pdf.js` zeichnet jede Seite mit demselben Baustein (`seiteZeichnen`); die Bilder sind nur einmal in der Datei,
+  das PDF wird dadurch kaum größer (3 Varianten: 923 KB → 944 KB).
+  Getestet mit `Test-ArchiCAD.ifc` und 3 Testvarianten: Schalter aus = 1 Seite, an = 4 Seiten (Texte jeder Seite geprüft),
+  Knopf im Vergleich = 4 Seiten, 1 Variante = Schalter versteckt und 1 Seite. Testvarianten wieder gelöscht. Keine Fehler.
+  Geändert: `pdf.js`, `app.js`, `index.html`, `style.css`. Versionsnummern `pdf.js?v=25`, `app.js?v=25`, `style.css?v=25`.
+  Probleme: Die Seiten wurden nur über ihre Texte geprüft, nicht als Bild angesehen (das Testfenster kann das PDF nicht anzeigen) –
+  bitte einmal ein PDF mit Einzelseiten selbst öffnen. Der Schalter wird nicht gespeichert (nach Neuladen wieder aus).
+  **Geändert nach Test (Wunsch der Nutzerin 18.11.):** Auf den Einzelseiten stehen **nie** Kennwerte (auch wenn „Kennwerte aufs PDF“ an ist),
+  die Bilder werden dort dadurch größer; die Übersicht richtet sich weiter nach dem Schalter. Versionsnummern `pdf.js?v=25b`, `app.js?v=25b`.
+  **Nachtrag (Wunsch der Nutzerin 18.11.):** In der Variantenliste steht unter dem Namen nur noch das Datum, ohne „Fensteranteil … %“
+  (sonst zu voll; der Anteil steht weiter im Vergleich und im PDF). Versionsnummer `app.js?v=25c`.
+  **Nochmals geändert (Wunsch der Nutzerin 18.11.):** Auf den Einzelseiten steht **gar kein Text** mehr außer den Kennzeichen auf den Bildern
+  (z. B. „Perspektive aus Nordosten, 15°“, „N (NNW)“): kein Titel, kein Modell, kein Stand, kein Variantenname, keine Fußzeile.
+  Die 5 Bilder sitzen mittig und so groß wie möglich auf dem Blatt. Die Seitenzahlen („Seite x von y“) sind ganz weggefallen.
+  Reihenfolge der Einzelseiten = Spalten der Übersicht (älteste zuerst), der Name steht nur dort.
+  Getestet mit Platzhalterbildern: Übersicht unverändert, Einzelseiten je 5 Bilder und nur deren Kennzeichen. Versionsnummern `pdf.js?v=25d`, `app.js?v=25d`.
+  **Nachtrag (Wunsch der Nutzerin 18.11.):** Material **„Glas“ ist nicht mehr wählbar** (Fassade je Seite, „Alle“, Stützen, einzelne Wände);
+  für Glasfassaden gibt es Pfosten-Riegel. Glas bleibt im Hintergrund erhalten (`ausgeblendet: true` in `materialien.js`), damit alte
+  Varianten mit Glas weiter richtig laden und „Glas“ anzeigen. Getestet mit `Test-ArchiCAD.ifc` in einem zweiten Tab: alle Listen ohne Glas,
+  gesetzter Wert „glas“ zeigt weiter „Glas“, keine Fehler. Versionsnummern `materialien.js?v=25` (in `app.js`, `fassade.js`, `realistisch.js`),
+  `fassade.js?v=25`, `realistisch.js?v=25`, `szene.js?v=25`, `app.js?v=25e`.
+
 ## Design-Vision (Entwurf 17.11., in Sitzung 15b umgesetzt)
 Mit der Nutzerin als Testseite entworfen und abgestimmt („erstmal so festhalten“). Umbau später in einer eigenen Sitzung.
 - **Stil:** Glassmorphism – halbtransparente Glaskarten mit Unschärfe vor einem dunklen, farbigen Verlauf,
@@ -688,6 +716,17 @@ Mit der Nutzerin als Testseite entworfen und abgestimmt („erstmal so festhalte
   kein Unterschied. Nur auf diesem Rechner gemessen; über dem 3D-Bild nur wenige, kleine Glas-Elemente verwenden.
 
 ## Nächste Schritte
+- **Sitzung 19b (Wunsch der Nutzerin 18.11., nach Sitzung 19):** Die Darstellung „realistisch“ soll auch aufs PDF.
+  Stand heute: Die 5 Bilder einer Variante werden beim Speichern immer im Zeichenstil gemacht; „realistisch“ gilt nur im 3D-Fenster.
+  Technisch machbar: `szene.js` kann ein Bild schon realistisch zeichnen (`realistischZeichnen`), das lässt sich beim Fotografieren nutzen.
+  Gilt nur für neu gespeicherte Varianten (alte haben keine realistischen Bilder). Vor dem Bauen klären:
+  (1) Werden die Bilder in der Darstellung gemacht, die gerade im 3D-Fenster eingestellt ist, oder immer beide (doppelter Speicher)?
+  (2) Gilt es auch für die 4 Ansichten oder nur für die Perspektive? (3) Wie wählt man es fürs PDF bzw. im Vergleich aus?
+- **Sitzung 19 (erledigt, s. o.; Entscheidung 17.11., vor dem Bauen):** PDF-Einzelseiten. Neuer Schalter „Einzelseiten je Variante“
+  unter „Kennwerte aufs PDF“, **Start aus** (aus = PDF wie bisher). An und ab 2 angekreuzten Varianten: nach der
+  Übersichtsseite folgt je Variante eine eigene Seite A3 quer, aufgebaut **wie das 1-Varianten-PDF** (große Perspektive,
+  Ansichten in einer Reihe, Kennwerte rechts – richtet sich nach „Kennwerte aufs PDF“). Kein Material, keine Fenstergrößen.
+  Bei nur 1 Variante gibt es keine zusätzliche Seite. Gilt auch für den PDF-Knopf im Vergleich.
 - **Sitzung 16 (Entscheidung 17.11., vor dem Bauen):** Ortssuche. Suchfeld im aufgeklappten Sonnen-Feld über Breite/Länge,
   gesucht wird erst bei Enter (OpenStreetMap/Nominatim, höchstens 1 Anfrage pro Sekunde), bis zu 5 Treffer.
   Klick auf einen Treffer setzt Breite/Länge **und** füllt „Standort fürs PDF“ (danach frei änderbar). Namensnennung

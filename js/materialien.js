@@ -16,7 +16,8 @@ export const MATERIALIEN = [
   { id: 'sichtbeton', name: 'Sichtbeton', farbe: '#b3b0aa', muster: 'beton', ton: 'warmgrau' },
   { id: 'putz-altweiss', name: 'Putz', farbe: '#e2ddd3', muster: 'putz', ton: 'altweiss', tonImmerNennen: true },
   { id: 'platten-anthrazit', name: 'Fassadenplatten', farbe: '#63676b', muster: 'platten', ton: 'anthrazit', tonImmerNennen: true },
-  { id: 'glas', name: 'Glas', farbe: '#8c9eab', muster: 'glas', ton: 'blaugrau', tonImmerNennen: true },
+  // Glas ist seit 18.11. nicht mehr wählbar (Wunsch der Nutzerin, dafür gibt es Pfosten-Riegel); bleibt nur für alte Varianten
+  { id: 'glas', name: 'Glas', farbe: '#8c9eab', muster: 'glas', ton: 'blaugrau', tonImmerNennen: true, ausgeblendet: true },
   // Wird als echte Glasfassade mit Pfosten und Riegeln gebaut (fassade.js); das Muster ist nur Vorschaubild
   // und Ersatz für Wände, die sich nicht nachbauen lassen. Nicht für Stützen.
   { id: 'pfosten-riegel', name: 'Pfosten-Riegel', farbe: '#8c9eab', muster: 'pfostenRiegel', pfostenRiegel: true },

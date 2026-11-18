@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Fassaden-Tool</title>
-  <link rel="stylesheet" href="style.css?v=24">
+  <link rel="stylesheet" href="style.css?v=25">
   <!-- Bibliotheken aus dem Internet: three.js (3D) und web-ifc (IFC lesen) -->
   <script type="importmap">
   {
@@ -16,7 +16,7 @@
   }
   </script>
   <!-- ?v=… erzwingt nach Änderungen die neue Fassung (sonst hält der Browser alte Dateien fest) -->
-  <script type="module" src="js/app.js?v=24b"></script>
+  <script type="module" src="js/app.js?v=25e"></script>
 </head>
 <body>
   <!-- Hintergrund: dunkler Farbverlauf mit weichen Farbflecken (Sitzung 15b, Glassmorphism) -->
@@ -143,6 +143,7 @@
             <input type="text" class="eingabe" id="standort" maxlength="80" autocomplete="off"
               placeholder="Standort fürs PDF (freiwillig)" aria-label="Standort, erscheint im Kopf des PDF">
             <label class="schalter"><input type="checkbox" id="pdfKennwerte" checked autocomplete="off"> Kennwerte aufs PDF</label>
+            <label class="schalter" id="pdfEinzelseitenZeile" hidden><input type="checkbox" id="pdfEinzelseiten" autocomplete="off"> Einzelseiten je Variante</label>
           </div>
           <span class="textknoepfe">
             <button class="textknopf" id="vergleichOeffnen">Vergleichen</button>

@@ -1,13 +1,13 @@
 // Bedienoberfläche: Datei wählen oder hineinziehen, Modell anzeigen, Fassade gestalten
-import { Szene } from './szene.js?v=23';
+import { Szene } from './szene.js?v=25';
 import { ifcLaden } from './ifc.js?v=19';
-import { aussenwaendeErkennen, wandFaerben, oeffnungenZuordnen, fensterAnpassen, stuetzenVorbereiten, stuetzeFaerben, dachVorbereiten, dachFaerben, kennwerteBerechnen, hauptrichtungBestimmen, fensterFaerben, anbauteileZuordnen } from './fassade.js?v=20b';
+import { aussenwaendeErkennen, wandFaerben, oeffnungenZuordnen, fensterAnpassen, stuetzenVorbereiten, stuetzeFaerben, dachVorbereiten, dachFaerben, kennwerteBerechnen, hauptrichtungBestimmen, fensterFaerben, anbauteileZuordnen } from './fassade.js?v=25';
 import {
   MATERIALIEN, DACHMATERIALIEN, START_MATERIAL, START_DACH, PFOSTEN_RIEGEL, ALTE_KENNUNGEN, musterBild,
   farbtoeneVon, farbtonVon, farbtonSetzen, farbtoeneSammeln, farbtoeneUebernehmen, materialText,
-} from './materialien.js?v=20b';
+} from './materialien.js?v=25';
 import { variantenLesen, varianteSpeichern, varianteLoeschen } from './varianten.js';
-import { pdfErstellen, pdfDateiname } from './pdf.js?v=22';
+import { pdfErstellen, pdfDateiname } from './pdf.js?v=25d';
 import { START_SONNE, sonnenstand, himmelsrichtung, uhrzeitText, ortMitName, zeitText, weltzeit } from './sonne.js?v=24';
 
 const $ = (id) => document.getElementById(id);
@@ -344,6 +344,13 @@ function felderzeileAufbauen(lesen) {
 // schluessel: N/O/S/W, 'Alle', 'Stuetzen' oder 'Dach'; lesen/schreiben: woher das Material kommt und wohin es geht;
 // felder(): die Felder dieser Zeile (nicht bei Stützen und Dach); angebot: welche Materialien zur Wahl stehen
 const materialZeilen = {};
+// Ausgeblendete Materialien (Glas) stehen unsichtbar in der Liste: nicht wählbar,
+// aber eine alte Variante mit Glas zeigt weiter „Glas“ an
+function optionFuer(m) {
+  const option = new Option(m.name, m.id);
+  option.hidden = Boolean(m.ausgeblendet);
+  return option;
+}
 function materialzeileAufbauen(schluessel, name, lesen, schreiben, felder = null, angebot = MATERIALIEN) {
   const block = document.createElement('div');
   const zeile = document.createElement('label');
@@ -359,7 +366,7 @@ function materialzeileAufbauen(schluessel, name, lesen, schreiben, felder = null
   muster.className = 'muster';
 
   const liste = document.createElement('select');
-  for (const m of angebot) if (felder || !m.pfostenRiegel) liste.add(new Option(m.name, m.id));
+  for (const m of angebot) if (felder || !m.pfostenRiegel) liste.add(optionFuer(m));
   const felderzeile = felder ? felderzeileAufbauen(() => [felder()]) : null;
 
   // Liste und Musterbild auf den gespeicherten Wert setzen
@@ -433,7 +440,7 @@ materialwahlAufbauen();
 const WIE_DIE_SEITE = ''; // Eintrag „wie die Seite“: Wand hat kein eigenes Material
 const VERSCHIEDEN = '*'; // ausgewählte Wände haben unterschiedliche Materialien
 $('einzelMaterial').add(new Option('wie die Seite', WIE_DIE_SEITE));
-for (const m of MATERIALIEN) $('einzelMaterial').add(new Option(m.name, m.id));
+for (const m of MATERIALIEN) $('einzelMaterial').add(optionFuer(m));
 const verschiedenEintrag = new Option('– verschieden –', VERSCHIEDEN);
 verschiedenEintrag.disabled = true;
 $('einzelMaterial').add(verschiedenEintrag);
@@ -906,9 +913,8 @@ async function variantenAnzeigen() {
     const name = document.createElement('strong');
     name.textContent = variante.name; // textContent: Namen werden nie als HTML gelesen
     const angaben = document.createElement('small');
-    const { fassade, fenster } = variante.kennwerte.gesamt;
-    const datum = new Date(variante.datum).toLocaleString('de-DE', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' });
-    angaben.textContent = `${datum} · Fensteranteil ${fassade > 0 ? Math.round((fenster / fassade) * 100) : '–'} %`;
+    // nur das Datum, ohne Fensteranteil (Wunsch der Nutzerin 18.11.: sonst zu voll)
+    angaben.textContent = new Date(variante.datum).toLocaleString('de-DE', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' });
 
     const knoepfe = document.createElement('span');
     const laden = document.createElement('button');
@@ -962,6 +968,7 @@ function vergleichswahlAnzeigen() {
   $('vergleichOeffnen').hidden = anzahl < 2;
   $('vergleichOeffnen').textContent = `${anzahl} Varianten vergleichen`;
   $('pdfwahl').hidden = anzahl < 1;
+  $('pdfEinzelseitenZeile').hidden = anzahl < 2; // bei 1 Variante gäbe es nichts Zusätzliches
   $('pdfSpeichern').hidden = anzahl < 1;
 }
 
@@ -985,6 +992,7 @@ async function pdfSpeichern(knopf) {
     const doc = await pdfErstellen({
       varianten, modellName, standort: $('standort').value.trim(), kennzeichen: ansichtKennzeichen, blickText, sonnenText,
       mitKennwerte: $('pdfKennwerte').checked,
+      einzelseiten: $('pdfEinzelseiten').checked,
     });
     const dateiname = pdfDateiname(modellName, varianten.length);
     doc.save(dateiname);
