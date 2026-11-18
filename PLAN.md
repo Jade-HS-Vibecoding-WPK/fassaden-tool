@@ -689,6 +689,9 @@ Was bis Do 10:30 nicht fertig ist, wandert zu Could.
   Varianten mit Glas weiter richtig laden und „Glas“ anzeigen. Getestet mit `Test-ArchiCAD.ifc` in einem zweiten Tab: alle Listen ohne Glas,
   gesetzter Wert „glas“ zeigt weiter „Glas“, keine Fehler. Versionsnummern `materialien.js?v=25` (in `app.js`, `fassade.js`, `realistisch.js`),
   `fassade.js?v=25`, `realistisch.js?v=25`, `szene.js?v=25`, `app.js?v=25e`.
+  **Nachtrag (Wunsch der Nutzerin 18.11.):** Dachmaterial „Schlicht hell“ heißt jetzt nur **„Schlicht“** (bei den Farbtönen „Dach: Schlicht“).
+  Nur der Name in `materialien.js`, die Kennung `dach-hell` bleibt, alte Varianten laden weiter. Versionsnummern alle `v=25f`
+  (`materialien.js` in `app.js`, `fassade.js`, `realistisch.js`; `fassade.js`, `realistisch.js`, `szene.js`, `app.js`).
 
 ## Design-Vision (Entwurf 17.11., in Sitzung 15b umgesetzt)
 Mit der Nutzerin als Testseite entworfen und abgestimmt („erstmal so festhalten“). Umbau später in einer eigenen Sitzung.

@@ -1,11 +1,11 @@
 // Bedienoberfläche: Datei wählen oder hineinziehen, Modell anzeigen, Fassade gestalten
-import { Szene } from './szene.js?v=25';
+import { Szene } from './szene.js?v=25f';
 import { ifcLaden } from './ifc.js?v=19';
-import { aussenwaendeErkennen, wandFaerben, oeffnungenZuordnen, fensterAnpassen, stuetzenVorbereiten, stuetzeFaerben, dachVorbereiten, dachFaerben, kennwerteBerechnen, hauptrichtungBestimmen, fensterFaerben, anbauteileZuordnen } from './fassade.js?v=25';
+import { aussenwaendeErkennen, wandFaerben, oeffnungenZuordnen, fensterAnpassen, stuetzenVorbereiten, stuetzeFaerben, dachVorbereiten, dachFaerben, kennwerteBerechnen, hauptrichtungBestimmen, fensterFaerben, anbauteileZuordnen } from './fassade.js?v=25f';
 import {
   MATERIALIEN, DACHMATERIALIEN, START_MATERIAL, START_DACH, PFOSTEN_RIEGEL, ALTE_KENNUNGEN, musterBild,
   farbtoeneVon, farbtonVon, farbtonSetzen, farbtoeneSammeln, farbtoeneUebernehmen, materialText,
-} from './materialien.js?v=25';
+} from './materialien.js?v=25f';
 import { variantenLesen, varianteSpeichern, varianteLoeschen } from './varianten.js';
 import { pdfErstellen, pdfDateiname } from './pdf.js?v=25d';
 import { START_SONNE, sonnenstand, himmelsrichtung, uhrzeitText, ortMitName, zeitText, weltzeit } from './sonne.js?v=24';

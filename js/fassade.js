@@ -2,7 +2,7 @@
 // und die Wände mit veränderten Fensteröffnungen als eigene „Scheiben“ neu bauen
 import * as THREE from 'three';
 import { MATERIAL, kantenlinienHinzufuegen } from './darstellung.js?v=19';
-import { fassadenMaterial, dachKantenMaterial } from './materialien.js?v=25';
+import { fassadenMaterial, dachKantenMaterial } from './materialien.js?v=25f';
 
 // Reihenfolge im Uhrzeigersinn, Norden = Plan-oben = -Z in der 3D-Szene
 const RICHTUNGEN = ['N', 'O', 'S', 'W'];

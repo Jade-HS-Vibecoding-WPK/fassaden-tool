@@ -35,7 +35,7 @@ export const START_MATERIAL = 'klinker-rot';
 // Stehfalz ↔ Fassadenplatten (kühles Grau), Schlicht hell ↔ Sichtbeton.
 // kante: schlichte Farbe der schmalen Dachkanten (Ortgang, Traufkante), wie ein Ortgangblech.
 export const DACHMATERIALIEN = [
-  { id: 'dach-hell', name: 'Schlicht hell', farbe: '#b4b1ab', kante: '#9b9893', muster: 'abdichtung', ton: 'hell' },
+  { id: 'dach-hell', name: 'Schlicht', farbe: '#b4b1ab', kante: '#9b9893', muster: 'abdichtung', ton: 'hell' },
   { id: 'ziegel-rot', name: 'Ziegel rot', farbe: '#7d4e45', kante: '#66423b', muster: 'ziegel', ton: 'rot' },
   { id: 'ziegel-anthrazit', name: 'Ziegel anthrazit', farbe: '#58554f', kante: '#4a4843', muster: 'ziegel', ton: 'anthrazit' },
   { id: 'stehfalz-hell', name: 'Stehfalz hellgrau', farbe: '#969a9c', kante: '#85898b', muster: 'stehfalz', ton: 'hellgrau' },
