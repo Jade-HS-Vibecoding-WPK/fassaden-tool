@@ -1,6 +1,6 @@
 // Bedienoberfläche: Datei wählen oder hineinziehen, Modell anzeigen, Fassade gestalten
-import { Szene } from './szene.js?v=49';
-import { umgebungLaden, umgebungBauen } from './umgebung.js?v=4';
+import { Szene } from './szene.js?v=50f';
+import { umgebungLaden, umgebungBauen, vorlageBauen, VORLAGEN } from './umgebung.js?v=5f';
 import { ifcLaden } from './ifc.js?v=19';
 import { aussenwaendeErkennen, wandFaerben, oeffnungenZuordnen, fensterAnpassen, stuetzenVorbereiten, stuetzeFaerben, dachVorbereiten, dachFaerben, kennwerteBerechnen, hauptrichtungBestimmen, fensterFaerben, anbauteileZuordnen } from './fassade.js?v=25g';
 import {
@@ -8,7 +8,7 @@ import {
   farbtoeneVon, farbtonVon, farbtonSetzen, farbtoeneSammeln, farbtoeneUebernehmen, materialText,
 } from './materialien.js?v=25f';
 import { variantenLesen, varianteSpeichern, varianteLoeschen } from './varianten.js';
-import { pdfErstellen, pdfDateiname } from './pdf.js?v=26h';
+import { pdfErstellen, pdfDateiname } from './pdf.js?v=27';
 import { START_SONNE, sonnenstand, himmelsrichtung, uhrzeitText, ortMitName, zeitText, weltzeit } from './sonne.js?v=24';
 
 const $ = (id) => document.getElementById(id);
@@ -814,8 +814,11 @@ $('varianteSpeichern').addEventListener('click', async () => {
       darstellung: szene.stil,
       // Maße der Ansichtsbilder in Metern (Sitzung 20c), damit das PDF sie maßstäblich setzen kann; ältere Varianten haben keine
       masse,
-      // Umgebung (Sitzung 23): Ort und Verschiebung, wenn die Perspektive Nachbarhäuser zeigt; sonst null
-      umgebung: umgebungAn ? { ...umgebungOrt(), ost: umgebungLage.ost, nord: umgebungLage.nord } : null,
+      // Umgebung (Sitzung 23): Ort und Verschiebung, wenn die Perspektive Nachbarhäuser zeigt; sonst null.
+      // Sitzung 23b: art = Vorlage oder „osm“; bei einer Vorlage nur die Art (kein Ort, keine Verschiebung)
+      umgebung: !umgebungAn ? null
+        : umgebungArt === 'osm' ? { art: 'osm', ...umgebungOrt(), ost: umgebungLage.ost, nord: umgebungLage.nord }
+          : { art: umgebungArt },
     });
     $('variantenName').value = '';
     variantenStatus(`„${name}“ ist gespeichert.`);
@@ -891,7 +894,9 @@ function varianteLaden(variante) {
   // Umgebung übernehmen (ältere Varianten vor Sitzung 23 kennen sie nicht: Einstellung bleibt)
   if (variante.umgebung !== undefined) {
     umgebungAn = !!variante.umgebung;
-    if (variante.umgebung) {
+    // Varianten aus Sitzung 23 haben keine Art: das war immer OpenStreetMap
+    if (variante.umgebung) umgebungArt = variante.umgebung.art ?? 'osm';
+    if (variante.umgebung && umgebungArt === 'osm') {
       const { breite, laenge, ost, nord } = variante.umgebung;
       ortGenau = { breite, laenge };
       if (!variante.sonne) { // Sonne ohne eigenen Ort: denselben Ort nehmen
@@ -1372,7 +1377,7 @@ async function dateiOeffnen(datei) {
     $('umgebungwahl').hidden = false;
     $('ansichtwahl').hidden = false;
     szene.nachbarschaftVersteckt = false;
-    szene.umgebungVerschieben(umgebungLage.ost, umgebungLage.nord); // Umgebung ans neue Haus legen
+    umgebungAktualisieren(); // Umgebung ans neue Haus legen (Vorlagen passen ihren freien Platz ans Haus an)
     ansichtKnoepfeMarkieren();
     // Kopfleiste: Dateiname und Schritte freigeben, los geht es mit „Fassade“ (Außenwände sind Nebensache)
     $('kopfDatei').textContent = datei.name;
@@ -1656,6 +1661,10 @@ $('umgebungOrtssuche').addEventListener('submit', (ereignis) => { ereignis.preve
 // Das Haus lässt sich mit zwei Reglern auf dem Grundstück verschieben (Norden bleibt Plan-oben).
 let umgebungAn = false;
 let umgebungAufgeklappt = false;
+// Sitzung 23b: Art der Umgebung – eine Vorlage (s. VORLAGEN in umgebung.js) oder 'osm' = echter Ort.
+// Beim ersten Einschalten kommt „Ländlich“ (Entscheidung der Nutzerin), weil OSM oft überlastet ist.
+let umgebungArt = 'laendlich';
+let umgebungSchonAn = false; // erstes Einschalten: Feld aufklappen, damit man die Auswahl sieht
 let ortGenau = null; // { breite, laenge } genau aus der Ortssuche; null = die (gerundeten) Koordinaten der Sonne
 const umgebungLage = { ost: 0, nord: 0 }; // Meter, um die das Haus vom gesuchten Ort nach Osten/Norden steht
 let umgebungGebaut = null; // { schluessel, gruppe, anzahl } – zuletzt gebaute Umgebung
@@ -1676,11 +1685,13 @@ const kommaZahl = (wert, stellen) => wert.toFixed(stellen).replace('.', ',');
 
 function umgebungAnzeigen(info) {
   $('umgebungKnopf').setAttribute('aria-pressed', String(umgebungAn));
-  $('umgebungKnopf').title = umgebungAn ? 'Umgebung aus' : 'Umgebung zeigen (Nachbarhäuser, Straßen, Grün aus OpenStreetMap)';
+  $('umgebungKnopf').title = umgebungAn ? 'Umgebung aus' : 'Umgebung zeigen (Vorlage oder echter Ort)';
+  for (const k of $('umgebungArten').querySelectorAll('button')) k.setAttribute('aria-pressed', String(k.dataset.art === umgebungArt));
+  $('umgebungOsm').hidden = umgebungArt !== 'osm'; // Adresse und „Haus verschieben“ nur beim echten Ort
   $('umgebungAufklappen').hidden = !umgebungAn;
   $('umgebungAufklappen').setAttribute('aria-expanded', String(umgebungAufgeklappt));
   $('umgebungfeld').hidden = !umgebungAn || !umgebungAufgeklappt;
-  $('osmVermerk').hidden = !umgebungAn;
+  $('osmVermerk').hidden = !umgebungAn || umgebungArt !== 'osm';
   $('umgebungOst').value = String(umgebungLage.ost);
   $('umgebungNord').value = String(umgebungLage.nord);
   const meter = (wert, plus, minus) => (wert === 0 ? '0 m' : `${kommaZahl(Math.abs(wert), wert % 1 ? 1 : 0)} m ${wert > 0 ? plus : minus}`);
@@ -1698,8 +1709,25 @@ async function umgebungAktualisieren() {
     umgebungAnzeigen();
     return;
   }
+  if (umgebungArt !== 'osm') { // Vorlage: sofort gebaut, ohne Internet; freier Platz passt sich der Hausgröße an
+    $('umgebungKnopf').classList.remove('laedt');
+    const box = szene.modell ? szene.gebaeudeBox() : null;
+    const haus = box ? { hx: (box.max.x - box.min.x) / 2, hn: (box.max.z - box.min.z) / 2 } : { hx: 6, hn: 6 };
+    const schluessel = `${umgebungArt}|${haus.hx.toFixed(1)}|${haus.hn.toFixed(1)}`;
+    if (umgebungGebaut?.schluessel !== schluessel) {
+      const gruppe = vorlageBauen(umgebungArt, haus);
+      const anzahl = gruppe.children.filter((t) => t.userData.nachbar).length;
+      umgebungGebaut = { schluessel, gruppe, anzahl, baeume: gruppe.userData.baeume };
+    }
+    szene.umgebungSetzen(umgebungGebaut.gruppe, 0, 0);
+    const teile = [];
+    if (umgebungGebaut.anzahl) teile.push(`${umgebungGebaut.anzahl} Häuser`);
+    if (umgebungGebaut.baeume) teile.push(`${umgebungGebaut.baeume} Bäume`);
+    umgebungAnzeigen(textElement('span', `Vorlage „${VORLAGEN[umgebungArt]}“: frei erfunden, ohne Internet. ${teile.join(', ')}.`));
+    return;
+  }
   const { breite, laenge } = umgebungOrt();
-  const schluessel = `${breite}|${laenge}`;
+  const schluessel = `osm|${breite}|${laenge}`;
   if (umgebungGebaut?.schluessel !== schluessel) {
     szene.umgebungSetzen(null);
     $('umgebungKnopf').classList.add('laedt');
@@ -1712,7 +1740,8 @@ async function umgebungAktualisieren() {
       if (auftrag !== umgebungAuftrag) return;
       $('umgebungKnopf').classList.remove('laedt');
       umgebungAufgeklappt = true; // Meldung zeigen
-      umgebungAnzeigen('OpenStreetMap ist gerade überlastet oder nicht erreichbar. Knopf aus und wieder an = neuer Versuch.');
+      umgebungAnzeigen('OpenStreetMap ist gerade überlastet oder nicht erreichbar. Nochmal „Echter Ort“ klicken = neuer Versuch – '
+        + 'oder oben eine Vorlage wählen (geht ohne Internet).');
       return;
     }
     if (auftrag !== umgebungAuftrag) return; // inzwischen anderer Ort oder ausgeschaltet
@@ -1728,8 +1757,15 @@ async function umgebungAktualisieren() {
 
 $('umgebungKnopf').addEventListener('click', () => {
   umgebungAn = !umgebungAn;
+  if (umgebungAn && !umgebungSchonAn) { umgebungSchonAn = true; umgebungAufgeklappt = true; }
   umgebungAktualisieren();
 });
+for (const knopf of $('umgebungArten').querySelectorAll('button')) {
+  knopf.addEventListener('click', () => {
+    umgebungArt = knopf.dataset.art;
+    umgebungAktualisieren();
+  });
+}
 $('umgebungAufklappen').addEventListener('click', () => {
   umgebungAufgeklappt = !umgebungAufgeklappt;
   umgebungAnzeigen();

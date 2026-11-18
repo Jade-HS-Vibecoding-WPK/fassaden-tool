@@ -339,8 +339,9 @@ function seiteZeichnen(doc, varianten, { bilder, kennzeichen, blickText, masssta
   const fussY = BLATT_H - RAND + 2;
   doc.setFont(SCHRIFT, 'normal').setFontSize(9).setTextColor(...TEXT);
   doc.text(`Ansichten M 1:${massstab}`, BLATT_B - RAND, fussY, { align: 'right' });
-  // Umgebung aus OpenStreetMap (Sitzung 23): Namensnennung ist Pflicht – einzige Schrift-Ausnahme, winzig, links vom Maßstab
-  if (varianten.some((v) => v.umgebung)) {
+  // Umgebung aus OpenStreetMap (Sitzung 23): Namensnennung ist Pflicht – einzige Schrift-Ausnahme, winzig, links vom Maßstab.
+  // Vorlagen (Sitzung 23b) sind frei erfunden und brauchen keinen Vermerk; Varianten ohne „art“ stammen aus Sitzung 23 = OSM
+  if (varianten.some((v) => v.umgebung && (v.umgebung.art ?? 'osm') === 'osm')) {
     const massstabBreite = doc.getTextWidth(`Ansichten M 1:${massstab}`);
     doc.setFontSize(6).setTextColor(...LEISE);
     doc.text('Umgebung © OpenStreetMap-Mitwirkende', BLATT_B - RAND - massstabBreite - 8, fussY, { align: 'right' });

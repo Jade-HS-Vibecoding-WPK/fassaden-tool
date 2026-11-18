@@ -4,7 +4,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { realistischesMaterial, himmelHintergrund, himmelUmgebung } from './realistisch.js?v=25f';
 import { MATERIAL } from './darstellung.js?v=19';
 import { Nachbearbeitung } from './stile.js?v=14';
-import { umgebungLegen, hausFreistellen } from './umgebung.js?v=4';
+import { umgebungLegen, hausFreistellen } from './umgebung.js?v=5f';
 
 // Gemalte Darstellungen (Sitzung 19d): Zeichenstil wird nachträglich übermalt (stile.js)
 const GEMALT = ['aquarell', 'bleistift'];

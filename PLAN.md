@@ -192,7 +192,7 @@ Erledigte Sitzungen abhaken, die oberste offene Zeile ist dran (die Nummern blei
       und meldet sonst „überlastet … Knopf aus und wieder an“. **Mit echten Daten noch nicht gesehen – bitte später nochmal testen.**
       Nachbarn werfen noch keinen Schatten (nur das eigene Haus). In „Realistisch“ wirken Nachbarn auf der Schattenseite recht dunkel.
       Versionsnummern: `umgebung.js?v=4` (in `app.js` und `szene.js`), `szene.js?v=49`, `pdf.js?v=26h`, `app.js?v=53`, `style.css?v=30b`.
-- [ ] 23b. Umgebungs-Vorlagen statt nur OpenStreetMap (Wunsch der Nutzerin 18.11.: OSM lädt oft nicht, Server überlastet).
+- [x] 23b. Umgebungs-Vorlagen statt nur OpenStreetMap (Wunsch der Nutzerin 18.11.: OSM lädt oft nicht, Server überlastet) (18.11.).
       Im Umgebungs-Feld eine Auswahl: **Städtisch · Ländlich · Wald · Wiese · Echter Ort (OpenStreetMap)**.
       Vorschlag (noch abzustimmen):
       - Vorlagen werden in der App selbst gebaut: kein Internet nötig, lädt sofort, nichts verlässt das Gerät.
@@ -200,10 +200,58 @@ Erledigte Sitzungen abhaken, die oberste offene Zeile ist dran (die Nummern blei
         Städtisch = Blockrand/Reihenhäuser 3–5 Geschosse an Straßen, Gehwege, Straßenbäume;
         Ländlich = wenige Einfamilienhäuser, Feldweg, Wiese, Baumgruppen; Wald = dichte Bäume mit Lichtung ums Haus;
         Wiese = grüne Platte mit ein paar Bäumen.
+      - **Entscheidung (Nutzerin 18.11.):** Bei „Ländlich“ haben die Häuser teils Satteldächer (nicht nur flache Klötze),
+        im gleichen hellen Modellstil.
       - Sieht jedes Mal gleich aus (feste Zufallszahlen); ums eigene Haus bleibt immer Platz.
       - „Haus verschieben“ und der OSM-Vermerk nur bei „Echter Ort“. Schlägt OSM fehl: Hinweis auf die Vorlagen.
       - Varianten speichern die Wahl; das PDF nennt OSM nur bei „Echter Ort“.
       - **Entscheidung (Nutzerin 18.11.):** Beim ersten Einschalten kommt **Ländlich**.
+      **Gebaut:** `vorlageBauen` in `js/umgebung.js` (OSM-Teil dafür in gemeinsame Bausteine zerlegt: Platte, Nachbarhaus,
+      runder Rand). Im Umgebungs-Feld 5 kleine Knöpfe (Städtisch · Ländlich · Wald · Wiese · Echter Ort); Adresse,
+      „Haus verschieben“ und der © OSM-Vermerk nur bei „Echter Ort“. Beim ersten Einschalten klappt das Feld auf.
+      Der freie Platz richtet sich nach der Größe des eigenen Hauses; Bäume als eine Sammelform (schnell, Wald ca. 1100 Bäume in 6 ms).
+      - Städtisch: Straßenraster mit Gehwegen und Straßenbäumen, geschlossener Blockrand 3–5 Geschosse, grüne Höfe.
+        **Änderung beim Bauen:** Das Haus steht an einer Straßenecke, gegenüber im Südosten ein kleiner Park –
+        sonst verdeckten die hohen Nachbarn das Haus aus der üblichen Blickrichtung (Südost, 15° von oben).
+      - Ländlich: geschwungene Dorfstraße, Feldweg, ca. 20 Häuser (ca. 2/3 mit Satteldach, teils giebelständig, Schuppen),
+        Hof mit Scheune, Gartenbäume, Baumgruppen, beige Äcker.
+      - Wald: dichter Wald mit Lichtung ums Haus, die sich nach Südosten zur Waldwiese öffnet (sonst sah man das Haus nicht),
+        am Waldrand niedrigere Bäume, Waldweg nach Süden.
+      - Wiese: grüne Platte, Feldweg, ca. 20 einzelne Bäume und eine Gruppe.
+      Varianten speichern `umgebung: { art }` (bei „Echter Ort“ wie bisher mit Ort + Verschiebung); alte Varianten ohne Art
+      gelten als „Echter Ort“. PDF nennt OSM nur bei „Echter Ort“. Anleitung (Datenschutz-Satz) ergänzt.
+      Getestet (Test-ArchiCAD.ifc): alle 4 Vorlagen in Zeichnung, Wiese in Realistisch, Ländlich in Aquarell; Umschalten
+      Vorlage ↔ Echter Ort (Felder und Vermerk erscheinen/verschwinden); Test-Variante mit „Ländlich“ gespeichert,
+      auf Wald gewechselt, geladen → wieder Ländlich; Perspektivbild mit Umgebung; Test-Variante wieder gelöscht. Keine neuen Fehler.
+      **Probleme/offen:** PDF mit Vorlage nicht eigens erzeugt (nur die Bedingung für den OSM-Vermerk geändert).
+      Dreht man die Perspektive stark (z. B. von Norden), können Stadthäuser bzw. Waldbäume das Haus verdecken.
+      In „Realistisch“ wirkt die Wiese eher grau (wie die Platte bei OSM). Echte OSM-Daten weiter ungetestet (Server überlastet).
+      **Nachtrag Bäume (Wunsch der Nutzerin 18.11., nach Vorbild-Silhouetten „etwas baumiger“):** statt Kugel auf Stamm
+      jetzt Kronen aus mehreren unregelmäßigen, kantigen Laub-Ballen, dickere Stämme, vier Wuchsformen
+      (rund, oval, schlank, locker mit sichtbaren Ästen), jeder Baum zufällig gedreht. Mischung je Vorlage
+      (Wald eher oval/schlank, Stadt eher oval). Krone etwas kräftiger grün. Wald weiterhin ca. 1100 Bäume in 5 ms.
+      Das Vorbild-Bild selbst ist nicht in der App (nur als Anregung für die Formen).
+      Versionsnummern: `umgebung.js?v=5f` (in `app.js` und `szene.js`), `szene.js?v=50f`, `pdf.js?v=27`, `app.js?v=54f`, `style.css?v=31`.
+- [ ] 23c. Dachmaterialien zusammenfassen (Wunsch der Nutzerin 18.11.): In der Dach-Auswahl stehen noch Farben im Namen
+      (z. B. „Stehfalz grau“). Wie bei der Fassade nur noch je Material ein Eintrag („Stehfalz“, „Ziegel“ …),
+      die Farbe kommt über die Farbtöne zum Anklicken.
+- [ ] 23d. „Außenwände“ aus der Kopfleiste nehmen (Wunsch der Nutzerin 18.11.): Ein eigener Reiter wirkt, als könne man
+      dort etwas gestalten. Stattdessen beim Dateinamen oben ein kleiner Pfeil zum Aufklappen.
+- [ ] 23e. Einzelnes Fenster zurücksetzen (Wunsch der Nutzerin 18.11.): Bei „Einzelne Fenster“ das angewählte Fenster
+      wieder auf 100 % (Maße aus der IFC) stellen können.
+- [ ] 23f. PDF-Blattgröße wählbar (Wunsch der Nutzerin 18.11.): A4, A3, A2, A1, A0 (bisher fest A3 quer).
+- [ ] 23g. Eventuell weitere Darstellungsstile neben Zeichnung, Realistisch, Aquarell, Bleistift
+      (Wunsch der Nutzerin 18.11., „eventuell“ – Ideen vorher mit ihr abstimmen).
+- [ ] 23h. Haus mit der Maus verschieben (Wunsch der Nutzerin 18.11.): Haus als Ganzes anklicken und auf der
+      Umgebungs-Platte ziehen, statt über die Regler „Haus verschieben“. Soll auch bei den Vorlagen gehen
+      (bisher steht das Haus dort fest in der Mitte).
+      Vorschlag (noch abzustimmen):
+      - Nur wenn die Umgebung an ist und man in der Perspektive ist. Kurzer Klick bleibt wie bisher
+        (Wand/Fenster wählen), erst Gedrückthalten + Ziehen verschiebt das Haus; die Kamera dreht dabei nicht mit.
+      - Wie bisher wandert in Wahrheit die Umgebung (Ansichten und Maße bleiben unberührt), Norden bleibt Plan-oben.
+      - Vorlagen: Verschieben innerhalb der Platte; Nachbarhäuser/Bäume unter dem Haus verschwinden
+        (bei den Vorlagen heißt das: Platz ums Haus nicht mehr fest eingeplant).
+      - Regler bei „Echter Ort“ bleiben zum Feinjustieren; Varianten merken die Lage auch bei Vorlagen.
 - [ ] 22. Nachmittag: README (Poster macht die Nutzerin selbst nach Moodle-Vorlage)
 
 **Fr 20.11.** – Polieren & präsentieren, Abgabe bis 16 Uhr

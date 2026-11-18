@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Fassaden-Tool</title>
-  <link rel="stylesheet" href="style.css?v=30b">
+  <link rel="stylesheet" href="style.css?v=31">
   <!-- Bibliotheken aus dem Internet: three.js (3D) und web-ifc (IFC lesen) -->
   <script type="importmap">
   {
@@ -16,7 +16,7 @@
   }
   </script>
   <!-- ?v=… erzwingt nach Änderungen die neue Fassung (sonst hält der Browser alte Dateien fest) -->
-  <script type="module" src="js/app.js?v=53"></script>
+  <script type="module" src="js/app.js?v=54f"></script>
 </head>
 <body>
   <!-- Hintergrund: dunkler Farbverlauf mit weichen Farbflecken (Sitzung 15b, Glassmorphism) -->
@@ -177,7 +177,7 @@
             <button class="knopf" id="anleitungSchliessen" hidden>Zurück zum Modell</button>
           </div>
           <p class="anleitung-einleitung">Den eigenen Entwurf als IFC laden, die Fassade gestalten und Varianten vergleichen.
-          Alles bleibt in diesem Browser, nichts wird hochgeladen. Nur die Ortssuche und der Knopf „Umgebung“ fragen bei OpenStreetMap nach (dabei geht nur der Ort aus dem Gerät).</p>
+          Alles bleibt in diesem Browser, nichts wird hochgeladen. Nur die Ortssuche und die Umgebung „Echter Ort“ fragen bei OpenStreetMap nach (dabei geht nur der Ort aus dem Gerät); die Umgebungs-Vorlagen kommen ohne Internet aus.</p>
           <ol class="schritte">
             <li><span>1</span><div><strong>IFC laden</strong>
               <p>Entwurf als IFC exportieren und links mit „IFC-Datei wählen“ öffnen oder ins Fenster ziehen.</p></div></li>
@@ -298,9 +298,9 @@
       <div class="umgebungwahl" id="umgebungwahl" hidden>
         <div class="sonnen-zeile">
           <button type="button" class="sonnen-mehr" id="umgebungAufklappen" aria-expanded="false" aria-controls="umgebungfeld"
-            aria-label="Ort und Lage des Hauses einstellen" title="Ort und Lage des Hauses einstellen" hidden></button>
+            aria-label="Umgebung auswählen" title="Umgebung auswählen" hidden></button>
           <button type="button" class="umgebungknopf" id="umgebungKnopf" aria-pressed="false" aria-label="Umgebung"
-            title="Umgebung zeigen (Nachbarhäuser, Straßen, Grün aus OpenStreetMap)">
+            title="Umgebung zeigen (Vorlage oder echter Ort)">
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path class="hinten" d="M13.5 9.5 L17.5 6 L21.5 9.5 V17 H13.5 Z"/>
               <path class="vorne" d="M2.5 12 L8 7.5 L13.5 12 V19.5 H2.5 Z"/>
@@ -309,6 +309,15 @@
           </button>
         </div>
         <div class="sonnenfeld umgebungfeld" id="umgebungfeld" hidden>
+          <!-- Sitzung 23b: Vorlagen (in der App gebaut, ohne Internet) oder echter Ort aus OpenStreetMap -->
+          <div class="umgebung-arten" id="umgebungArten" role="group" aria-label="Art der Umgebung">
+            <button type="button" data-art="staedtisch" aria-pressed="false" title="Vorlage: Blockrand mit Straßen, Gehwegen und Straßenbäumen">Städtisch</button>
+            <button type="button" data-art="laendlich" aria-pressed="false" title="Vorlage: Dorfstraße, Einfamilienhäuser (teils mit Satteldach), Gärten, Äcker">Ländlich</button>
+            <button type="button" data-art="wald" aria-pressed="false" title="Vorlage: dichter Wald mit Lichtung ums Haus">Wald</button>
+            <button type="button" data-art="wiese" aria-pressed="false" title="Vorlage: Wiese mit ein paar Bäumen">Wiese</button>
+            <button type="button" data-art="osm" aria-pressed="false" class="breit" title="Echte Nachbarhäuser und Straßen aus OpenStreetMap (braucht Internet)">Echter Ort (OpenStreetMap)</button>
+          </div>
+          <div class="umgebung-osm" id="umgebungOsm" hidden>
           <form class="ortssuche" id="umgebungOrtssuche" role="search">
             <input type="search" class="eingabe" id="umgebungSuchfeld" maxlength="120" autocomplete="off"
               placeholder="Adresse suchen …" aria-label="Adresse suchen (Enter drücken)" title="Adresse des Grundstücks eintippen und Enter drücken">
@@ -323,6 +332,7 @@
             <span>S</span><input type="range" id="umgebungNord" min="-100" max="100" step="0.5" value="0" autocomplete="off" aria-label="Haus nach Norden verschieben (Meter)"><span>N</span>
             <output id="umgebungNordWert">0 m</output>
           </label>
+          </div>
           <p class="hinweis" id="umgebungInfo"></p>
         </div>
       </div>
