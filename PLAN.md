@@ -123,17 +123,19 @@ Erledigte Sitzungen abhaken, die oberste offene Zeile ist dran (die Nummern blei
       „damit ich mir das Ganze besser vorstellen kann“; mit Ansichtsknöpfen 3D/N/O/S/W (17.11.)
 - [x] 16. Should 3b: Standort per Ortssuche (17.11.)
 - [x] 19. Should 4c: PDF-Einzelseiten (18.11.)
-- [ ] 19b. PDF auch in der Darstellung „realistisch“ (Wunsch der Nutzerin 18.11.) ← **als Nächstes**
+- [x] 19b. PDF auch in der Darstellung „realistisch“ (Wunsch der Nutzerin 18.11.) (18.11.)
+- [ ] 19c. Sonne startet mit heutigem Datum und aktueller Uhrzeit (Wunsch der Nutzerin 18.11.) ← **als Nächstes**
+- [ ] 19d. Weitere Zeichenstile neben „Zeichnung“: Aquarell und Bleistiftzeichnung (Wunsch der Nutzerin 18.11.)
 - [ ] 20. Ab ca. 10:30: Test mit eigener IFC, Fehler beheben
 - [ ] 21. Auf GitHub hochladen und über GitHub Pages veröffentlichen → **12 Uhr Freeze**
 - [ ] 22. Nachmittag: README (Poster macht die Nutzerin selbst nach Moodle-Vorlage)
 
 **Fr 20.11.** – Polieren & präsentieren, Abgabe bis 16 Uhr
 
-Wenn es eng wird, zuerst streichen: 19b (PDF realistisch).
+Wenn es eng wird, zuerst streichen: 19d (Aquarell/Bleistift), dann 19c (Sonne mit aktueller Uhrzeit).
 Was bis Do 10:30 nicht fertig ist, wandert zu Could.
 
-## Stand (18.11.2026, nach Sitzung 19)
+## Stand (18.11.2026, nach Sitzung 19b)
 - CLAUDE.md und PLAN.md angelegt, Plan mit der Nutzerin abgestimmt.
 - Test-IFC liegt in `testdaten/` (Einfamilienhaus, Revit 2023, IFC2x3: 192 Wände, 57 Fenster, 49 Türen).
   Quelle: Bundesingenieurkammer, Seite „BIM-Praxisbeispiele“ (Download zum Betrachten angeboten).
@@ -693,6 +695,19 @@ Was bis Do 10:30 nicht fertig ist, wandert zu Could.
   Nur der Name in `materialien.js`, die Kennung `dach-hell` bleibt, alte Varianten laden weiter. Versionsnummern alle `v=25f`
   (`materialien.js` in `app.js`, `fassade.js`, `realistisch.js`; `fassade.js`, `realistisch.js`, `szene.js`, `app.js`).
 
+- Sitzung 19b (18.11.): Bilder und PDF auch „realistisch“. „Variante speichern“ macht die 5 Bilder jetzt in der Darstellung,
+  die gerade im 3D-Fenster eingestellt ist (Zeichnung oder Realistisch), für Perspektive **und** Ansichten N/O/S/W.
+  Hintergrund der Bilder bleibt weiß (kein Himmel), die Spiegelung des Himmels in den Materialien bleibt.
+  Die Darstellung wird mit der Variante gespeichert (`darstellung`); ältere Varianten gelten als Zeichnung.
+  Vermerk an der Perspektive: im Vergleich „SO · 15° · realistisch“, im großen Bild und im PDF „Perspektive aus Südosten, 15° · realistisch“.
+  Variantenliste unverändert, „Laden“ schaltet die Darstellung im 3D-Fenster nicht um.
+  Technik: `realistischZeichnen` in `szene.js` nimmt jetzt eine Kamera und kann ohne Himmel zeichnen; `bilderAufnehmen` nutzt es.
+  Getestet mit `Test-ArchiCAD.ifc`: je eine Variante realistisch und Zeichnung gespeichert, alle Bilder angesehen
+  (realistisch: Texturen, Licht- und Schattenseiten, weißer Hintergrund; Zeichnung wie bisher), Vergleich zeigt den Vermerk nur bei der
+  realistischen. Testvarianten wieder gelöscht. Keine Fehler. Geändert: `szene.js`, `app.js`, `index.html`. Versionsnummern `szene.js?v=26`, `app.js?v=26`.
+  Probleme: Das PDF selbst wurde nicht erzeugt/angesehen (gleicher Beschriftungs-Baustein wie im Vergleich) – bitte einmal selbst ein PDF
+  mit einer realistischen Variante speichern.
+
 ## Design-Vision (Entwurf 17.11., in Sitzung 15b umgesetzt)
 Mit der Nutzerin als Testseite entworfen und abgestimmt („erstmal so festhalten“). Umbau später in einer eigenen Sitzung.
 - **Stil:** Glassmorphism – halbtransparente Glaskarten mit Unschärfe vor einem dunklen, farbigen Verlauf,
@@ -719,12 +734,24 @@ Mit der Nutzerin als Testseite entworfen und abgestimmt („erstmal so festhalte
   kein Unterschied. Nur auf diesem Rechner gemessen; über dem 3D-Bild nur wenige, kleine Glas-Elemente verwenden.
 
 ## Nächste Schritte
-- **Sitzung 19b (Wunsch der Nutzerin 18.11., nach Sitzung 19):** Die Darstellung „realistisch“ soll auch aufs PDF.
+- **Sitzung 19c (Wunsch der Nutzerin 18.11.):** Schaltet man die Sonne ein, steht sie auf **heute und jetzt**
+  (Datum und deutsche Uhrzeit des Rechners) statt auf dem festen Startwert. Danach frei verstellbar wie bisher.
+  Vor dem Bauen klären: nur beim ersten Einschalten nach dem Öffnen der Seite (danach merkt sie sich die eigene Einstellung)
+  oder bei jedem Einschalten neu? Was passiert nachts (Sonne unter dem Horizont = keine Schatten)?
+- **Sitzung 19d (Wunsch der Nutzerin 18.11.):** Weitere Stile für die Darstellung, neben „Zeichnung“ und „Realistisch“:
+  **Aquarell** und **Bleistiftzeichnung**. Vor dem Bauen klären: Wie sollen sie aussehen (Beispielbilder?),
+  wo schaltet man um (Umschalter im 3D-Fenster um zwei Knöpfe erweitern?), gelten sie wie seit 19b auch für die gespeicherten
+  Bilder und das PDF (mit Vermerk)? Aufwendig: ggf. nur einer der beiden Stile, wenn die Zeit knapp wird.
+- **Sitzung 19b (erledigt, s. o.; Wunsch der Nutzerin 18.11., nach Sitzung 19):** Die Darstellung „realistisch“ soll auch aufs PDF.
   Stand heute: Die 5 Bilder einer Variante werden beim Speichern immer im Zeichenstil gemacht; „realistisch“ gilt nur im 3D-Fenster.
   Technisch machbar: `szene.js` kann ein Bild schon realistisch zeichnen (`realistischZeichnen`), das lässt sich beim Fotografieren nutzen.
   Gilt nur für neu gespeicherte Varianten (alte haben keine realistischen Bilder). Vor dem Bauen klären:
   (1) Werden die Bilder in der Darstellung gemacht, die gerade im 3D-Fenster eingestellt ist, oder immer beide (doppelter Speicher)?
   (2) Gilt es auch für die 4 Ansichten oder nur für die Perspektive? (3) Wie wählt man es fürs PDF bzw. im Vergleich aus?
+  **Entschieden (18.11., mit der Nutzerin):** (1) Die Bilder entstehen in der Darstellung, die gerade im 3D-Fenster
+  eingestellt ist (kein doppelter Speicher). (2) Gilt für alle 5 Bilder (Perspektive + N/O/S/W).
+  (3) Keine eigene Auswahl fürs PDF; die Darstellung wird mit der Variante gespeichert, Vergleich und PDF zeigen
+  einen kleinen Vermerk „realistisch“ an der Perspektive. Variantenliste bleibt unverändert.
 - **Sitzung 19 (erledigt, s. o.; Entscheidung 17.11., vor dem Bauen):** PDF-Einzelseiten. Neuer Schalter „Einzelseiten je Variante“
   unter „Kennwerte aufs PDF“, **Start aus** (aus = PDF wie bisher). An und ab 2 angekreuzten Varianten: nach der
   Übersichtsseite folgt je Variante eine eigene Seite A3 quer, aufgebaut **wie das 1-Varianten-PDF** (große Perspektive,

@@ -67,7 +67,7 @@ export class Szene {
     this.schattenBoden.raycast = () => {};
     this.szene.add(this.schattenBoden);
 
-    // Umschalter „Zeichnung | Realistisch“: gilt nur fürs 3D-Fenster, nicht für die gespeicherten Bilder
+    // Umschalter „Zeichnung | Realistisch“: gilt fürs 3D-Fenster und (seit Sitzung 19b) für die gespeicherten Bilder
     this.realistisch = false;
 
     this.modell = null;
@@ -87,8 +87,9 @@ export class Szene {
 
   // Ein Bild „realistisch“: Materialien kurz tauschen, Linien ausblenden, Himmel und Licht umstellen,
   // zeichnen und sofort alles zurück. So merkt der Rest der App nichts davon
-  // (Hervorheben, Auswahl und die gespeicherten Bilder arbeiten weiter mit dem Zeichenstil).
-  realistischZeichnen() {
+  // (Hervorheben und Auswahl arbeiten weiter mit dem Zeichenstil).
+  // kamera: von welcher Kamera aus; mitHimmel = false: weißer Hintergrund (für die gespeicherten Bilder, Sitzung 19b)
+  realistischZeichnen(kamera = this.kamera, mitHimmel = true) {
     if (!this.himmel) {
       this.himmel = himmelHintergrund();
       this.umgebung = himmelUmgebung(this.renderer);
@@ -98,7 +99,7 @@ export class Szene {
       if (teil.isMesh) { netze.push(teil, teil.material); teil.material = realistischesMaterial(teil.material); }
       else if (teil.isLineSegments && teil.visible) { linien.push(teil); teil.visible = false; }
     });
-    this.szene.background = this.himmel;
+    if (mitHimmel) this.szene.background = this.himmel;
     this.szene.environment = this.umgebung;
     // Sonne tiefer und von Südwesten: Südseite hell, Ostseite im Schatten (deutliche Licht- und Schattenseiten).
     // Ist die Sonne (Sitzung 15) an, bleibt sie, wo sie laut Datum und Uhrzeit steht.
@@ -120,7 +121,7 @@ export class Szene {
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.0;
     try {
-      this.renderer.render(this.szene, this.kamera);
+      this.renderer.render(this.szene, kamera);
     } finally {
       for (let i = 0; i < netze.length; i += 2) netze[i].material = netze[i + 1];
       for (const linie of linien) linie.visible = true;
@@ -468,7 +469,9 @@ export class Szene {
     try {
       const kameras = { perspektive, ...Object.fromEntries(Object.entries(ANSICHTEN).map(([r, v]) => [r, ansichtKamera(v)])) };
       for (const [name, kamera] of Object.entries(kameras)) {
-        this.renderer.render(this.szene, kamera);
+        // in der Darstellung, die gerade im 3D-Fenster eingestellt ist (Sitzung 19b), Hintergrund immer weiß
+        if (this.realistisch && this.modell) this.realistischZeichnen(kamera, false);
+        else this.renderer.render(this.szene, kamera);
         // Bild sofort abholen, solange es noch auf der Zeichenfläche liegt
         // (toDataURL statt toBlob: toBlob braucht in manchen Browsern ca. 1 s pro Bild)
         bilder[name] = alsBlob(this.renderer.domElement.toDataURL('image/jpeg', 0.85));

@@ -1,5 +1,5 @@
 // Bedienoberfläche: Datei wählen oder hineinziehen, Modell anzeigen, Fassade gestalten
-import { Szene } from './szene.js?v=25f';
+import { Szene } from './szene.js?v=26';
 import { ifcLaden } from './ifc.js?v=19';
 import { aussenwaendeErkennen, wandFaerben, oeffnungenZuordnen, fensterAnpassen, stuetzenVorbereiten, stuetzeFaerben, dachVorbereiten, dachFaerben, kennwerteBerechnen, hauptrichtungBestimmen, fensterFaerben, anbauteileZuordnen } from './fassade.js?v=25f';
 import {
@@ -718,12 +718,14 @@ const blick = { aus: 135, hoehe: 15 }; // Start: aus Südosten, 15° von oben
 const blickVon = (variante) => variante.blick ?? { aus: 135, hoehe: 26 };
 const blickText = (variante) => {
   const b = blickVon(variante);
-  return `Perspektive aus ${BLICK_NAMEN[b.aus]}, ${variante.blick ? '' : 'ca. '}${b.hoehe}°`;
+  return `Perspektive aus ${BLICK_NAMEN[b.aus]}, ${variante.blick ? '' : 'ca. '}${b.hoehe}°${realistischVermerk(variante)}`;
 };
 const blickKurz = (variante) => {
   const b = blickVon(variante);
-  return `${BLICK_KURZ[b.aus]} · ${b.hoehe}°`;
+  return `${BLICK_KURZ[b.aus]} · ${b.hoehe}°${realistischVermerk(variante)}`;
 };
+// Kleiner Vermerk, wenn die Bilder in der Darstellung „realistisch“ gemacht wurden (Sitzung 19b)
+const realistischVermerk = (variante) => (variante.darstellung === 'realistisch' ? ' · realistisch' : '');
 
 function blickAnzeigen() {
   $('blickAus').value = String(blick.aus);
@@ -810,6 +812,8 @@ $('varianteSpeichern').addEventListener('click', async () => {
       einstellungen: einstellungenSammeln(), kennwerte: kennwerteMitGesamt(), bilder, drehung, blick: { ...blick },
       // Sonne (Sitzung 15): Datum, Uhrzeit, Ort und Sonnenstand, wenn die Bilder Schatten haben; sonst null
       sonne: sonneAn ? { ...sonne, ...sonnenstand(sonne) } : null,
+      // Darstellung der Bilder (Sitzung 19b): wie gerade im 3D-Fenster; ältere Varianten haben keinen Eintrag = Zeichnung
+      darstellung: szene.realistisch ? 'realistisch' : 'zeichnung',
     });
     $('variantenName').value = '';
     variantenStatus(`„${name}“ ist gespeichert.`);
