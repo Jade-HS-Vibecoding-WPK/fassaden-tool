@@ -78,7 +78,7 @@ nebeneinander vergleicht und als PDF mitnimmt.
 - Nach jedem fertigen Feature ein Commit (Speicherstand) und gleich danach hochladen zu GitHub.
 - **Geändert (17.11.):** Zwischenstände sollen laut Werkstatt doch laufend auf GitHub liegen, nicht erst ab Donnerstag.
   Repo: https://github.com/Jade-HS-Vibecoding-WPK/fassaden-tool (öffentlich, MIT-Lizenz, README von GitHub).
-  Erstes Hochladen am 17.11. nach Sitzung 8. GitHub Pages (Veröffentlichung der App) kommt weiter in Sitzung 21.
+  Erstes Hochladen am 17.11. nach Sitzung 8. GitHub Pages seit 18.11. an: https://jade-hs-vibecoding-wpk.github.io/fassaden-tool/
 - `testdaten/` wird nicht hochgeladen (Beispiel-IFC stammt von der Bundesingenieurkammer, Nutzungsbedingungen nicht geklärt).
 
 ## Sitzungsplan (ein Feature pro Sitzung)
@@ -141,7 +141,9 @@ Erledigte Sitzungen abhaken, die oberste offene Zeile ist dran (die Nummern blei
 - [ ] 20e. Beschriftung „Ansicht Nord“ statt „N“ (Wunsch der Nutzerin 18.11.): im PDF und im Variantenvergleich unter jeder
       Ansicht „Ansicht Nord / Nordost / Ost …“ – die Richtung, in die die Fassade wirklich zeigt, in 8 Stufen (nicht mehr „N (NNW)“).
       Genau dazwischen (z. B. NNW) → zur Hauptrichtung runden („Ansicht Nord“). Technisch: `ansichtKennzeichen` in `app.js`.
-- [ ] 21. Auf GitHub hochladen und über GitHub Pages veröffentlichen → **12 Uhr Freeze** ← **als Nächstes**
+- [x] 21. Auf GitHub hochladen und über GitHub Pages veröffentlichen (vor 20e gezogen, Wunsch der Nutzerin) (18.11.)
+      Live-Demo: https://jade-hs-vibecoding-wpk.github.io/fassaden-tool/ (Pages aus Zweig `main`, Ordner `/`).
+      Jeder `git push` auf `main` aktualisiert die Seite nach 1–2 Minuten von selbst. → **12 Uhr Freeze**
 - [ ] 22. Nachmittag: README (Poster macht die Nutzerin selbst nach Moodle-Vorlage)
 
 **Fr 20.11.** – Polieren & präsentieren, Abgabe bis 16 Uhr

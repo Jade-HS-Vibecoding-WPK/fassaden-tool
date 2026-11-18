@@ -24,6 +24,8 @@ Entsteht in der Vibecoding KI-Werkstatt (Jade Hochschule, 16.–20.11.2026). Abg
 - Kein Node/npm auf dem Rechner. Lokal testen mit `python -m http.server 8000` (siehe `.claude/launch.json`).
 - Git ist installiert und im Projekt eingerichtet (Zweig `main`). GitHub: https://github.com/Jade-HS-Vibecoding-WPK/fassaden-tool
   (öffentlich). Nach jedem Commit auch hochladen (`git push`), damit die Zwischenstände dort liegen.
+- Live-Demo (GitHub Pages aus `main`, Ordner `/`): https://jade-hs-vibecoding-wpk.github.io/fassaden-tool/ –
+  jeder Push aktualisiert sie nach 1–2 Minuten. Achtung: Was auf `main` liegt, ist sofort öffentlich live.
 - Code-Namen und Kommentare auf Deutsch.
 - Nach Änderungen an einer JS-Datei die Versionsnummer an ihrem Import erhöhen (`?v=…` in `index.html` bzw. im
   `import` in `app.js`), sonst zeigt der Browser alte Fassungen (python-Server schickt keine Zwischenspeicher-Regeln).
