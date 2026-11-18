@@ -190,7 +190,7 @@ function spalteZeichnen(doc, v, bilder, lage, x, y, kennzeichen, blickText) {
  * varianten: 1–4 gespeicherte Varianten (älteste zuerst); modellName: Dateiname der IFC (nur für die Datei-Eigenschaften);
  * massstab: 50, 100, 200 oder 500 (gilt für alle Ansichten); mitKennwerte: Tabelle „Kennwerte“ zeigen;
  * einzelseiten: ab 2 Varianten nach der Übersicht je Variante eine eigene Seite;
- * kennzeichen(variante, richtung): Beschriftung einer Ansicht, z. B. „N“ oder „N (NNW)“;
+ * kennzeichen(variante, richtung): Beschriftung einer Ansicht, z. B. „Ansicht Nord“ oder „Ansicht Nordost“;
  * blickText(variante): Beschriftung der Perspektive, z. B. „Perspektive aus Südosten, 15°“
  */
 export async function pdfErstellen({ varianten, modellName, kennzeichen, blickText, massstab = 100, mitKennwerte = true, einzelseiten = false }) {

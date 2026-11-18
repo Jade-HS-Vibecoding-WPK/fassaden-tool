@@ -7,7 +7,7 @@ import {
   farbtoeneVon, farbtonVon, farbtonSetzen, farbtoeneSammeln, farbtoeneUebernehmen, materialText,
 } from './materialien.js?v=25f';
 import { variantenLesen, varianteSpeichern, varianteLoeschen } from './varianten.js';
-import { pdfErstellen, pdfDateiname } from './pdf.js?v=26d';
+import { pdfErstellen, pdfDateiname } from './pdf.js?v=26e';
 import { START_SONNE, sonnenstand, himmelsrichtung, uhrzeitText, ortMitName, zeitText, weltzeit } from './sonne.js?v=24';
 
 const $ = (id) => document.getElementById(id);
@@ -24,20 +24,16 @@ let modellName = ''; // Dateiname der IFC (steht im Kopf des PDF)
 // Gewähltes Fassadenmaterial je Himmelsrichtung
 const RICHTUNGSNAMEN = { N: 'Nord', O: 'Ost', S: 'Süd', W: 'West' };
 
-// Feinere Himmelsrichtungen (16 Stück, je 22,5°) für die Beschriftung der Ansichten
-const KOMPASS = [
-  ['N', 'Nord'], ['NNO', 'Nordnordost'], ['NO', 'Nordost'], ['ONO', 'Ostnordost'],
-  ['O', 'Ost'], ['OSO', 'Ostsüdost'], ['SO', 'Südost'], ['SSO', 'Südsüdost'],
-  ['S', 'Süd'], ['SSW', 'Südsüdwest'], ['SW', 'Südwest'], ['WSW', 'Westsüdwest'],
-  ['W', 'West'], ['WNW', 'Westnordwest'], ['NW', 'Nordwest'], ['NNW', 'Nordnordwest'],
-];
+// Himmelsrichtungen in 8 Stufen (je 45°) für die Beschriftung der Ansichten (Sitzung 20e)
+const KOMPASS = ['Nord', 'Nordost', 'Ost', 'Südost', 'Süd', 'Südwest', 'West', 'Nordwest'];
 const RICHTUNG_GRAD = { N: 0, O: 90, S: 180, W: 270 };
-// Wohin zeigt die Fassade einer Seite wirklich? (drehung = Drehung des Gebäudes in Grad)
-// Gibt null zurück, wenn es dieselbe Richtung ist wie der Name der Seite (Gebäude kaum gedreht).
-function genaueRichtung(richtung, drehung = 0) {
-  const stufe = ((Math.round((RICHTUNG_GRAD[richtung] + drehung) / 22.5) % 16) + 16) % 16;
-  const [kurz, lang] = KOMPASS[stufe];
-  return kurz === richtung ? null : { kurz, lang };
+// Wohin zeigt die Fassade einer Seite wirklich? (drehung = Drehung des Gebäudes in Grad), z. B. „Nordost“.
+// Erst auf 16 Stufen (22,5°) runden; liegt die Fassade genau dazwischen (z. B. Nordnordwest),
+// zählt die Hauptrichtung (Nord/Ost/Süd/West). Schrägrichtungen also nur bei etwa 34°–56° Drehung.
+function fassadenRichtung(richtung, drehung = 0) {
+  const stufe16 = ((Math.round((RICHTUNG_GRAD[richtung] + drehung) / 22.5) % 16) + 16) % 16;
+  const stufe8 = stufe16 % 2 === 0 ? stufe16 / 2 : (2 * Math.round(stufe16 / 4)) % 8;
+  return KOMPASS[stufe8];
 }
 const materialJeRichtung = { N: START_MATERIAL, O: START_MATERIAL, S: START_MATERIAL, W: START_MATERIAL };
 
@@ -1000,10 +996,9 @@ function vergleichswahlAnzeigen() {
 // Angekreuzte Varianten, älteste zuerst (so stehen sie im Vergleich und im PDF von links nach rechts)
 const gewaehlteVarianten = () => gespeicherteVarianten.filter((v) => zumVergleich.has(v.id)).sort((a, b) => a.datum - b.datum);
 
-// Beschriftung einer Ansicht: „N“, bei gedrehtem Gebäude „N (NNW)“
+// Beschriftung einer Ansicht: „Ansicht Nord“ – die Richtung, in die die Fassade wirklich zeigt (Sitzung 20e)
 function ansichtKennzeichen(variante, richtung) {
-  const genau = genaueRichtung(richtung, variante.drehung);
-  return genau ? `${richtung} (${genau.kurz})` : richtung;
+  return `Ansicht ${fassadenRichtung(richtung, variante.drehung)}`;
 }
 
 // PDF-Übersichtsseite A3 quer bauen und direkt als Datei speichern
@@ -1104,12 +1099,10 @@ function vergleichOeffnen() {
   zeile('Ansichten', (v) => {
     const ansichten = document.createElement('div');
     ansichten.className = 'ansichten';
-    for (const [richtung, name] of Object.entries(RICHTUNGSNAMEN)) {
-      // Ist das Gebäude gedreht, steht dabei, wohin die Fassade wirklich zeigt (ältere Varianten: ohne)
-      const genau = genaueRichtung(richtung, v.drehung);
-      ansichten.append(genau
-        ? vergleichsbild(v, richtung, `Ansicht ${name} – zeigt nach ${genau.lang}`, ansichtKennzeichen(v, richtung))
-        : vergleichsbild(v, richtung, `Ansicht ${name}`));
+    for (const richtung of Object.keys(RICHTUNGSNAMEN)) {
+      // Beschriftung nach der Richtung, in die die Fassade wirklich zeigt (ältere Varianten ohne Drehung: wie die Seite)
+      const kennzeichen = ansichtKennzeichen(v, richtung);
+      ansichten.append(vergleichsbild(v, richtung, kennzeichen, kennzeichen));
     }
     return ansichten;
   });

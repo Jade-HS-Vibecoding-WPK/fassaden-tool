@@ -138,9 +138,13 @@ Erledigte Sitzungen abhaken, die oberste offene Zeile ist dran (die Nummern blei
       immer 2 Seiten zu dunkel (Licht fest von Südost bzw. echte Sonne). Neu: für jede Ansicht Licht von vorne, leicht
       von links oben → alle 4 Fassaden gleich hell, keine Sonnenschatten.
       Perspektive bleibt wie sie ist (mit Sonne). Technisch: `lichtVonVorneSetzen` in `szene.js`, aufgerufen in `bilderAufnehmen`.
-- [ ] 20e. Beschriftung „Ansicht Nord“ statt „N“ (Wunsch der Nutzerin 18.11.): im PDF und im Variantenvergleich unter jeder
+- [x] 20e. (18.11.) Beschriftung „Ansicht Nord“ statt „N“ (Wunsch der Nutzerin 18.11.): im PDF und im Variantenvergleich unter jeder
       Ansicht „Ansicht Nord / Nordost / Ost …“ – die Richtung, in die die Fassade wirklich zeigt, in 8 Stufen (nicht mehr „N (NNW)“).
       Genau dazwischen (z. B. NNW) → zur Hauptrichtung runden („Ansicht Nord“). Technisch: `ansichtKennzeichen` in `app.js`.
+- [ ] 20g. Schriftart im PDF „Artifakt Element Light“ (Wunsch der Nutzerin 18.11.) statt Helvetica – für Kennzeichen,
+      Maßstab und Kennwerte-Tabelle. Technisch: jsPDF braucht die Schrift als TTF-Datei, die ins PDF eingebettet wird
+      (`addFileToVFS` + `addFont` in `pdf.js`), sonst fehlen auch Umlaute. Vorher klären: Artifakt ist eine Schrift von
+      Autodesk – darf die Datei in unser öffentliches GitHub-Repo und in PDFs eingebettet werden? Wenn nein: ähnliche freie Schrift.
 - [x] 21. Auf GitHub hochladen und über GitHub Pages veröffentlichen (vor 20e gezogen, Wunsch der Nutzerin) (18.11.)
       Live-Demo: https://jade-hs-vibecoding-wpk.github.io/fassaden-tool/ (Pages aus Zweig `main`, Ordner `/`).
       Jeder `git push` auf `main` aktualisiert die Seite nach 1–2 Minuten von selbst. → **12 Uhr Freeze**
@@ -750,6 +754,14 @@ Mit der Nutzerin als Testseite entworfen und abgestimmt („erstmal so festhalte
   kein Unterschied. Nur auf diesem Rechner gemessen; über dem 3D-Bild nur wenige, kleine Glas-Elemente verwenden.
 
 ## Nächste Schritte
+- **Sitzung 20e (erledigt 18.11.):** Unter jeder Ansicht steht jetzt „Ansicht Nord“ usw. statt „N“ bzw. „N (NNW)“ – im PDF,
+  unter den Bildern im Vergleich und als Titel des großen Bildes. Neue Funktion `fassadenRichtung` in `app.js` (ersetzt
+  `genaueRichtung`): erst auf 16 Stufen runden, eine Zwischenstufe wie NNW zählt zur Hauptrichtung → Schrägrichtungen
+  (Nordost …) nur bei etwa 34°–56° Drehung. Rundung mit Drehungen von 0° bis 200° nachgerechnet (Grenzen 33,7°/33,8° und
+  56,2°/56,3° stimmen). Getestet mit `Test-Neu.ifc` (nicht gedreht): Vergleich und PDF zeigen „Ansicht Nord/Ost/Süd/West“, keine Fehler.
+  Hinweis: Längste Beschriftung („Ansicht Nordwest“) ist im PDF ca. 20 mm breit; erst bei einer Fassade unter ca. 6 m in 1:500
+  könnte sie in die nächste Ansicht ragen. Neue Testvarianten „Variante 3/4“ von Test-Neu.ifc im Speicher.
+  Versionsnummern `app.js?v=49`, `pdf.js?v=26e` (nur Kommentar geändert).
 - **Sitzung 20f (erledigt 18.11.):** Ansichten ohne Schatten. Für jede der 4 Ansichten (nur gespeicherte Bilder, Vergleich, PDF)
   stellt `lichtVonVorneSetzen` die Sonne hinter den Betrachter, etwas nach links und oben; kein Bauteil wirft Schatten,
   Schattenboden aus. Danach stellt `bilderAufnehmen` Sonne und Schatten fürs 3D-Fenster zurück. `realistischZeichnen`
