@@ -1367,7 +1367,16 @@ for (const knopf of $('stilwahl').querySelectorAll('button')) {
 // haben auch die 5 Bilder Schatten, und Datum/Uhrzeit/Ort werden mit der Variante gespeichert.
 let sonneAn = false;
 let sonneAufgeklappt = false; // Einstellungen nur bei Bedarf zeigen (Wunsch der Nutzerin: Feld verdeckte das Gebäude)
-const sonne = { ...START_SONNE, datum: `${new Date().getFullYear()}${START_SONNE.datum.slice(4)}` };
+// Start mit heutigem Datum und aktueller deutscher Uhrzeit (Sitzung 19c), Uhrzeit auf die Viertelstunde
+// gerundet wie der Regler; Ort bleibt Oldenburg
+function jetztInDeutschland() {
+  const t = Object.fromEntries(new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Europe/Berlin', hourCycle: 'h23', year: 'numeric', month: '2-digit', day: '2-digit', hour: 'numeric', minute: 'numeric',
+  }).formatToParts(new Date()).map((teil) => [teil.type, teil.value]));
+  const minuten = Math.min(Math.round((Number(t.hour) * 60 + Number(t.minute)) / 15) * 15, 1425); // 23:53 → 23:45, nicht 24:00
+  return { datum: `${t.year}-${t.month}-${t.day}`, minuten };
+}
+const sonne = { ...START_SONNE, ...jetztInDeutschland() };
 
 // Uhrzeit-Regler als Tagesverlauf: Himmelsfarbe je Stunde aus der Sonnenhöhe an diesem Tag und Ort
 // (Nacht dunkelblau, Dämmerung orange, Tag hellblau). Wird nur neu gerechnet, wenn sich Datum oder Ort ändern.

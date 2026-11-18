@@ -124,8 +124,8 @@ Erledigte Sitzungen abhaken, die oberste offene Zeile ist dran (die Nummern blei
 - [x] 16. Should 3b: Standort per Ortssuche (17.11.)
 - [x] 19. Should 4c: PDF-Einzelseiten (18.11.)
 - [x] 19b. PDF auch in der Darstellung „realistisch“ (Wunsch der Nutzerin 18.11.) (18.11.)
-- [ ] 19c. Sonne startet mit heutigem Datum und aktueller Uhrzeit (Wunsch der Nutzerin 18.11.) ← **als Nächstes**
-- [ ] 19d. Weitere Zeichenstile neben „Zeichnung“: Aquarell und Bleistiftzeichnung (Wunsch der Nutzerin 18.11.)
+- [x] 19c. Sonne startet mit heutigem Datum und aktueller Uhrzeit (Wunsch der Nutzerin 18.11.) (18.11.)
+- [ ] 19d. Weitere Zeichenstile neben „Zeichnung“: Aquarell und Bleistiftzeichnung (Wunsch der Nutzerin 18.11.) ← **als Nächstes**
 - [ ] 20. Ab ca. 10:30: Test mit eigener IFC, Fehler beheben
 - [ ] 21. Auf GitHub hochladen und über GitHub Pages veröffentlichen → **12 Uhr Freeze**
 - [ ] 22. Nachmittag: README (Poster macht die Nutzerin selbst nach Moodle-Vorlage)
@@ -135,7 +135,7 @@ Erledigte Sitzungen abhaken, die oberste offene Zeile ist dran (die Nummern blei
 Wenn es eng wird, zuerst streichen: 19d (Aquarell/Bleistift), dann 19c (Sonne mit aktueller Uhrzeit).
 Was bis Do 10:30 nicht fertig ist, wandert zu Could.
 
-## Stand (18.11.2026, nach Sitzung 19b)
+## Stand (18.11.2026, nach Sitzung 19c)
 - CLAUDE.md und PLAN.md angelegt, Plan mit der Nutzerin abgestimmt.
 - Test-IFC liegt in `testdaten/` (Einfamilienhaus, Revit 2023, IFC2x3: 192 Wände, 57 Fenster, 49 Türen).
   Quelle: Bundesingenieurkammer, Seite „BIM-Praxisbeispiele“ (Download zum Betrachten angeboten).
@@ -734,10 +734,11 @@ Mit der Nutzerin als Testseite entworfen und abgestimmt („erstmal so festhalte
   kein Unterschied. Nur auf diesem Rechner gemessen; über dem 3D-Bild nur wenige, kleine Glas-Elemente verwenden.
 
 ## Nächste Schritte
-- **Sitzung 19c (Wunsch der Nutzerin 18.11.):** Schaltet man die Sonne ein, steht sie auf **heute und jetzt**
-  (Datum und deutsche Uhrzeit des Rechners) statt auf dem festen Startwert. Danach frei verstellbar wie bisher.
-  Vor dem Bauen klären: nur beim ersten Einschalten nach dem Öffnen der Seite (danach merkt sie sich die eigene Einstellung)
-  oder bei jedem Einschalten neu? Was passiert nachts (Sonne unter dem Horizont = keine Schatten)?
+- **Sitzung 19c (erledigt 18.11.):** Beim Öffnen der Seite steht die Sonne auf **heute und jetzt** (deutsche Uhrzeit,
+  auf die Viertelstunde gerundet wie der Regler, höchstens 23:45), Ort weiter Oldenburg. Danach frei verstellbar; die eigene
+  Einstellung bleibt bis zum Neuladen. Geladene Varianten mit Sonne bringen weiter ihr gespeichertes Datum/Uhrzeit mit.
+  Nachts steht die Sonne unter dem Horizont: Regler zeigt den Mond, keine Schatten (gab es schon). Nur `app.js` geändert (v=27).
+  Getestet: 09:33 Uhr → Regler 09:30, Datum 18.11.2026, keine Fehler. Probleme: keine.
 - **Sitzung 19d (Wunsch der Nutzerin 18.11.):** Weitere Stile für die Darstellung, neben „Zeichnung“ und „Realistisch“:
   **Aquarell** und **Bleistiftzeichnung**. Vor dem Bauen klären: Wie sollen sie aussehen (Beispielbilder?),
   wo schaltet man um (Umschalter im 3D-Fenster um zwei Knöpfe erweitern?), gelten sie wie seit 19b auch für die gespeicherten
