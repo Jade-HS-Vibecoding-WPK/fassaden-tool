@@ -324,12 +324,38 @@ Erledigte Sitzungen abhaken, die oberste offene Zeile ist dran (die Nummern blei
       Gelände in der IFC auf dem „Hintergrund“ liegt. Auf Boden und Hintergrund zeichnet der Marker nur noch echte
       Umrisse (Tiefensprung, `markerUmriss`), keine Helligkeitssprünge. Getestet mit Sonne, keine Fehler.
       Versionsnummern: `stile.js?v=20`, `szene.js?v=53f`, `app.js?v=62f`.
-- [ ] 23k. Neuer Darstellungsstil „Collage“ – Zeitungs-Collage (Wunsch der Nutzerin 18.11.):
+- [x] 23k. Neuer Darstellungsstil „Collage“ – Zeitungs-Collage (Wunsch der Nutzerin 18.11.):
       - Flächen wie aus Zeitschriften ausgerissen: Rasterpunkte (wie im Druck), ausgefranste weiße Reißkanten,
         Stücke leicht verdreht/versetzt, kleiner Schatten darunter. Ab und zu ein Streifen Klebeband.
       - Himmel und Wiese als große ausgerissene Papierstücke, Fenster eher dunkel und glänzend.
       - Keine echten Fotos aus dem Internet (Rechte, Repo öffentlich): Alles wird im Programm selbst gezeichnet.
       Code: vierter Stil in `js/stile.js`, Knopf „Collage“, Vermerk „· Collage“.
+      Gebaut (18.11.): `collage()` in `stile.js`. Ebenen: weißes Papier · Himmel-Rechteck · Wiesen-Streifen ·
+      Haus · Klebeband. (Erst:) Das Haus ist in große, unregelmäßige Stücke geteilt (ca. 420 px), jedes leicht verdreht/versetzt,
+      eigener Rasterwinkel und Farbton („aus einer anderen Zeitschrift“). Wo ein Stück über dem Nachbarn liegt:
+      weißer Reißrand und kleiner Schatten. Um das ganze Haus ein weißer Reißrand mit Schatten. Schlagschatten der Sonne =
+      Stück graues Rasterpapier. Fenster dunkelblau (`szene.js`) → im Bild sattes Hochglanz mit schrägen Lichtstreifen.
+      Klebeband nur dort, wo ein Ende auf dem Haus und eins daneben liegt. Kanten des Modells fein grau nachgezogen.
+      Erster Versuch: Stücke zu klein (260 px), sah aus wie zersprungenes Glas → größer, weiße Risse unregelmäßig schmal.
+      Getestet mit Test-Neu.ifc, ohne und mit Sonne; Variante gespeichert (Bilder 3000 × 2000), keine Fehler.
+      Probleme: Himmel und Wiese sind feste Rechtecke im Bild (nicht am Haus ausgerichtet) – bei sehr hohem/flachem
+      Haus evtl. unpassend. PDF im Collage-Stil nicht extra angesehen. Beim Testen 2 Varianten (3 und 4, 15:07)
+      doppelt gespeichert – kann die Nutzerin löschen.
+      Überarbeitet (Wunsch der Nutzerin, gleiche Sitzung): weniger Stücke (ca. 600 px) und weniger verdreht (bis ca. 1°,
+      Versatz 8 statt 14 px); weiße Risse feiner; Rasterpunkte kleiner und mit weniger Unterschied Papier/Tinte
+      (weniger auffällig); Himmel blasser blau; Kanten kräftiger. Fenster unverändert. Getestet, keine Fehler.
+      2. Überarbeitung (Wunsch der Nutzerin): keine Risse mehr auf dem Haus – das Haus ist ein ganzes Stück
+      (nur noch Reißrand und Schatten am Umriss). Die Risse liegen jetzt ums Haus herum und laufen waagerecht:
+      Himmel und Wiese aus je 2 waagerechten Papierstreifen (Funktion `streifen`). Getestet, keine Fehler.
+      3. Überarbeitung (Wunsch der Nutzerin): unten mehr Risse, nicht ganz waagerecht, wilder – Wiese aus 3 Streifen,
+      schräger gelegt (bis ca. 3,5°), Ränder mit großen Bögen (`reissenWild`); zwischen den Streifen blitzt stellenweise
+      weißes Papier durch. Himmel unverändert. Getestet, keine Fehler.
+      Tagesverlauf (Nutzerin: „Sonnenanimation funktioniert bei Marker und Collage nicht“ – lief zwar, aber ohne
+      Abend/Nacht): Marker und Collage haben jetzt Abend und Nacht wie das Aquarell. Himmel abends lila/orange, nachts
+      dunkelblau, Wiese dunkler, Fenster leuchten nach und nach (gleiche Regeln wie Aquarell, `mitStimmung` in
+      `szene.js`, `himmelStimmung`/`wieseStimmung` in `stile.js`). Marker legt abends/nachts mehr Hintergrund an.
+      Bleistift bleibt ohne Stimmung. Getestet: Collage 16:45 und 21:00, Marker nachts – keine Fehler.
+      Versionsnummern: `stile.js?v=22`, `szene.js?v=55`, `app.js?v=64`.
 - [ ] 23h. Haus mit der Maus verschieben (Wunsch der Nutzerin 18.11.): Haus als Ganzes anklicken und auf der
       Umgebungs-Platte ziehen, statt über die Regler „Haus verschieben“. Soll auch bei den Vorlagen gehen
       (bisher steht das Haus dort fest in der Mitte).

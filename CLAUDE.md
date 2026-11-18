@@ -45,7 +45,8 @@ Entsteht in der Vibecoding KI-Werkstatt (Jade Hochschule, 16.–20.11.2026). Abg
 - `js/darstellung.js` – Zeichenstil: Farben der Bauteile (Rohmodell, Dach, Fenster …) und Kantenlinien
 - `js/materialien.js` – Fassadenmaterialien als selbst gezeichnete Texturen
 - `js/realistisch.js` – Darstellung „realistisch“: echte Materialien, Himmel, Spiegelung
-- `js/stile.js` – Darstellungen „Aquarell“ (mit Abendlicht bei tiefer Sonne) und „Bleistift“: übermalt das Bild im Zeichenstil
+- `js/stile.js` – Darstellungen „Aquarell“ (mit Abendlicht bei tiefer Sonne), „Bleistift“, „Marker“ und „Collage“ (Sitzung 23k):
+  übermalt das Bild im Zeichenstil
 - `js/umgebung.js` – Umgebung aus OpenStreetMap: Nachbarhäuser als Klötze, Straßen, Grün auf runder Platte (nur Perspektive);
   dazu Vorlagen Städtisch/Ländlich/Wald/Wiese, in der App gebaut ohne Internet (Sitzung 23b, Start: Ländlich)
 - `js/sonne.js` – Sonnenstand aus Datum, deutscher Uhrzeit und Koordinaten (Schatten zeichnet `szene.js`)

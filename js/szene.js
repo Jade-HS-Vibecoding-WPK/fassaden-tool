@@ -3,11 +3,11 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { realistischesMaterial, himmelHintergrund, himmelUmgebung } from './realistisch.js?v=26';
 import { MATERIAL } from './darstellung.js?v=19';
-import { Nachbearbeitung } from './stile.js?v=20';
+import { Nachbearbeitung } from './stile.js?v=22';
 import { umgebungLegen, hausFreistellen } from './umgebung.js?v=5f';
 
 // Gemalte Darstellungen (Sitzung 19d): Zeichenstil wird nachträglich übermalt (stile.js)
-const GEMALT = ['aquarell', 'bleistift', 'marker'];
+const GEMALT = ['aquarell', 'bleistift', 'marker', 'collage'];
 
 // Ist das Teil zu sehen? (es selbst und alle, zu denen es gehört)
 function istSichtbar(teil) {
@@ -188,8 +188,10 @@ export class Szene {
       this.fensterDunkel = new THREE.MeshLambertMaterial({ side: THREE.DoubleSide, transparent: true });
     }
     const aquarell = this.stil === 'aquarell';
-    const abend = aquarell ? this.abendAnteil() : 0;
-    const nacht = aquarell ? this.nachtAnteil() : 0;
+    // Abend und Nacht (Tagesverlauf der Sonne): im Aquarell, seit Sitzung 23k auch im Marker und in der Collage
+    const mitStimmung = ['aquarell', 'marker', 'collage'].includes(this.stil);
+    const abend = mitStimmung ? this.abendAnteil() : 0;
+    const nacht = mitStimmung ? this.nachtAnteil() : 0;
     const getauscht = [];
     const grundKraft = this.grundlicht.intensity;
     const sonnenKraft = this.sonne.intensity;
@@ -207,18 +209,24 @@ export class Szene {
       }
     }
     // Aquarell: Gelände der IFC als Wiese (Wunsch der Nutzerin: mehr Grün unten), am Abend und in der Nacht dunkler
+    // (Marker und Collage: Gelände behält seine Farbe, wird nur abends und nachts dunkler)
     const gelaendeFarbe = MATERIAL.gelaende.color.getHex();
-    if (aquarell) {
-      MATERIAL.gelaende.color.set(0xc6cdb8).lerp(new THREE.Color(0x6f7a68), abend).lerp(new THREE.Color(0x3c424c), nacht * 0.6);
+    if (mitStimmung) {
+      if (aquarell) MATERIAL.gelaende.color.set(0xc6cdb8);
+      MATERIAL.gelaende.color.lerp(new THREE.Color(0x6f7a68), aquarell ? abend : abend * 0.5)
+        .lerp(new THREE.Color(0x3c424c), nacht * 0.6);
       // Gläser: tagsüber dunkler als im Zeichenstil (Wunsch der Nutzerin); abends leuchten sie warm,
-      // ein Fenster ohne Licht wird dunkelblau
-      const tagGlas = new THREE.Color(0x76889c);
+      // ein Fenster ohne Licht wird dunkelblau.
+      // Marker: Glas kräftig blau, wie mit einem blauen Marker angelegt.
+      // Collage (Sitzung 23k): Glas dunkel blau, wird im Übermalen zu glänzendem Hochglanzpapier.
+      const tagGlas = new THREE.Color({ aquarell: 0x76889c, marker: 0x6f93bd, collage: 0x26354d }[this.stil]);
+      const tagDeckkraft = { aquarell: 0.75, marker: 0.85, collage: 0.95 }[this.stil];
       // Leuchtende Fenster schon bei noch hoher Sonne deutlich warm, damit man die ersten Lichter sieht
       const leuchten = Math.max(abend, 0.6);
       this.fensterLicht.color.copy(tagGlas).lerp(new THREE.Color(0xffc261), leuchten);
       this.fensterDunkel.color.copy(tagGlas).lerp(new THREE.Color(0x232838), abend);
-      this.fensterLicht.opacity = THREE.MathUtils.lerp(0.75, 1, leuchten);
-      this.fensterDunkel.opacity = THREE.MathUtils.lerp(0.75, 1, abend);
+      this.fensterLicht.opacity = THREE.MathUtils.lerp(tagDeckkraft, 1, leuchten);
+      this.fensterDunkel.opacity = THREE.MathUtils.lerp(tagDeckkraft, 1, abend);
       const anteil = this.lichterAnteil();
       // Pfosten-Riegel: die ganze Glaswand ist ein Raum dahinter (Sitzung 20b). Er geht mit den ersten Fenstern an
       // (voll an, wenn ein Viertel der Fenster leuchtet) und mit den letzten aus, weich ein- und ausgeblendet.
@@ -237,16 +245,6 @@ export class Szene {
         getauscht.push([teil, teil.material]);
         // ohne Licht: Glas mit Licht und Schatten; mit Licht: leuchtet selbst
         teil.material = Szene.fensterZufall(teil) < anteil ? this.fensterLicht : this.fensterDunkel;
-      });
-    }
-    // Marker: Glas kräftig blau, damit die Fenster wie mit einem blauen Marker angelegt wirken
-    if (this.stil === 'marker') {
-      this.fensterDunkel.color.set(0x6f93bd);
-      this.fensterDunkel.opacity = 0.85;
-      this.modell.traverse((teil) => {
-        if (!teil.isMesh || teil.material !== MATERIAL.fenster) return;
-        getauscht.push([teil, teil.material]);
-        teil.material = this.fensterDunkel;
       });
     }
     if (abend > 0) {

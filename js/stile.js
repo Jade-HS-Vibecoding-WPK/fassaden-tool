@@ -1,4 +1,4 @@
-// Gemalte Darstellungen „Aquarell“ und „Bleistift“ (Sitzung 19d), „Marker“ (Sitzung 23g).
+// Gemalte Darstellungen „Aquarell“ und „Bleistift“ (Sitzung 19d), „Marker“ (Sitzung 23g), „Collage“ (Sitzung 23k).
 // Ablauf: Das 3D-Bild wird erst ganz normal im Zeichenstil gezeichnet, aber nicht auf den Bildschirm,
 // sondern in ein unsichtbares Bild (mit Tiefe: wie weit weg ist jeder Punkt). Danach „übermalt“ ein kleines
 // Grafikkarten-Programm (Shader) dieses Bild: Kanten finden, Farbe blasser und weicher machen, Papier,
@@ -15,9 +15,9 @@ uniform sampler2D tFarbe;   // 3D-Bild im Zeichenstil
 uniform sampler2D tTiefe;   // Tiefe (0 = nah, 1 = Hintergrund)
 uniform vec2 aufloesung;    // Bildgröße in Pixeln
 uniform float nah, fern, ortho;
-uniform int stil;           // 1 = Aquarell, 2 = Bleistift, 3 = Marker (Sitzung 23g)
-uniform float abend;        // 0 = Tag, 1 = Abend (nur Aquarell)
-uniform float nacht;        // 0 = Abend, 1 = tiefe Nacht (nur Aquarell)
+uniform int stil;           // 1 = Aquarell, 2 = Bleistift, 3 = Marker (Sitzung 23g), 4 = Collage (23k)
+uniform float abend;        // 0 = Tag, 1 = Abend (Aquarell, seit 23k auch Marker und Collage)
+uniform float nacht;        // 0 = Abend, 1 = tiefe Nacht (Aquarell, Marker, Collage)
 uniform vec3 papier;
 uniform mat4 projInv, kameraWelt; // um aus Bildpunkt und Tiefe den Punkt im Raum zu berechnen
 uniform float bodenHoehe;   // bis zu dieser Höhe gelten waagerechte Flächen als Boden (Wiese im Aquarell)
@@ -215,6 +215,15 @@ vec3 bleistift(vec2 q, vec2 px, float s) {
   return mix(vec3(0.2, 0.21, 0.23), papier, wert);
 }
 
+// Himmel und Wiese je nach Tageszeit (Marker und Collage, Sitzung 23k): tags die angegebene Farbe,
+// abends oben lila und zum Horizont orange, nachts dunkelblau. h: 0 = Horizont … 1 = oben
+vec3 himmelStimmung(vec3 tag, float h) {
+  vec3 abendFarbe = mix(vec3(0.97, 0.70, 0.48), vec3(0.62, 0.55, 0.80), h);
+  vec3 nachtFarbe = mix(vec3(0.40, 0.42, 0.60), vec3(0.20, 0.22, 0.38), h);
+  return mix(tag, mix(abendFarbe, nachtFarbe, nacht), abend);
+}
+vec3 wieseStimmung(vec3 tag) { return mix(tag, mix(vec3(0.50, 0.56, 0.48), vec3(0.30, 0.33, 0.38), nacht), abend); }
+
 // ---------- Marker (Sitzung 23g) ----------
 // Eine Lage Marker: flächig angelegt, nur mit unregelmäßigen Strichspuren in Zugrichtung
 // (Wunsch der Nutzerin: keine Parallelschraffur, keine weißen Lücken, keine einzelnen dunklen Striche).
@@ -290,9 +299,12 @@ vec3 marker(vec2 q, vec2 px, float s) {
   }
   float boden = clamp((oben - unten) * 0.5, 0.0, 1.0);
   boden = max(boden, smoothstep(0.3, 0.15, vUv.y + (wolkig(q * vec2(3.0, 1.0) + 2.0) - 0.5) * 0.15) * step(0.01, nahe));
+  // abends und nachts mehr Hintergrund angelegt, damit man die Stimmung sieht
+  nahe = mix(nahe, 1.0, abend * 0.5 + nacht * 0.4);
   float himmelStriche = min(markerBahnen(p, 0.12, 45.0, 50.0), 1.0) * nahe * (1.0 - boden);
   float wiesenStriche = min(markerBahnen(p, 0.05, 35.0, 60.0), 1.0) * nahe * boden;
-  vec3 himmel = vec3(0.70, 0.84, 0.95), wiese = vec3(0.70, 0.84, 0.58);
+  vec3 himmel = himmelStimmung(vec3(0.70, 0.84, 0.95), smoothstep(0.35, 1.0, vUv.y));
+  vec3 wiese = wieseStimmung(vec3(0.70, 0.84, 0.58));
   vec3 hinten = papier * mix(vec3(1.0), himmel, himmelStriche) * mix(vec3(1.0), wiese, wiesenStriche);
   // Schlagschatten auf dem Boden (Wunsch der Nutzerin): dunkel mit dem grauen Marker gefüllt, ohne Umriss.
   // Ohne Gelände in der IFC liegt der Schatten auf dem „Hintergrund“: dort ist das Bild dunkler als weiß.
@@ -314,11 +326,132 @@ vec3 marker(vec2 q, vec2 px, float s) {
   return bild;
 }
 
+// ---------- Collage (Sitzung 23k) ----------
+// Wie aus Zeitschriften ausgerissen und aufgeklebt. Alles wird hier selbst gezeichnet (keine Fotos aus dem Internet).
+// Ebenen von unten nach oben: weißes Papier · 2 Himmel-Streifen · 2 Wiesen-Streifen · Haus (ein Stück) · Klebeband.
+// Maße in Bildpunkten eines 1000 Pixel hohen Bildes (p), damit es im 3D-Fenster und in den Bildern gleich wirkt.
+mat2 dreh(float w) { float c = cos(w), s = sin(w); return mat2(c, s, -s, c); }
+// Abstand zum Rand eines leicht gedrehten Rechtecks, negativ = innen
+float rechteck(vec2 p, vec2 mitte, vec2 halb, float w) {
+  vec2 d = abs(dreh(w) * (p - mitte)) - halb;
+  return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0);
+}
+// Reißkante: Rand nicht gerade, sondern ausgefranst (große Bögen und feine Zacken)
+float reissen(vec2 p, float saat) { return (wolkig(p * 0.02 + saat) - 0.5) * 22.0 + (rauschen(p * 0.3 + saat) - 0.5) * 4.0; }
+// Rasterdruck wie in einer Zeitschrift: Punkte satter Druckfarbe auf leicht getöntem Papier,
+// je dunkler die Stelle, desto größer die Punkte
+vec3 raster(vec3 c, vec2 p, float winkel, float abst, float s) {
+  float l = hell(c);
+  vec3 hellP = mix(c, vec3(1.0), 0.3); // wenig Unterschied Papier – Tinte: Punkte nicht so auffällig
+  vec3 tinte = clamp(vec3(l) + (c - vec3(l)) * 1.2, 0.0, 1.0) * 0.8;
+  float f = clamp((hell(hellP) - l) / max(hell(hellP) - hell(tinte), 0.01), 0.0, 1.0);
+  float dd = length(fract(dreh(winkel) * p / abst) - 0.5);
+  float r = sqrt(f / 3.1416);
+  float aa = 0.75 / (abst * s);
+  return mix(hellP, tinte, 1.0 - smoothstep(r - aa, r + aa, dd));
+}
+// Ein ausgerissener Papierstreifen (Himmel oder Wiese): leicht gedrehtes Rechteck mit ausgefranstem Rand,
+// weißem Reißrand und kleinem Schatten darunter. Die Risse liegen so nur ums Haus herum, nicht auf dem Haus
+// (Wunsch der Nutzerin), und laufen eher waagerecht.
+// wild: 0 = Rand nur leicht ausgefranst, 1 = Rand schlägt große Bögen (wie hastig abgerissen)
+float reissenWild(vec2 p, float saat, float wild) {
+  return reissen(p, saat) * (1.0 + wild) + (wolkig(p * 0.006 + saat * 2.0) - 0.5) * 70.0 * wild;
+}
+vec3 streifen(vec3 bild, vec2 p, vec2 mitte, vec2 halb, float w, float saat, vec3 c, float rasterWinkel, float s, float wild) {
+  float aa = 1.0 / s;
+  vec2 schattenWeg = vec2(4.0, -5.0);
+  float d = rechteck(p, mitte, halb, w) + reissenWild(p, saat, wild);
+  float ds = rechteck(p - schattenWeg, mitte, halb, w) + reissenWild(p - schattenWeg, saat, wild);
+  bild *= 1.0 - 0.18 * smoothstep(3.0, -3.0, ds);
+  vec3 weiss = vec3(0.99, 0.985, 0.97) * (0.975 + 0.025 * rauschen(p * 0.9));
+  float breiteRand = 2.0 + 3.5 * wolkig(p * 0.03 + saat * 3.0);
+  vec3 stueck = mix(raster(c, p, rasterWinkel, 3.5, s), weiss, smoothstep(-breiteRand - aa, -breiteRand + aa, d));
+  return mix(bild, stueck, smoothstep(aa, -aa, d));
+}
+// 1 = hier ist Haus (oder der Schlagschatten auf dem Boden, der wird ein Stück graues Papier)
+float collageInhalt(vec2 uv) { return max(bauteil(uv), step(0.14, 1.0 - hell(farbe(uv)))); }
+
+vec3 collage(vec2 q, vec2 px, float s) {
+  vec2 p = q * 1000.0;
+  float seitenverh = aufloesung.x / aufloesung.y;
+  float breite = 1000.0 * seitenverh;
+  vec2 einheit = vec2(0.001 / seitenverh, 0.001);                       // 1 p in Bild-Koordinaten
+  vec3 weiss = vec3(0.99, 0.985, 0.97) * (0.975 + 0.025 * rauschen(p * 0.9)); // weißer Reißrand mit Fasern
+  vec2 schattenWeg = vec2(4.0, -5.0);                                    // kleiner Schatten nach rechts unten
+
+  vec3 bild = papier;
+  // Himmel: zwei waagerechte Streifen (oben etwas kräftiger), mit Wolken, zum Horizont heller
+  float wolke = smoothstep(0.45, 0.75, wolkig(p * vec2(0.004, 0.009) + 3.0));
+  vec3 himmel = mix(vec3(0.68, 0.78, 0.89), vec3(0.87, 0.91, 0.95), wolke);
+  himmel = mix(himmel, vec3(0.88, 0.91, 0.94), smoothstep(650.0, 380.0, p.y) * 0.5);
+  float hoehe = smoothstep(330.0, 930.0, p.y);
+  himmel = himmelStimmung(himmel, hoehe);
+  bild = streifen(bild, p, vec2(breite * 0.5, 560.0), vec2(breite * 0.44, 230.0), -0.012, 1.0, himmel, 0.79, s, 0.0);
+  vec3 himmelOben = himmelStimmung(mix(vec3(0.64, 0.75, 0.88), vec3(0.85, 0.89, 0.95), wolke), hoehe);
+  bild = streifen(bild, p, vec2(breite * 0.5 + 8.0, 830.0), vec2(breite * 0.45, 105.0), 0.015, 3.0, himmelOben, 0.5, s, 0.0);
+  // Wiese: drei Streifen unten, liegen über dem Himmel, nach unten etwas dunkler. Wunsch der Nutzerin:
+  // unten mehr Risse, nicht ganz waagerecht, wilder – deshalb schräger gelegt und mit großen Bögen im Rand
+  vec3 wiese = wieseStimmung(mix(vec3(0.40, 0.58, 0.31), vec3(0.64, 0.75, 0.43), wolkig(p * vec2(0.012, 0.06) + 8.0)));
+  bild = streifen(bild, p, vec2(breite * 0.5 + 10.0, 265.0), vec2(breite * 0.47, 90.0), 0.035, 2.0, wiese, 0.26, s, 0.6);
+  bild = streifen(bild, p, vec2(breite * 0.5 - 6.0, 165.0), vec2(breite * 0.48, 70.0), -0.06, 4.0, wiese * 0.92, 1.1, s, 0.9);
+  bild = streifen(bild, p, vec2(breite * 0.5 + 4.0, 70.0), vec2(breite * 0.47, 55.0), 0.045, 5.0, wiese * 0.84, 0.6, s, 1.0);
+
+  // Haus: ein ganzes Stück, ohne Risse. Um den Umriss: weißer Reißrand verschiedener Breite und kleiner Schatten
+  vec2 uv = vUv;
+  float inhalt = collageInhalt(uv);
+  float w = 2.0 + 4.0 * wolkig(p * 0.03 + 9.0);
+  float rand = 0.0, schatten = 0.0;
+  for (int k = 0; k < 8; k++) {
+    float wk = float(k) * 0.785;
+    vec2 r = vec2(cos(wk), sin(wk)) * einheit;
+    rand = max(rand, max(collageInhalt(uv + r * w), collageInhalt(uv + r * w * 0.5)));
+    schatten = max(schatten, collageInhalt(uv - schattenWeg * einheit + r * w));
+  }
+  bild *= 1.0 - 0.2 * schatten * (1.0 - rand);
+  bild = mix(bild, weiss, rand * (1.0 - inhalt));
+
+  // Druck auf dem Haus: Rasterpunkte wie in einer Zeitschrift
+  vec3 c = farbe(uv);
+  vec3 druck = raster(c, p, 0.79, 3.8, s);
+  // Fenster dunkel und glänzend: sattes Hochglanzpapier ohne Raster, mit schrägen Lichtstreifen
+  float glas = step(hell(c), 0.25) * step(c.r + 0.04, c.b);
+  float band = fract(dot(p, vec2(0.6, 0.8)) / 110.0);
+  float glanz = smoothstep(0.0, 0.03, band) - smoothstep(0.12, 0.15, band)
+              + 0.6 * (smoothstep(0.2, 0.22, band) - smoothstep(0.25, 0.27, band));
+  vec3 glasBild = mix(mix(c * 0.7, vec3(0.08, 0.1, 0.16), 0.4), vec3(0.92, 0.95, 1.0), glanz * 0.55);
+  druck = mix(druck, glasBild, glas);
+  // Kanten des Modells fein nachgezogen, damit man das Haus lesen kann (auf dem Boden nur echte Umrisse)
+  vec2 kd = px * 0.85 * s;
+  float linie = mix(kante(uv, kd), markerUmriss(uv, kd), 1.0 - bauteil(uv));
+  druck = mix(druck, vec3(0.16, 0.16, 0.2), smoothstep(0.25, 0.7, linie) * 0.72);
+  bild = mix(bild, druck, inhalt);
+
+  // Ab und zu ein Streifen Klebeband, quer über den Rand des Hauses
+  float ZK = 380.0;
+  vec2 gk = floor(p / ZK);
+  for (int i = -1; i <= 1; i++) for (int j = -1; j <= 1; j++) {
+    vec2 kid = gk + vec2(float(i), float(j));
+    if (zufall(kid + 0.61) > 0.8) continue;
+    vec2 m = (kid + 0.2 + 0.6 * vec2(zufall(kid + 0.13), zufall(kid + 0.77))) * ZK;
+    float wk = (zufall(kid + 0.37) - 0.5) * 1.2 + step(0.5, zufall(kid + 0.91)) * 1.5708;
+    vec2 r = vec2(cos(wk), sin(wk));
+    float haus = collageInhalt((m + r * 45.0) * vec2(0.001 / seitenverh, 0.001))
+               + collageInhalt((m - r * 45.0) * vec2(0.001 / seitenverh, 0.001));
+    if (haus < 0.5 || haus > 1.5) continue;                 // nur wo ein Ende auf dem Haus klebt, das andere daneben
+    vec2 l = vec2(dot(p - m, r), dot(p - m, vec2(-r.y, r.x)));
+    float zack = abs(fract(l.y / 5.0) - 0.5) * 4.0;          // abgerissene, gezackte Enden
+    float innen = step(abs(l.x), 55.0 + zack) * step(abs(l.y), 14.0);
+    vec3 klebe = vec3(0.97, 0.93, 0.80) * (0.97 + 0.03 * rauschen(l * vec2(0.05, 0.8)));
+    bild = mix(bild, min(bild * 1.05 + 0.04, 1.0) * klebe, innen * 0.85);
+  }
+  return bild;
+}
+
 void main() {
   vec2 px = 1.0 / aufloesung;
   float s = aufloesung.y / 1000.0; // Pinsel- und Strichgrößen wie in einem 1000 Pixel hohen Bild
   vec2 q = vUv * vec2(aufloesung.x / aufloesung.y, 1.0);
-  vec3 c = stil == 1 ? aquarell(q, px, s) : stil == 2 ? bleistift(q, px, s) : marker(q, px, s);
+  vec3 c = stil == 1 ? aquarell(q, px, s) : stil == 2 ? bleistift(q, px, s) : stil == 3 ? marker(q, px, s) : collage(q, px, s);
   gl_FragColor = vec4(c, 1.0);
 }
 `;
@@ -377,7 +510,7 @@ export class Nachbearbeitung {
     u.nah.value = kamera.near;
     u.fern.value = kamera.far;
     u.ortho.value = kamera.isOrthographicCamera ? 1 : 0;
-    u.stil.value = { aquarell: 1, bleistift: 2, marker: 3 }[stil] ?? 2;
+    u.stil.value = { aquarell: 1, bleistift: 2, marker: 3, collage: 4 }[stil] ?? 2;
     u.abend.value = abend;
     u.nacht.value = nacht;
     u.projInv.value.copy(kamera.projectionMatrixInverse);
