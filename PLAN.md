@@ -125,8 +125,8 @@ Erledigte Sitzungen abhaken, die oberste offene Zeile ist dran (die Nummern blei
 - [x] 19. Should 4c: PDF-Einzelseiten (18.11.)
 - [x] 19b. PDF auch in der Darstellung „realistisch“ (Wunsch der Nutzerin 18.11.) (18.11.)
 - [x] 19c. Sonne startet mit heutigem Datum und aktueller Uhrzeit (Wunsch der Nutzerin 18.11.) (18.11.)
-- [ ] 19d. Weitere Zeichenstile neben „Zeichnung“: Aquarell und Bleistiftzeichnung (Wunsch der Nutzerin 18.11.) ← **als Nächstes**
-- [ ] 20. Ab ca. 10:30: Test mit eigener IFC, Fehler beheben
+- [x] 19d. Weitere Zeichenstile neben „Zeichnung“: Aquarell und Bleistiftzeichnung (Wunsch der Nutzerin 18.11.) (18.11.)
+- [ ] 20. Ab ca. 10:30: Test mit eigener IFC, Fehler beheben ← **als Nächstes**
 - [ ] 21. Auf GitHub hochladen und über GitHub Pages veröffentlichen → **12 Uhr Freeze**
 - [ ] 22. Nachmittag: README (Poster macht die Nutzerin selbst nach Moodle-Vorlage)
 
@@ -135,7 +135,7 @@ Erledigte Sitzungen abhaken, die oberste offene Zeile ist dran (die Nummern blei
 Wenn es eng wird, zuerst streichen: 19d (Aquarell/Bleistift), dann 19c (Sonne mit aktueller Uhrzeit).
 Was bis Do 10:30 nicht fertig ist, wandert zu Could.
 
-## Stand (18.11.2026, nach Sitzung 19c)
+## Stand (18.11.2026, nach Sitzung 19d)
 - CLAUDE.md und PLAN.md angelegt, Plan mit der Nutzerin abgestimmt.
 - Test-IFC liegt in `testdaten/` (Einfamilienhaus, Revit 2023, IFC2x3: 192 Wände, 57 Fenster, 49 Türen).
   Quelle: Bundesingenieurkammer, Seite „BIM-Praxisbeispiele“ (Download zum Betrachten angeboten).
@@ -739,10 +739,52 @@ Mit der Nutzerin als Testseite entworfen und abgestimmt („erstmal so festhalte
   Einstellung bleibt bis zum Neuladen. Geladene Varianten mit Sonne bringen weiter ihr gespeichertes Datum/Uhrzeit mit.
   Nachts steht die Sonne unter dem Horizont: Regler zeigt den Mond, keine Schatten (gab es schon). Nur `app.js` geändert (v=27).
   Getestet: 09:33 Uhr → Regler 09:30, Datum 18.11.2026, keine Fehler. Probleme: keine.
-- **Sitzung 19d (Wunsch der Nutzerin 18.11.):** Weitere Stile für die Darstellung, neben „Zeichnung“ und „Realistisch“:
-  **Aquarell** und **Bleistiftzeichnung**. Vor dem Bauen klären: Wie sollen sie aussehen (Beispielbilder?),
-  wo schaltet man um (Umschalter im 3D-Fenster um zwei Knöpfe erweitern?), gelten sie wie seit 19b auch für die gespeicherten
-  Bilder und das PDF (mit Vermerk)? Aufwendig: ggf. nur einer der beiden Stile, wenn die Zeit knapp wird.
+- **Sitzung 19d (erledigt 18.11.):** Umschalter im 3D-Fenster hat vier Knöpfe: Zeichnung · Realistisch · Aquarell · Bleistift.
+  Neue Datei `js/stile.js` (`Nachbearbeitung`): zeichnet den Zeichenstil in ein unsichtbares Bild mit Tiefe und übermalt es
+  mit einem Shader. Aquarell: Farbe blasser, weich verlaufen, fleckig, Papierkorn, leichte Farbränder, feine graue Kanten,
+  graublaue Himmels- und graugrüne Bodenwäsche ums Gebäude, Bildrand läuft ins Weiß aus. Abendlicht: ist die Sonne an und
+  steht tiefer als 10° (ganz ab 4° unter dem Horizont), wird der Himmel lila-orange, das Licht kühler, die Fenster
+  (Material `MATERIAL.fenster`) leuchten warm. Bleistift: nur Grau, zittrige Kanten, Schraffur je nach Dunkelheit in bis zu
+  drei Richtungen (helle Flächen frei), Papierkorn. Im 3D-Fenster warmes Papier (#fbfaf7), gespeicherte Bilder weiß.
+  `szene.stil` ersetzt `szene.realistisch`; Variante speichert `darstellung` ('aquarell'/'bleistift'), Vermerk „· Aquarell“/„· Bleistift“
+  im Vergleich und im PDF (wie „· realistisch“).
+  **Nachgebessert (Wunsch der Nutzerin, gleiche Sitzung):** Aquarell weniger unscharf, Farbschicht gegen die Linien
+  verschoben (malt locker über den Umriss, lässt mal einen weißen Spalt), mehr Grün unten (Wiesenwäsche in der unteren
+  Bildhälfte; tief liegende waagerechte Flächen – bis 1,5 m über dem tiefsten Wandpunkt – und das IFC-Gelände werden Wiese).
+  Sonne an (Aquarell und Bleistift): kräftigere Schatten (weniger Grundlicht, Schatten auf dem Boden dunkler),
+  im Aquarell leicht blau-violett. Bleistift: keine strenge Kreuzschraffur mehr – lange, unterschiedlich kräftige Einzelstriche
+  in einer Hauptrichtung (ca. 60°), dichter durch Zwischenstriche, erst sehr dunkle Stellen bekommen eine leicht gedrehte
+  zweite Lage; sonnige Flächen bleiben frei.
+  **Zweite Nachbesserung (Wunsch der Nutzerin):** Schatten bei beiden noch stärker (Grundlicht ×0,4, Sonne ×1,35,
+  Bodenschatten 60 %). Bleistift zarter: Striche enger (5,5 statt 8), feiner und heller, Schatten zusätzlich als leichter
+  grauer Grundton. Aquarell stellenweise scharf (fleckig verteilt ungewischte Farbe), Grün unten weniger und gedämpfter.
+  **Dritte Nachbesserung (Wunsch der Nutzerin):** Aquarell-Gläser tagsüber dunkler (#76889c). Tiefe Nacht (Sonne 4° bis 18°
+  unter dem Horizont): Himmel nachtblau, Licht und Gelände dunkler. Fensterlichter nach Uhrzeit (`szene.uhrzeit` aus `app.js`):
+  bis 1 Uhr alle an, 1–3 Uhr gehen sie nach und nach aus (jedes Fenster mit fester Zufallszahl aus seiner Lage),
+  3–4 Uhr ganz dunkel, 4–6 Uhr gehen wieder Lichter an (eigene Ergänzung, der Nutzerin gesagt). Fenster ohne Licht dunkelblau.
+  Getestet: 13:00, 18:00, 23:00, 02:00 (etwa die Hälfte an), 03:30 (alles dunkel), keine Fehler.
+  **Zeitplan der Lichter geändert (Wunsch der Nutzerin):** bis 23 Uhr alle an, 23–24 Uhr gehen wenige einzelne aus (noch 85 %),
+  0–2 Uhr nach und nach die übrigen, 2–5 Uhr ganz dunkel, 5–7 Uhr nach und nach wieder an. Getestet: 22:30, 23:45, 01:00, 03:00, 06:00.
+  Versionsnummern: `stile.js?v=14` (in `szene.js`), `szene.js?v=41` (in `app.js`), `app.js?v=42` (in `index.html`).
+  Getestet mit dem Einfamilienhaus: Aquarell am Tag (12:00, 13:00, 15:00) und am Abend (16:45), Bleistift mit Sonne (13:00), Perspektive und Ansicht S,
+  Vergleich mit Vermerk, Realistisch und Zeichnung weiter in Ordnung, keine Fehler in der Konsole. Testvarianten wieder gelöscht.
+  Probleme: Die Muster (Rauschen, Schraffur) hängen am Bildschirm, nicht am Gebäude – beim Drehen „gleitet“ das Gebäude
+  unter dem Papier (bei Zeichenstilen üblich). Die Abendstimmung im Aquarell sieht man nur mit eingeschalteter Sonne.
+  Höher liegendes Gelände (mehr als 1,5 m über dem tiefsten Wandpunkt, z. B. bei Keller) bleibt im Aquarell grau.
+  Bei Sonne um 15 Uhr im November liegt fast alles im Schatten, das Aquarell wirkt dann insgesamt grau. Die Inspo-Bilder der Nutzerin liegen nicht im Projekt.
+- **Sitzung 19d (Planung, Wunsch der Nutzerin 18.11.):** Weitere Stile für die Darstellung, neben „Zeichnung“ und „Realistisch“:
+  **Aquarell** und **Bleistiftzeichnung**. Geklärt mit der Nutzerin (18.11.):
+  - **Beide Stile** in dieser Sitzung.
+  - **Umschalten:** zwei weitere Knöpfe im Umschalter im 3D-Fenster: Zeichnung · Realistisch · Aquarell · Bleistift.
+  - **Bilder und PDF:** wie „Realistisch“ seit 19b – gespeichert wird im gewählten Stil, das PDF vermerkt den Stil.
+  - **Aquarell** nach den Inspo-Bildern der Nutzerin (nicht im Repo): Grundlage hell und zurückhaltend (Bild 2):
+    blasse Materialfarben, feine graue Bleistiftkanten, Papierstruktur, Bildrand läuft weich ins Weiß aus.
+    Dazu Abendlicht aus Bild 1: Steht die Sonne tief oder ist sie untergegangen, wird der Himmel lila-orange
+    verlaufen und die Fenster leuchten warm.
+  - **Bleistift:** nur Grautöne, leicht zittrige Kantenlinien, dunkle Seiten und Schatten schräg schraffiert, helles Papier.
+  - Technik-Idee: Nachbearbeitung des fertigen 3D-Bildes (Kanten finden, Farbe aufhellen/verwischen, Papier und
+    Schraffur darüberlegen), damit beide Stile dieselbe Grundlage nutzen.
+  Aufwendig: Wenn die Zeit knapp wird, zuerst das Abendlicht im Aquarell weglassen, dann einen der beiden Stile.
 - **Sitzung 19b (erledigt, s. o.; Wunsch der Nutzerin 18.11., nach Sitzung 19):** Die Darstellung „realistisch“ soll auch aufs PDF.
   Stand heute: Die 5 Bilder einer Variante werden beim Speichern immer im Zeichenstil gemacht; „realistisch“ gilt nur im 3D-Fenster.
   Technisch machbar: `szene.js` kann ein Bild schon realistisch zeichnen (`realistischZeichnen`), das lässt sich beim Fotografieren nutzen.

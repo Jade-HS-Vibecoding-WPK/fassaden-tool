@@ -1,5 +1,5 @@
 // Bedienoberfläche: Datei wählen oder hineinziehen, Modell anzeigen, Fassade gestalten
-import { Szene } from './szene.js?v=26';
+import { Szene } from './szene.js?v=41';
 import { ifcLaden } from './ifc.js?v=19';
 import { aussenwaendeErkennen, wandFaerben, oeffnungenZuordnen, fensterAnpassen, stuetzenVorbereiten, stuetzeFaerben, dachVorbereiten, dachFaerben, kennwerteBerechnen, hauptrichtungBestimmen, fensterFaerben, anbauteileZuordnen } from './fassade.js?v=25f';
 import {
@@ -724,8 +724,9 @@ const blickKurz = (variante) => {
   const b = blickVon(variante);
   return `${BLICK_KURZ[b.aus]} · ${b.hoehe}°${realistischVermerk(variante)}`;
 };
-// Kleiner Vermerk, wenn die Bilder in der Darstellung „realistisch“ gemacht wurden (Sitzung 19b)
-const realistischVermerk = (variante) => (variante.darstellung === 'realistisch' ? ' · realistisch' : '');
+// Kleiner Vermerk, wenn die Bilder nicht im Zeichenstil gemacht wurden (Sitzung 19b, Aquarell/Bleistift seit 19d)
+const STIL_VERMERK = { realistisch: ' · realistisch', aquarell: ' · Aquarell', bleistift: ' · Bleistift' };
+const realistischVermerk = (variante) => STIL_VERMERK[variante.darstellung] ?? '';
 
 function blickAnzeigen() {
   $('blickAus').value = String(blick.aus);
@@ -813,7 +814,7 @@ $('varianteSpeichern').addEventListener('click', async () => {
       // Sonne (Sitzung 15): Datum, Uhrzeit, Ort und Sonnenstand, wenn die Bilder Schatten haben; sonst null
       sonne: sonneAn ? { ...sonne, ...sonnenstand(sonne) } : null,
       // Darstellung der Bilder (Sitzung 19b): wie gerade im 3D-Fenster; ältere Varianten haben keinen Eintrag = Zeichnung
-      darstellung: szene.realistisch ? 'realistisch' : 'zeichnung',
+      darstellung: szene.stil,
     });
     $('variantenName').value = '';
     variantenStatus(`„${name}“ ist gespeichert.`);
@@ -1353,11 +1354,11 @@ async function dateiOeffnen(datei) {
   }
 }
 
-// ---------- Umschalter „Zeichnung | Realistisch“ im 3D-Fenster ----------
-// Nur fürs Anschauen: Bilder, Vergleich und PDF bleiben immer im Zeichenstil, die Wahl wird nicht mit der Variante gespeichert.
+// ---------- Umschalter „Zeichnung | Realistisch | Aquarell | Bleistift“ im 3D-Fenster ----------
+// Gilt fürs 3D-Fenster und für die Bilder beim Speichern einer Variante (Sitzung 19b/19d); das PDF vermerkt den Stil.
 for (const knopf of $('stilwahl').querySelectorAll('button')) {
   knopf.addEventListener('click', () => {
-    szene.realistisch = knopf.dataset.stil === 'realistisch';
+    szene.stil = knopf.dataset.stil;
     for (const k of $('stilwahl').querySelectorAll('button')) k.setAttribute('aria-pressed', String(k === knopf));
   });
 }
@@ -1425,6 +1426,7 @@ function sonneAnwenden() {
   requestAnimationFrame(() => {
     sonneGeplant = false;
     const stand = sonneAn ? sonnenstand(sonne) : null;
+    szene.uhrzeit = stand ? sonne.minuten : null; // fürs Aquarell: nachts gehen Lichter aus (Sitzung 19d)
     szene.sonneSetzen(stand);
     if (stand) {
       $('sonneInfo').textContent = stand.hoehe > 0

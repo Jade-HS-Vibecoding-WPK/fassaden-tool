@@ -16,7 +16,7 @@
   }
   </script>
   <!-- ?v=… erzwingt nach Änderungen die neue Fassung (sonst hält der Browser alte Dateien fest) -->
-  <script type="module" src="js/app.js?v=27"></script>
+  <script type="module" src="js/app.js?v=42"></script>
 </head>
 <body>
   <!-- Hintergrund: dunkler Farbverlauf mit weichen Farbflecken (Sitzung 15b, Glassmorphism) -->
@@ -233,10 +233,12 @@
         <button type="button" data-ansicht="180" title="Ansicht Süd">S</button>
         <button type="button" data-ansicht="270" title="Ansicht West">W</button>
       </div>
-      <!-- Umschalter Darstellung: nur fürs Anschauen, gespeicherte Bilder bleiben im Zeichenstil -->
+      <!-- Umschalter Darstellung: gilt auch für die Bilder beim Speichern einer Variante (Aquarell und Bleistift seit Sitzung 19d) -->
       <div class="stilwahl" id="stilwahl" role="group" aria-label="Darstellung im 3D-Fenster" hidden>
         <button type="button" data-stil="zeichnung" aria-pressed="true">Zeichnung</button>
         <button type="button" data-stil="realistisch" aria-pressed="false">Realistisch</button>
+        <button type="button" data-stil="aquarell" aria-pressed="false" title="Aquarell – mit Sonne am Abend: Abendstimmung">Aquarell</button>
+        <button type="button" data-stil="bleistift" aria-pressed="false">Bleistift</button>
       </div>
       <!-- Sonne und Schatten (Sitzung 15): rundes Sonnensymbol schaltet an/aus. Ist die Sonne an, klappt der kleine Pfeil
            daneben die Einstellungen auf (Start: zugeklappt, Wunsch der Nutzerin) -->

@@ -2,6 +2,11 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { realistischesMaterial, himmelHintergrund, himmelUmgebung } from './realistisch.js?v=25f';
+import { MATERIAL } from './darstellung.js?v=19';
+import { Nachbearbeitung } from './stile.js?v=14';
+
+// Gemalte Darstellungen (Sitzung 19d): Zeichenstil wird nachträglich übermalt (stile.js)
+const GEMALT = ['aquarell', 'bleistift'];
 
 // Ist das Teil zu sehen? (es selbst und alle, zu denen es gehört)
 function istSichtbar(teil) {
@@ -67,8 +72,9 @@ export class Szene {
     this.schattenBoden.raycast = () => {};
     this.szene.add(this.schattenBoden);
 
-    // Umschalter „Zeichnung | Realistisch“: gilt fürs 3D-Fenster und (seit Sitzung 19b) für die gespeicherten Bilder
-    this.realistisch = false;
+    // Umschalter Darstellung: 'zeichnung', 'realistisch' (Sitzung 17), 'aquarell' oder 'bleistift' (Sitzung 19d).
+    // Gilt fürs 3D-Fenster und (seit Sitzung 19b) für die gespeicherten Bilder
+    this.stil = 'zeichnung';
 
     this.modell = null;
     this.mausAnklickenEinrichten();
@@ -80,9 +86,125 @@ export class Szene {
     this.renderer.setAnimationLoop(() => {
       this.steuerung.update();
       if (this.sonneScheint()) this.schattenBauteileMarkieren();
-      if (this.realistisch && this.modell) this.realistischZeichnen();
-      else this.renderer.render(this.szene, this.kamera);
+      this.zeichnen(this.kamera);
     });
+  }
+
+  // Ein Bild in der eingestellten Darstellung; fuerBild = true: gespeichertes Bild (weißer Hintergrund)
+  zeichnen(kamera, fuerBild = false) {
+    if (this.modell && this.stil === 'realistisch') this.realistischZeichnen(kamera, !fuerBild);
+    else if (this.modell && GEMALT.includes(this.stil)) this.gemaltZeichnen(kamera, fuerBild);
+    else this.renderer.render(this.szene, kamera);
+  }
+
+  // Abendstimmung fürs Aquarell (Wunsch der Nutzerin: Abendlicht aus ihrem Beispielbild):
+  // 0 = Tag (Sonne aus oder höher als 10°), 1 = Sonne tiefer als 4° unter dem Horizont, dazwischen fließend
+  abendAnteil() {
+    if (!this.modell || !this.sonnenstand) return 0;
+    return THREE.MathUtils.clamp((10 - this.sonnenstand.hoehe) / 14, 0, 1);
+  }
+
+  // Tiefe Nacht fürs Aquarell: 0 = Sonne höchstens 4° unter dem Horizont, 1 = tiefer als 18° (richtig dunkel)
+  nachtAnteil() {
+    if (!this.modell || !this.sonnenstand) return 0;
+    return THREE.MathUtils.clamp((-4 - this.sonnenstand.hoehe) / 14, 0, 1);
+  }
+
+  // Wie viele Fenster nachts noch Licht haben (Wunsch der Nutzerin): bis 23 Uhr alle, bis Mitternacht gehen wenige
+  // einzelne aus (noch 85 %), bis 2 Uhr nach und nach die übrigen, 2 bis 5 Uhr alles dunkel, 5 bis 7 Uhr gehen sie
+  // nach und nach wieder an. this.uhrzeit = Minuten seit Mitternacht (app.js)
+  lichterAnteil() {
+    const m = this.uhrzeit;
+    if (m == null) return 1;
+    if (m >= 1380) return 1 - 0.15 * (m - 1380) / 60; // 23–24 Uhr
+    if (m < 120) return 0.85 * (1 - m / 120);           // 0–2 Uhr
+    if (m < 300) return 0;                              // 2–5 Uhr
+    if (m < 420) return (m - 300) / 120;                // 5–7 Uhr
+    return 1;
+  }
+
+  // Feste Zufallszahl je Fenster (aus seiner Lage), damit immer dieselben Fenster zuerst dunkel werden;
+  // alle Scheiben eines Fensters bekommen dieselbe
+  static fensterZufall(teil) {
+    if (teil.userData.lichtZufall === undefined) {
+      let bauteil = teil;
+      while (bauteil.parent && !bauteil.userData.art) bauteil = bauteil.parent;
+      const mitte = new THREE.Box3().setFromObject(bauteil).getCenter(new THREE.Vector3());
+      const w = Math.sin(mitte.x * 12.9898 + mitte.y * 78.233 + mitte.z * 37.719) * 43758.5453;
+      teil.userData.lichtZufall = w - Math.floor(w);
+    }
+    return teil.userData.lichtZufall;
+  }
+
+  // Aquarell oder Bleistift: Zeichenstil zeichnen und übermalen (stile.js).
+  // Aquarell: Gläser dunkler; am Abend Licht kühler, Fenster leuchten warm; in der Nacht alles dunkler, Lichter gehen aus.
+  // Gilt nur für dieses eine Bild, danach alles zurück.
+  gemaltZeichnen(kamera, fuerBild) {
+    if (!this.nachbearbeitung) {
+      this.nachbearbeitung = new Nachbearbeitung();
+      this.fensterLicht = new THREE.MeshBasicMaterial({ side: THREE.DoubleSide, transparent: true });
+      this.fensterDunkel = new THREE.MeshLambertMaterial({ side: THREE.DoubleSide, transparent: true });
+    }
+    const aquarell = this.stil === 'aquarell';
+    const abend = aquarell ? this.abendAnteil() : 0;
+    const nacht = aquarell ? this.nachtAnteil() : 0;
+    const getauscht = [];
+    const grundKraft = this.grundlicht.intensity;
+    const sonnenKraft = this.sonne.intensity;
+    const schatten = this.schattenBoden.material;
+    const schattenDeckkraft = schatten.opacity;
+    // Sonne an: kräftigere Schatten (Wunsch der Nutzerin), weniger Grundlicht, Schatten auf dem Boden dunkler;
+    // im Aquarell sind die Schatten leicht blau-violett, wie gemalt
+    if (this.sonneScheint()) {
+      this.grundlicht.intensity *= 0.4;
+      this.sonne.intensity *= 1.35;
+      schatten.opacity = 0.6;
+      if (aquarell) {
+        this.grundlicht.color.lerp(new THREE.Color(0xa9b6e8), 0.6);
+        schatten.color.set(0x2c3268);
+      }
+    }
+    // Aquarell: Gelände der IFC als Wiese (Wunsch der Nutzerin: mehr Grün unten), am Abend und in der Nacht dunkler
+    const gelaendeFarbe = MATERIAL.gelaende.color.getHex();
+    if (aquarell) {
+      MATERIAL.gelaende.color.set(0xc6cdb8).lerp(new THREE.Color(0x6f7a68), abend).lerp(new THREE.Color(0x3c424c), nacht * 0.6);
+      // Gläser: tagsüber dunkler als im Zeichenstil (Wunsch der Nutzerin); abends leuchten sie warm,
+      // ein Fenster ohne Licht wird dunkelblau
+      const tagGlas = new THREE.Color(0x76889c);
+      this.fensterLicht.color.copy(tagGlas).lerp(new THREE.Color(0xffc261), abend);
+      this.fensterDunkel.color.copy(tagGlas).lerp(new THREE.Color(0x232838), abend);
+      this.fensterLicht.opacity = this.fensterDunkel.opacity = THREE.MathUtils.lerp(0.75, 1, abend);
+      const anteil = this.lichterAnteil();
+      this.modell.traverse((teil) => {
+        if (!teil.isMesh || teil.material !== MATERIAL.fenster) return;
+        getauscht.push(teil);
+        // tagsüber und ohne Licht: Glas mit Licht und Schatten; mit Licht: leuchtet selbst
+        teil.material = abend > 0 && Szene.fensterZufall(teil) < anteil ? this.fensterLicht : this.fensterDunkel;
+      });
+    }
+    if (abend > 0) {
+      this.grundlicht.color.lerp(new THREE.Color(0xc4bfe0), abend).lerp(new THREE.Color(0x7c84bc), nacht);
+      this.grundlicht.groundColor.lerp(new THREE.Color(0xd9a27c), abend) // warmer Schein von unten (Straßenlicht)
+        .lerp(new THREE.Color(0x55586f), nacht);
+      this.grundlicht.intensity *= (1 - 0.15 * abend) * (1 - 0.55 * nacht);
+      this.sonne.color.lerp(new THREE.Color(0xffb070), abend);
+    }
+    try {
+      this.nachbearbeitung.malen(this.renderer, this.szene, kamera, {
+        stil: this.stil, abend, nacht, papier: fuerBild ? 0xffffff : 0xfbfaf7, // Bilder bleiben weiß, im 3D-Fenster warmes Papier
+        bodenHoehe: this.gebaeudeBox().min.y + 1.5, // tiefe waagerechte Flächen = Boden (Aquarell: Wiese)
+      });
+    } finally {
+      for (const teil of getauscht) teil.material = MATERIAL.fenster;
+      this.grundlicht.color.set(0xffffff);
+      this.grundlicht.groundColor.set(0xdddddd);
+      this.grundlicht.intensity = grundKraft;
+      this.sonne.color.set(0xffffff);
+      this.sonne.intensity = sonnenKraft;
+      schatten.opacity = schattenDeckkraft;
+      schatten.color.set(0x000000);
+      MATERIAL.gelaende.color.setHex(gelaendeFarbe);
+    }
   }
 
   // Ein Bild „realistisch“: Materialien kurz tauschen, Linien ausblenden, Himmel und Licht umstellen,
@@ -470,8 +592,7 @@ export class Szene {
       const kameras = { perspektive, ...Object.fromEntries(Object.entries(ANSICHTEN).map(([r, v]) => [r, ansichtKamera(v)])) };
       for (const [name, kamera] of Object.entries(kameras)) {
         // in der Darstellung, die gerade im 3D-Fenster eingestellt ist (Sitzung 19b), Hintergrund immer weiß
-        if (this.realistisch && this.modell) this.realistischZeichnen(kamera, false);
-        else this.renderer.render(this.szene, kamera);
+        this.zeichnen(kamera, true);
         // Bild sofort abholen, solange es noch auf der Zeichenfläche liegt
         // (toDataURL statt toBlob: toBlob braucht in manchen Browsern ca. 1 s pro Bild)
         bilder[name] = alsBlob(this.renderer.domElement.toDataURL('image/jpeg', 0.85));

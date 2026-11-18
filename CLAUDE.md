@@ -38,7 +38,8 @@ Entsteht in der Vibecoding KI-Werkstatt (Jade Hochschule, 16.–20.11.2026). Abg
 - `js/fassade.js` – Außenwände erkennen, Fassade mit Fensteröffnungen neu bauen, Flächen berechnen
 - `js/darstellung.js` – Zeichenstil: Farben der Bauteile (Rohmodell, Dach, Fenster …) und Kantenlinien
 - `js/materialien.js` – Fassadenmaterialien als selbst gezeichnete Texturen
-- `js/realistisch.js` – Darstellung „realistisch“ (nur im 3D-Fenster): echte Materialien, Himmel, Spiegelung
+- `js/realistisch.js` – Darstellung „realistisch“: echte Materialien, Himmel, Spiegelung
+- `js/stile.js` – Darstellungen „Aquarell“ (mit Abendlicht bei tiefer Sonne) und „Bleistift“: übermalt das Bild im Zeichenstil
 - `js/sonne.js` – Sonnenstand aus Datum, deutscher Uhrzeit und Koordinaten (Schatten zeichnet `szene.js`)
 - `js/pdf.js` – PDF-Übersichtsseite A3 quer (1–4 Varianten), direkt als Datei gespeichert
 
