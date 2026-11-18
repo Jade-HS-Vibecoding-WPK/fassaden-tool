@@ -261,7 +261,24 @@ Erledigte Sitzungen abhaken, die oberste offene Zeile ist dran (die Nummern blei
       Getestet (Test-ArchiCAD.ifc): Breite 60 cm → Knopf erscheint; Seiten auf 50 % → Fenster 50 × 50 cm, „wie in der IFC“ →
       100 × 100 cm, Knopf verschwindet. Keine neuen Fehler. Probleme: keine.
       Versionsnummern: `app.js?v=58`, `style.css?v=34`.
-- [ ] 23f. PDF-Blattgröße wählbar (Wunsch der Nutzerin 18.11.): A4, A3, A2, A1, A0 (bisher fest A3 quer).
+- [x] 23f. PDF-Blattgröße wählbar (Wunsch der Nutzerin 18.11.) (18.11.): A4, A3, A2, A1, A0 (bisher fest A3 quer).
+      **Gebaut:** Unter „Varianten“ neben „Maßstab“ die Auswahl „Blattgröße“ (Start A3). Entscheidung: immer quer (kein Hochformat).
+      Ansichten bleiben maßstäblich, nur die Perspektive wächst mit dem Blatt; Einzelseiten bekommen dieselbe Größe.
+      Passt es nicht, schlägt die Meldung den nächsten gröberen Maßstab und das kleinste größere Blatt vor, auf das es passt
+      (`BLATTGROESSEN`, `passt` in `pdf.js`). Anleitung Schritt 4 angepasst.
+      Getestet (3 alte Test-Varianten, direkt über `pdfErstellen`, ohne Speichern): Seitengrößen A4–A0 stimmen, alle Bilder
+      innerhalb 15 mm Rand; 3 Varianten 1:100 auf A3 → „Bitte 1:200 oder das Blatt A2 wählen“. Keine neuen Fehler.
+      Probleme: Das PDF selbst ließ sich im eingebauten Browser nicht ansehen – bitte einmal echt speichern und anschauen.
+      Auf A0/A1 kann die Perspektive etwas unscharf wirken (Bild hat feste Pixelzahl).
+      Versionsnummern: `pdf.js?v=28`, `app.js?v=59`.
+- [ ] 23i. PDF-Inhalt wählbar (Wunsch der Nutzerin 18.11., vor 23g gestellt): einzelne Varianten für sich speichern,
+      auch nur Ansichten oder nur Perspektive. Soll übersichtlich bleiben, der Vergleich eher als zweite Möglichkeit.
+      Vorschlag (noch abzustimmen):
+      - Statt „Einzelseiten je Variante“ eine Auswahl „Seiten“ (erst ab 2 angekreuzten Varianten):
+        „Je Variante eine Seite“ (Start) · „Vergleich auf einer Seite“ · „Beides“.
+      - Auswahl „Bilder“: Perspektive + Ansichten (Start) · nur Ansichten · nur Perspektive.
+        Nur Perspektive → Maßstab ausgegraut (sie hat keinen).
+      - Weiterhin eine einzige PDF-Datei mit allen Seiten (keine Stapel einzelner Dateien).
 - [ ] 23g. Eventuell weitere Darstellungsstile neben Zeichnung, Realistisch, Aquarell, Bleistift
       (Wunsch der Nutzerin 18.11., „eventuell“ – Ideen vorher mit ihr abstimmen).
 - [ ] 23h. Haus mit der Maus verschieben (Wunsch der Nutzerin 18.11.): Haus als Ganzes anklicken und auf der

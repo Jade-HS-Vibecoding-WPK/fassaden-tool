@@ -8,7 +8,7 @@ import {
   farbtoeneVon, farbtonVon, farbtonSetzen, farbtoeneSammeln, farbtoeneUebernehmen, materialText,
 } from './materialien.js?v=26';
 import { variantenLesen, varianteSpeichern, varianteLoeschen } from './varianten.js';
-import { pdfErstellen, pdfDateiname } from './pdf.js?v=27';
+import { pdfErstellen, pdfDateiname } from './pdf.js?v=28';
 import { START_SONNE, sonnenstand, himmelsrichtung, uhrzeitText, ortMitName, zeitText, weltzeit } from './sonne.js?v=24';
 
 const $ = (id) => document.getElementById(id);
@@ -950,7 +950,7 @@ function varianteLaden(variante) {
 let bildAdressen = []; // Vorschaubilder der Liste, werden beim Neuzeichnen freigegeben
 let gespeicherteVarianten = []; // die Varianten des geladenen Modells, neueste zuerst
 const zumVergleich = new Set(); // Nummern (id) der angekreuzten Varianten
-const VERGLEICH_HOECHSTENS = 4; // so viele passen auch aufs PDF (A3 quer)
+const VERGLEICH_HOECHSTENS = 4; // so viele passen auch aufs PDF (A3 quer, ab Sitzung 23f Blatt wählbar)
 
 async function variantenAnzeigen() {
   $('bereichVarianten').hidden = waende.length === 0;
@@ -1060,7 +1060,7 @@ function ansichtKennzeichen(variante, richtung) {
   return `Ansicht ${fassadenRichtung(richtung, variante.drehung)}`;
 }
 
-// PDF-Übersichtsseite A3 quer bauen und direkt als Datei speichern
+// PDF-Übersichtsseite (quer, Blattgröße wählbar) bauen und direkt als Datei speichern
 async function pdfSpeichern(knopf) {
   const varianten = gewaehlteVarianten();
   if (varianten.length < 1) return;
@@ -1071,6 +1071,7 @@ async function pdfSpeichern(knopf) {
     const doc = await pdfErstellen({
       varianten, modellName, kennzeichen: ansichtKennzeichen, blickText,
       massstab: Number($('pdfMassstab').value),
+      blattgroesse: $('pdfBlatt').value,
       mitKennwerte: $('pdfKennwerte').checked,
       einzelseiten: $('pdfEinzelseiten').checked,
     });

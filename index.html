@@ -16,7 +16,7 @@
   }
   </script>
   <!-- ?v=… erzwingt nach Änderungen die neue Fassung (sonst hält der Browser alte Dateien fest) -->
-  <script type="module" src="js/app.js?v=58"></script>
+  <script type="module" src="js/app.js?v=59"></script>
 </head>
 <body>
   <!-- Hintergrund: dunkler Farbverlauf mit weichen Farbflecken (Sitzung 15b, Glassmorphism) -->
@@ -148,6 +148,15 @@
                 <option value="500">1:500</option>
               </select>
             </label>
+            <label class="massstabwahl" title="Blatt immer quer; die Ansichten bleiben im gewählten Maßstab">Blattgröße
+              <select id="pdfBlatt" autocomplete="off">
+                <option value="a4">A4</option>
+                <option value="a3" selected>A3</option>
+                <option value="a2">A2</option>
+                <option value="a1">A1</option>
+                <option value="a0">A0</option>
+              </select>
+            </label>
             <label class="schalter"><input type="checkbox" id="pdfKennwerte" checked autocomplete="off"> Kennwerte aufs PDF</label>
             <label class="schalter" id="pdfEinzelseitenZeile" hidden><input type="checkbox" id="pdfEinzelseiten" autocomplete="off"> Einzelseiten je Variante</label>
           </div>
@@ -189,7 +198,7 @@
               Die Kennwerte rechnen sofort mit.</p></div></li>
             <li><span>4</span><div><strong>Vergleichen</strong>
               <p>„Variante speichern“ macht 5 Bilder. Bis zu 4 Varianten ankreuzen, nebeneinander vergleichen
-              und als PDF (A3 quer) speichern. Die Ansichten im PDF sind maßstäblich: beim Drucken
+              und als PDF speichern (quer, A4 bis A0). Die Ansichten im PDF sind maßstäblich: beim Drucken
               „Tatsächliche Größe“ wählen, nicht „An Seite anpassen“.</p></div></li>
           </ol>
 

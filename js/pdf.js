@@ -1,13 +1,18 @@
-// PDF-Übersichtsseite: 1 bis 4 Varianten nebeneinander auf A3 quer, wird direkt als Datei gespeichert.
+// PDF-Übersichtsseite: 1 bis 4 Varianten nebeneinander, Blatt immer quer (A4 bis A0, Sitzung 23f; vorher fest A3), wird direkt als Datei gespeichert.
 // Auf Wunsch folgt danach je Variante eine eigene Seite (Sitzung 19).
 // Seit Sitzung 20c: Ansichten maßstäblich, keine Schrift außer Kennzeichen, Maßstab und (auf Wunsch) Kennwerte.
 // Seit Sitzung 20g: Schriftart Source Sans 3 (Light, für Hervorhebungen Semibold) statt Helvetica.
 // Die Bibliothek jsPDF wird erst beim ersten Klick aus dem Internet geladen (die App startet dadurch nicht langsamer).
 const JSPDF_ADRESSE = 'https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js';
 
-// Blatt und Abstände in Millimetern
-const BLATT_B = 420;
-const BLATT_H = 297;
+// Blattgrößen quer in Millimetern (Sitzung 23f), kleinste zuerst; Abstände ebenfalls in Millimetern
+export const BLATTGROESSEN = {
+  a4: { name: 'A4', b: 297, h: 210 },
+  a3: { name: 'A3', b: 420, h: 297 },
+  a2: { name: 'A2', b: 594, h: 420 },
+  a1: { name: 'A1', b: 841, h: 594 },
+  a0: { name: 'A0', b: 1189, h: 841 },
+};
 const RAND = 15;
 const SPALTENABSTAND = 10;
 const ZEILE = 5.2; // Höhe einer Tabellenzeile
@@ -224,12 +229,12 @@ function spalteZeichnen(doc, v, bilder, lage, x, y, kennzeichen, blickText) {
  * Baut die Übersichtsseite (auf Wunsch + Einzelseiten) und liefert das fertige PDF-Dokument (zum Speichern: doc.save(name)).
  * Seit Sitzung 20c ohne Schrift: nur Kennzeichen der Bilder und der Maßstab; Kennwerte-Tabelle nur, wenn gewünscht.
  * varianten: 1–4 gespeicherte Varianten (älteste zuerst); modellName: Dateiname der IFC (nur für die Datei-Eigenschaften);
- * massstab: 50, 100, 200 oder 500 (gilt für alle Ansichten); mitKennwerte: Tabelle „Kennwerte“ zeigen;
+ * massstab: 50, 100, 200 oder 500 (gilt für alle Ansichten); blattgroesse: 'a4' … 'a0' (immer quer); mitKennwerte: Tabelle „Kennwerte“ zeigen;
  * einzelseiten: ab 2 Varianten nach der Übersicht je Variante eine eigene Seite;
  * kennzeichen(variante, richtung): Beschriftung einer Ansicht, z. B. „Ansicht Nord“ oder „Ansicht Nordost“;
  * blickText(variante): Beschriftung der Perspektive, z. B. „Perspektive aus Südosten, 15°“
  */
-export async function pdfErstellen({ varianten, modellName, kennzeichen, blickText, massstab = 100, mitKennwerte = true, einzelseiten = false }) {
+export async function pdfErstellen({ varianten, modellName, kennzeichen, blickText, massstab = 100, blattgroesse = 'a3', mitKennwerte = true, einzelseiten = false }) {
   const alt = varianten.find((v) => !v.masse);
   if (alt) throw new Error(`„${alt.name}“ wurde vor dem Update gespeichert und kennt ihre Maße nicht. Bitte die Variante laden und neu speichern.`);
   const [JsPdf, schrift] = await Promise.all([bibliothekLaden(), schriftLaden()]);
@@ -242,22 +247,27 @@ export async function pdfErstellen({ varianten, modellName, kennzeichen, blickTe
     bilder.set(v, b);
   }
 
-  // Vorher prüfen, ob alles aufs Blatt passt (Übersicht und Einzelseiten), sonst gröberen Maßstab vorschlagen
+  // Vorher prüfen, ob alles aufs Blatt passt (Übersicht und Einzelseiten), sonst gröberen Maßstab oder größeres Blatt vorschlagen
   const mitEinzelseiten = einzelseiten && varianten.length > 1;
-  if (!seitenLage(varianten, bilder, mitKennwerte) || (mitEinzelseiten && varianten.some((v) => !seitenLage([v], bilder, false)))) {
+  const blatt = BLATTGROESSEN[blattgroesse] ?? BLATTGROESSEN.a3;
+  const passt = (b) => seitenLage(varianten, bilder, mitKennwerte, b)
+    && !(mitEinzelseiten && varianten.some((v) => !seitenLage([v], bilder, false, b)));
+  if (!passt(blatt)) {
     const groeber = MASSSTAEBE.find((m) => m > massstab);
-    throw new Error(`Die Ansichten passen in 1:${massstab} nicht aufs Blatt. `
-      + (groeber ? `Bitte 1:${groeber} wählen.` : 'Bitte weniger Varianten ankreuzen.'));
+    const groesser = Object.values(BLATTGROESSEN).find((b) => b.b > blatt.b && passt(b));
+    const vorschlaege = [groeber && `1:${groeber}`, groesser && `das Blatt ${groesser.name}`].filter(Boolean);
+    throw new Error(`Die Ansichten passen in 1:${massstab} nicht auf ${blatt.name}. `
+      + (vorschlaege.length ? `Bitte ${vorschlaege.join(' oder ')} wählen.` : 'Bitte weniger Varianten ankreuzen.'));
   }
 
-  const doc = new JsPdf({ orientation: 'landscape', unit: 'mm', format: 'a3' });
+  const doc = new JsPdf({ orientation: 'landscape', unit: 'mm', format: blattgroesse in BLATTGROESSEN ? blattgroesse : 'a3' });
   schriftEinbetten(doc, schrift);
   doc.setProperties({ title: `${varianten.length === 1 ? 'Fassadenvariante' : 'Variantenvergleich'} – ${modellName}`, creator: 'Fassaden-Tool' });
-  const angaben = { bilder, kennzeichen, blickText, massstab };
+  const angaben = { bilder, kennzeichen, blickText, massstab, blatt };
   seiteZeichnen(doc, varianten, { ...angaben, mitKennwerte });
   if (mitEinzelseiten) {
     for (const v of varianten) {
-      doc.addPage('a3', 'landscape');
+      doc.addPage([blatt.b, blatt.h], 'landscape');
       seiteZeichnen(doc, [v], { ...angaben, mitKennwerte: false });
     }
   }
@@ -280,11 +290,11 @@ function groessteAnsichten(varianten, bilder) {
 // - Spalten: eine Spalte je Variante nebeneinander, Kennwerte darunter (bei 1 Variante auch rechts oder neben der Perspektive)
 // - Zeilen (ab 2 Varianten): je Variante ein Streifen über die ganze Breite, Kennwerte rechts im Streifen
 // Liefert { lage, plaetze: [{ x, y, tabelle: [x, y] | null }], tabelleB }
-function seitenLage(varianten, bilder, mitKennwerte) {
+function seitenLage(varianten, bilder, mitKennwerte, blatt) {
   const n = varianten.length;
   const groessen = groessteAnsichten(varianten, bilder);
-  const gesamtB = BLATT_B - 2 * RAND;
-  const gesamtH = BLATT_H - 2 * RAND - FUSS;
+  const gesamtB = blatt.b - 2 * RAND;
+  const gesamtH = blatt.h - 2 * RAND - FUSS;
   const moeglich = [];
 
   // Spalten
@@ -326,25 +336,25 @@ function seitenLage(varianten, bilder, mitKennwerte) {
   return moeglich.sort((a, b) => b.lage.p - a.lage.p)[0] ?? null;
 }
 
-// Eine Seite A3 quer ohne Kopf und Namen: Bilder je Variante, auf Wunsch Kennwerte.
+// Eine Seite (quer, Größe aus blatt) ohne Kopf und Namen: Bilder je Variante, auf Wunsch Kennwerte.
 // Unten rechts der Maßstab, mit Kennwerten unten links deren kurze Erklärung.
-function seiteZeichnen(doc, varianten, { bilder, kennzeichen, blickText, massstab, mitKennwerte }) {
-  const { lage, plaetze, tabelleB } = seitenLage(varianten, bilder, mitKennwerte);
+function seiteZeichnen(doc, varianten, { bilder, kennzeichen, blickText, massstab, blatt, mitKennwerte }) {
+  const { lage, plaetze, tabelleB } = seitenLage(varianten, bilder, mitKennwerte, blatt);
   for (const [i, v] of varianten.entries()) {
     const { x, y, tabelle } = plaetze[i];
     spalteZeichnen(doc, v, bilder.get(v), lage, x, y, kennzeichen, blickText);
     if (tabelle) tabelleKennwerte(doc, v, tabelle[0], tabelle[1], tabelleB);
   }
 
-  const fussY = BLATT_H - RAND + 2;
+  const fussY = blatt.h - RAND + 2;
   doc.setFont(SCHRIFT, 'normal').setFontSize(9).setTextColor(...TEXT);
-  doc.text(`Ansichten M 1:${massstab}`, BLATT_B - RAND, fussY, { align: 'right' });
+  doc.text(`Ansichten M 1:${massstab}`, blatt.b - RAND, fussY, { align: 'right' });
   // Umgebung aus OpenStreetMap (Sitzung 23): Namensnennung ist Pflicht – einzige Schrift-Ausnahme, winzig, links vom Maßstab.
   // Vorlagen (Sitzung 23b) sind frei erfunden und brauchen keinen Vermerk; Varianten ohne „art“ stammen aus Sitzung 23 = OSM
   if (varianten.some((v) => v.umgebung && (v.umgebung.art ?? 'osm') === 'osm')) {
     const massstabBreite = doc.getTextWidth(`Ansichten M 1:${massstab}`);
     doc.setFontSize(6).setTextColor(...LEISE);
-    doc.text('Umgebung © OpenStreetMap-Mitwirkende', BLATT_B - RAND - massstabBreite - 8, fussY, { align: 'right' });
+    doc.text('Umgebung © OpenStreetMap-Mitwirkende', blatt.b - RAND - massstabBreite - 8, fussY, { align: 'right' });
   }
   if (mitKennwerte) {
     doc.setFontSize(7).setTextColor(...LEISE);
