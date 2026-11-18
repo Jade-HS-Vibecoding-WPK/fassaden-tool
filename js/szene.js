@@ -1,7 +1,7 @@
 // 3D-Szene: Bühne, Kamera, Licht und Maussteuerung
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { realistischesMaterial, himmelHintergrund, himmelUmgebung } from './realistisch.js?v=25f';
+import { realistischesMaterial, himmelHintergrund, himmelUmgebung } from './realistisch.js?v=26';
 import { MATERIAL } from './darstellung.js?v=19';
 import { Nachbearbeitung } from './stile.js?v=14';
 import { umgebungLegen, hausFreistellen } from './umgebung.js?v=5f';

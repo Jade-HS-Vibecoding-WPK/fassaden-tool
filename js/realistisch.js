@@ -4,7 +4,7 @@
 // Gilt nur fürs Anschauen im 3D-Fenster. Bilder, Vergleich und PDF bleiben im Zeichenstil.
 import * as THREE from 'three';
 import { MATERIAL } from './darstellung.js?v=19';
-import { realistischesFassadenMaterial } from './materialien.js?v=25f';
+import { realistischesFassadenMaterial } from './materialien.js?v=26';
 
 const HIMMEL_OBEN = new THREE.Color('#7fa8d4');
 const HORIZONT = new THREE.Color('#eef3f8');

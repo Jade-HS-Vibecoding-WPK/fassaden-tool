@@ -34,12 +34,12 @@ export const START_MATERIAL = 'klinker-rot';
 // Ziegel rot ↔ Klinker rot (Farbton ca. 10°), Ziegel anthrazit ↔ Klinker anthrazit (warmes Grau),
 // Stehfalz ↔ Fassadenplatten (kühles Grau), Schlicht hell ↔ Sichtbeton.
 // kante: schlichte Farbe der schmalen Dachkanten (Ortgang, Traufkante), wie ein Ortgangblech.
+// Sitzung 23c (Wunsch der Nutzerin): wie bei der Fassade je Muster nur ein Eintrag, die Farbe kommt aus den Farbtönen.
+// „Ziegel anthrazit“ und „Stehfalz anthrazit“ sind weggefallen (siehe ALTE_KENNUNGEN).
 export const DACHMATERIALIEN = [
   { id: 'dach-hell', name: 'Schlicht', farbe: '#b4b1ab', kante: '#9b9893', muster: 'abdichtung', ton: 'hell' },
-  { id: 'ziegel-rot', name: 'Ziegel rot', farbe: '#7d4e45', kante: '#66423b', muster: 'ziegel', ton: 'rot' },
-  { id: 'ziegel-anthrazit', name: 'Ziegel anthrazit', farbe: '#58554f', kante: '#4a4843', muster: 'ziegel', ton: 'anthrazit' },
-  { id: 'stehfalz-hell', name: 'Stehfalz hellgrau', farbe: '#969a9c', kante: '#85898b', muster: 'stehfalz', ton: 'hellgrau' },
-  { id: 'stehfalz-anthrazit', name: 'Stehfalz anthrazit', farbe: '#4f5357', kante: '#44474b', muster: 'stehfalz', ton: 'anthrazit' },
+  { id: 'ziegel-rot', name: 'Ziegel', farbe: '#7d4e45', kante: '#66423b', muster: 'ziegel', ton: 'rot', tonImmerNennen: true },
+  { id: 'stehfalz-hell', name: 'Stehfalz', farbe: '#969a9c', kante: '#85898b', muster: 'stehfalz', ton: 'hellgrau', tonImmerNennen: true },
   { id: 'gruendach', name: 'Gründach', farbe: '#6c705f', kante: '#6b6d6b', muster: 'gruendach' },
 ];
 
@@ -120,6 +120,9 @@ export const ALTE_KENNUNGEN = {
   'holz-vergraut': ['holz-natur', 'vergraut'],
   'putz-sand': ['putz-altweiss', 'sand'],
   'platten-silber': ['platten-anthrazit', 'silbergrau'],
+  // Dach, Sitzung 23c
+  'ziegel-anthrazit': ['ziegel-rot', 'anthrazit'],
+  'stehfalz-anthrazit': ['stehfalz-hell', 'anthrazit'],
 };
 
 // Gewählter Farbton je Material (nur, wenn er vom Startton abweicht)
@@ -134,7 +137,8 @@ export function farbtoeneVon(id) {
 // ohne toene gilt die aktuelle Wahl in der App.
 export function farbtonVon(id, toene) {
   const eintrag = eintragZu(id);
-  const gesetzt = toene ? toene[eintrag.id] : gewaehlteToene.get(eintrag.id);
+  // Alte Kennung mit eigenem gespeichertem Ton (z. B. „Ziegel anthrazit“ in Ton braun) zuerst
+  const gesetzt = toene ? (toene[id] ?? toene[eintrag.id]) : gewaehlteToene.get(eintrag.id);
   const tonID = gesetzt ?? ALTE_KENNUNGEN[id]?.[1] ?? eintrag.ton;
   return farbtoeneVon(id).find((t) => t.id === tonID) ?? null;
 }

@@ -232,9 +232,18 @@ Erledigte Sitzungen abhaken, die oberste offene Zeile ist dran (die Nummern blei
       (Wald eher oval/schlank, Stadt eher oval). Krone etwas kräftiger grün. Wald weiterhin ca. 1100 Bäume in 5 ms.
       Das Vorbild-Bild selbst ist nicht in der App (nur als Anregung für die Formen).
       Versionsnummern: `umgebung.js?v=5f` (in `app.js` und `szene.js`), `szene.js?v=50f`, `pdf.js?v=27`, `app.js?v=54f`, `style.css?v=31`.
-- [ ] 23c. Dachmaterialien zusammenfassen (Wunsch der Nutzerin 18.11.): In der Dach-Auswahl stehen noch Farben im Namen
+- [x] 23c. Dachmaterialien zusammenfassen (Wunsch der Nutzerin 18.11.) (18.11.): In der Dach-Auswahl stehen noch Farben im Namen
       (z. B. „Stehfalz grau“). Wie bei der Fassade nur noch je Material ein Eintrag („Stehfalz“, „Ziegel“ …),
       die Farbe kommt über die Farbtöne zum Anklicken.
+      **Gebaut:** Dach-Auswahl jetzt Schlicht · Ziegel · Stehfalz · Gründach (`DACHMATERIALIEN` in `materialien.js`).
+      Ziegel startet rot, Stehfalz hellgrau; der Ton steht immer im Namen („Dach: Ziegel · anthrazit“).
+      „Ziegel anthrazit“ und „Stehfalz anthrazit“ stehen in `ALTE_KENNUNGEN` → alte Varianten werden beim Laden zu
+      Ziegel/Stehfalz + anthrazit (auch ein dort eigens gewählter Ton bleibt erhalten, `alteKennungenUmstellen` in `app.js`).
+      Getestet (Test-ArchiCAD.ifc): Auswahl zeigt die 4 Einträge, Ziegel → Farbtöne rot/anthrazit/braun/schwarz engobiert;
+      künstlich „alte“ Test-Variante mit Ziegel anthrazit geladen → Ziegel + anthrazit, Dach im 3D richtig. Test-Variante gelöscht.
+      Keine neuen Fehler. Probleme: keine.
+      Versionsnummern: `materialien.js?v=26` (in `app.js`, `fassade.js`, `realistisch.js`), `fassade.js?v=26`, `realistisch.js?v=26`,
+      `szene.js?v=51`, `app.js?v=55`.
 - [ ] 23d. „Außenwände“ aus der Kopfleiste nehmen (Wunsch der Nutzerin 18.11.): Ein eigener Reiter wirkt, als könne man
       dort etwas gestalten. Stattdessen beim Dateinamen oben ein kleiner Pfeil zum Aufklappen.
 - [ ] 23e. Einzelnes Fenster zurücksetzen (Wunsch der Nutzerin 18.11.): Bei „Einzelne Fenster“ das angewählte Fenster
