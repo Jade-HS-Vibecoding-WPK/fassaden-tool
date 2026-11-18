@@ -293,8 +293,10 @@ select:hover, select:focus, .eingabe:hover, .eingabe:focus { border-color: var(-
 .variantenliste .ankreuzen:disabled { cursor: not-allowed; }
 .vergleichswahl { border-top: 1px solid var(--linie); padding-top: 4px; }
 .vergleichswahl .pdfwahl { margin-top: 12px; }
-.vergleichswahl .pdfwahl .massstabwahl { display: grid; grid-template-columns: 1fr 96px; gap: 8px; align-items: center; font-size: 13px; margin-bottom: 10px; }
+.vergleichswahl .pdfwahl .massstabwahl { display: grid; grid-template-columns: 76px 1fr; gap: 8px; align-items: center; font-size: 13px; margin-bottom: 10px; }
 .vergleichswahl .pdfwahl .massstabwahl select { padding: 6px 8px; min-width: 0; cursor: pointer; }
+.vergleichswahl .pdfwahl .massstabwahl.aus { opacity: 0.45; }
+.vergleichswahl .pdfwahl .massstabwahl.aus select { cursor: default; }
 .vergleichswahl .pdfwahl .schalter { margin-bottom: 0; }
 .vergleichswahl .pdfwahl .schalter + .schalter { margin-top: 8px; }
 .textknoepfe { display: flex; gap: 18px; }

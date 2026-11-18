@@ -49,7 +49,8 @@ Entsteht in der Vibecoding KI-Werkstatt (Jade Hochschule, 16.–20.11.2026). Abg
 - `js/umgebung.js` – Umgebung aus OpenStreetMap: Nachbarhäuser als Klötze, Straßen, Grün auf runder Platte (nur Perspektive);
   dazu Vorlagen Städtisch/Ländlich/Wald/Wiese, in der App gebaut ohne Internet (Sitzung 23b, Start: Ländlich)
 - `js/sonne.js` – Sonnenstand aus Datum, deutscher Uhrzeit und Koordinaten (Schatten zeichnet `szene.js`)
-- `js/pdf.js` – PDF quer, Blatt A4–A0 wählbar (Sitzung 23f, Start A3; 1–4 Varianten, Ansichten maßstäblich, ohne Schrift), direkt als Datei gespeichert
+- `js/pdf.js` – PDF quer, Blatt A4–A0 wählbar (Sitzung 23f, Start A3; 1–4 Varianten, Ansichten maßstäblich, ohne Schrift), direkt als Datei gespeichert;
+  seit Sitzung 23i wählbar: Seiten (je Variante / Vergleich / beides) und Bilder (alle / nur Ansichten / nur Perspektive)
 
 # Entscheidungen
 - Kein Beispielhaus: Die App ist fürs Studium, man lädt immer den eigenen Entwurf als einfache IFC hoch.

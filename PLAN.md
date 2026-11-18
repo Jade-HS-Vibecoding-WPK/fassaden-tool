@@ -271,14 +271,29 @@ Erledigte Sitzungen abhaken, die oberste offene Zeile ist dran (die Nummern blei
       Probleme: Das PDF selbst ließ sich im eingebauten Browser nicht ansehen – bitte einmal echt speichern und anschauen.
       Auf A0/A1 kann die Perspektive etwas unscharf wirken (Bild hat feste Pixelzahl).
       Versionsnummern: `pdf.js?v=28`, `app.js?v=59`.
-- [ ] 23i. PDF-Inhalt wählbar (Wunsch der Nutzerin 18.11., vor 23g gestellt): einzelne Varianten für sich speichern,
+- [x] 23i. PDF-Inhalt wählbar (Wunsch der Nutzerin 18.11., vor 23g gestellt) (18.11.): einzelne Varianten für sich speichern,
       auch nur Ansichten oder nur Perspektive. Soll übersichtlich bleiben, der Vergleich eher als zweite Möglichkeit.
+      **Gebaut wie vorgeschlagen (Nutzerin: „Los, so bauen“):** Der Schalter „Einzelseiten je Variante“ ist weg. Neu unter „Blattgröße“:
+      - „Seiten“ (erst ab 2 angekreuzten Varianten): Je Variante (Start) · Vergleich · Beides. Die Texte sind kurz, weil
+        die Seitenleiste schmal ist; die lange Erklärung steht im Tooltip.
+      - „Bilder“: Alle (Perspektive + Ansichten, Start) · Nur Ansichten · Nur Perspektive. Bei „Nur Perspektive“ ist „Maßstab“ grau,
+        und auf dem Blatt steht kein „Ansichten M 1:…“. Bei „Nur Ansichten“ fehlt auch der OSM-Vermerk (Umgebung ist nur in der Perspektive).
+      - Immer eine einzige PDF-Datei. Kennwerte: bei „Je Variante“ auf jeder Seite, bei „Vergleich“/„Beides“ nur auf der Vergleichsseite (wie bisher).
+      - Dateiname: „Fassadenvariante_…“ (1 Variante), „Fassadenvarianten_…“ (je Variante), „Variantenvergleich_…“ (Vergleich/Beides).
+      - Der Knopf „Als PDF speichern“ im Vergleichsfenster nimmt dieselben Einstellungen aus der Seitenleiste.
+      Code: `pdfErstellen` hat statt `einzelseiten` jetzt `seiten` und `bildwahl`; `spalteAnordnen` kennt die 3 Bildwahlen.
+      Getestet (3 alte Test-Varianten direkt über `pdfErstellen`, ohne Speichern): alle Kombinationen A4/A3, 1 und 3 Varianten,
+      mit/ohne Kennwerte – Seitenzahl stimmt (z. B. 3 Varianten „Beides“ = 4 Seiten), kein Bild über dem 15-mm-Rand, keine Überlappung;
+      passt es nicht, kommt wie bisher der Vorschlag (Maßstab oder Blatt). Seitenleiste angesehen, Maßstab graut aus. Keine neuen Fehler.
+      Probleme: Das PDF selbst ließ sich im eingebauten Browser wieder nicht ansehen – bitte einmal echt speichern und anschauen.
+      Versionsnummern: `pdf.js?v=29`, `app.js?v=60`, `style.css?v=35c`.
+- [ ] 23j. Höhere Auflösung der Bilder im PDF (Wunsch der Nutzerin 18.11., nach 23i): Bisher macht „Variante speichern“
+      jedes der 5 Bilder 1500 × 1000 Pixel als JPEG 85 % (`bilderAufnehmen` in `szene.js`), auf A3–A0 wirkt das unscharf.
       Vorschlag (noch abzustimmen):
-      - Statt „Einzelseiten je Variante“ eine Auswahl „Seiten“ (erst ab 2 angekreuzten Varianten):
-        „Je Variante eine Seite“ (Start) · „Vergleich auf einer Seite“ · „Beides“.
-      - Auswahl „Bilder“: Perspektive + Ansichten (Start) · nur Ansichten · nur Perspektive.
-        Nur Perspektive → Maßstab ausgegraut (sie hat keinen).
-      - Weiterhin eine einzige PDF-Datei mit allen Seiten (keine Stapel einzelner Dateien).
+      - Bilder doppelt so groß aufnehmen (3000 × 2000), JPEG 92 %. Die Liste/der Vergleich zeigen sie einfach verkleinert.
+      - Aquarell und Bleistift (`stile.js`) prüfen: Pinsel- und Strichbreiten in Pixeln mitwachsen lassen, sonst sehen sie anders aus.
+      - Achtung: Speichern dauert etwas länger, jede Variante braucht ca. 3–4 × so viel Browser-Speicher.
+        Schon gespeicherte Varianten bleiben unscharf, bis man sie lädt und neu speichert.
 - [ ] 23g. Eventuell weitere Darstellungsstile neben Zeichnung, Realistisch, Aquarell, Bleistift
       (Wunsch der Nutzerin 18.11., „eventuell“ – Ideen vorher mit ihr abstimmen).
 - [ ] 23h. Haus mit der Maus verschieben (Wunsch der Nutzerin 18.11.): Haus als Ganzes anklicken und auf der

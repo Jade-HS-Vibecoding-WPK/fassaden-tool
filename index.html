@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Fassaden-Tool</title>
-  <link rel="stylesheet" href="style.css?v=34">
+  <link rel="stylesheet" href="style.css?v=35c">
   <!-- Bibliotheken aus dem Internet: three.js (3D) und web-ifc (IFC lesen) -->
   <script type="importmap">
   {
@@ -16,7 +16,7 @@
   }
   </script>
   <!-- ?v=… erzwingt nach Änderungen die neue Fassung (sonst hält der Browser alte Dateien fest) -->
-  <script type="module" src="js/app.js?v=59"></script>
+  <script type="module" src="js/app.js?v=60"></script>
 </head>
 <body>
   <!-- Hintergrund: dunkler Farbverlauf mit weichen Farbflecken (Sitzung 15b, Glassmorphism) -->
@@ -157,8 +157,21 @@
                 <option value="a0">A0</option>
               </select>
             </label>
+            <label class="massstabwahl" id="pdfSeitenZeile" hidden title="Je Variante eine Seite, alle zum Vergleich auf einer Seite oder beides – immer in einer einzigen PDF-Datei">Seiten
+              <select id="pdfSeiten" autocomplete="off">
+                <option value="einzeln" selected>Je Variante</option>
+                <option value="vergleich">Vergleich</option>
+                <option value="beides">Beides</option>
+              </select>
+            </label>
+            <label class="massstabwahl" title="Alle = Perspektive und die 4 Ansichten">Bilder
+              <select id="pdfBilder" autocomplete="off">
+                <option value="alle" selected>Alle</option>
+                <option value="ansichten">Nur Ansichten</option>
+                <option value="perspektive">Nur Perspektive</option>
+              </select>
+            </label>
             <label class="schalter"><input type="checkbox" id="pdfKennwerte" checked autocomplete="off"> Kennwerte aufs PDF</label>
-            <label class="schalter" id="pdfEinzelseitenZeile" hidden><input type="checkbox" id="pdfEinzelseiten" autocomplete="off"> Einzelseiten je Variante</label>
           </div>
           <span class="textknoepfe">
             <button class="textknopf" id="vergleichOeffnen">Vergleichen</button>

@@ -8,7 +8,7 @@ import {
   farbtoeneVon, farbtonVon, farbtonSetzen, farbtoeneSammeln, farbtoeneUebernehmen, materialText,
 } from './materialien.js?v=26';
 import { variantenLesen, varianteSpeichern, varianteLoeschen } from './varianten.js';
-import { pdfErstellen, pdfDateiname } from './pdf.js?v=28';
+import { pdfErstellen, pdfDateiname } from './pdf.js?v=29';
 import { START_SONNE, sonnenstand, himmelsrichtung, uhrzeitText, ortMitName, zeitText, weltzeit } from './sonne.js?v=24';
 
 const $ = (id) => document.getElementById(id);
@@ -1048,7 +1048,7 @@ function vergleichswahlAnzeigen() {
   $('vergleichOeffnen').hidden = anzahl < 2;
   $('vergleichOeffnen').textContent = `${anzahl} Varianten vergleichen`;
   $('pdfwahl').hidden = anzahl < 1;
-  $('pdfEinzelseitenZeile').hidden = anzahl < 2; // bei 1 Variante gäbe es nichts Zusätzliches
+  $('pdfSeitenZeile').hidden = anzahl < 2; // bei 1 Variante gibt es nur eine Seite
   $('pdfSpeichern').hidden = anzahl < 1;
 }
 
@@ -1073,9 +1073,10 @@ async function pdfSpeichern(knopf) {
       massstab: Number($('pdfMassstab').value),
       blattgroesse: $('pdfBlatt').value,
       mitKennwerte: $('pdfKennwerte').checked,
-      einzelseiten: $('pdfEinzelseiten').checked,
+      seiten: $('pdfSeiten').value,
+      bildwahl: $('pdfBilder').value,
     });
-    const dateiname = pdfDateiname(modellName, varianten.length);
+    const dateiname = pdfDateiname(modellName, varianten.length, $('pdfSeiten').value);
     doc.save(dateiname);
     variantenStatus(`„${dateiname}“ ist im Download-Ordner gespeichert.`);
   } catch (fehler) {
@@ -1088,6 +1089,11 @@ async function pdfSpeichern(knopf) {
   }
 }
 $('pdfSpeichern').addEventListener('click', () => pdfSpeichern($('pdfSpeichern')));
+// Nur Perspektive → Maßstab ausgegraut, die Perspektive hat keinen (Sitzung 23i)
+$('pdfBilder').addEventListener('change', () => {
+  $('pdfMassstab').disabled = $('pdfBilder').value === 'perspektive';
+  $('pdfMassstab').closest('label').classList.toggle('aus', $('pdfMassstab').disabled);
+});
 $('vergleichPdf').addEventListener('click', () => pdfSpeichern($('vergleichPdf')));
 
 // ---------- Variantenvergleich: eine Spalte je Variante, gleiche Zeilen auf gleicher Höhe ----------

@@ -1,5 +1,6 @@
 // PDF-Übersichtsseite: 1 bis 4 Varianten nebeneinander, Blatt immer quer (A4 bis A0, Sitzung 23f; vorher fest A3), wird direkt als Datei gespeichert.
 // Auf Wunsch folgt danach je Variante eine eigene Seite (Sitzung 19).
+// Seit Sitzung 23i wählbar: Seiten (je Variante / Vergleich / beides) und Bilder (alle / nur Ansichten / nur Perspektive).
 // Seit Sitzung 20c: Ansichten maßstäblich, keine Schrift außer Kennzeichen, Maßstab und (auf Wunsch) Kennwerte.
 // Seit Sitzung 20g: Schriftart Source Sans 3 (Light, für Hervorhebungen Semibold) statt Helvetica.
 // Die Bibliothek jsPDF wird erst beim ersten Klick aus dem Internet geladen (die App startet dadurch nicht langsamer).
@@ -175,7 +176,25 @@ function ansichtenAnordnungen(groessen) {
 // Beste Lage in einer Spalte (breite × hoehe): Perspektive (3:2) oben oder links, Ansichten maßstäblich.
 // Gewinnt die Lage mit der größten Perspektive; null, wenn die Ansichten nicht hineinpassen.
 // neben: so viel mm rechts neben der Perspektive frei lassen (für die Kennwerte-Tabelle), dann nur „Perspektive oben“.
-function spalteAnordnen(groessen, breite, hoehe, linksErlaubt, neben = 0) {
+// bildwahl (Sitzung 23i): 'alle' = Perspektive + Ansichten, 'ansichten' = nur Ansichten, 'perspektive' = nur Perspektive.
+// wert: danach werden mögliche Seiten-Lagen verglichen (Perspektivbreite; bei nur Ansichten der freie Platz).
+function spalteAnordnen(groessen, breite, hoehe, linksErlaubt, neben = 0, bildwahl = 'alle') {
+  if (bildwahl === 'perspektive') {
+    const p = Math.min(breite - neben, (hoehe - KENNZEICHEN_H) * 1.5);
+    if (p < PERSPEKTIVE_MIN) return null;
+    const ph = (p * 2) / 3;
+    return { p, ph, oben: true, ansichten: null, neben, breite: p + neben, hoehe: ph + KENNZEICHEN_H, wert: p };
+  }
+  if (bildwahl === 'ansichten') {
+    // Ansichten haben eine feste Größe (Maßstab); genommen wird die Anordnung, die am wenigsten knapp passt
+    let beste = null;
+    for (const a of ansichtenAnordnungen(groessen)) {
+      if (a.breite > breite || a.hoehe > hoehe) continue;
+      const wert = Math.min(breite - a.breite, hoehe - a.hoehe);
+      if (!beste || wert > beste.wert) beste = { p: 0, ph: 0, oben: true, ansichten: a, neben: 0, breite: a.breite, hoehe: a.hoehe, wert };
+    }
+    return beste;
+  }
   let beste = null;
   for (const a of ansichtenAnordnungen(groessen)) {
     if (a.breite > breite || a.hoehe > hoehe) continue;
@@ -190,7 +209,7 @@ function spalteAnordnen(groessen, breite, hoehe, linksErlaubt, neben = 0) {
   const ph = (p * 2) / 3;
   const gesamtB = oben ? Math.max(p + neben, ansichten.breite) : p + 2 * ANSICHTSABSTAND + ansichten.breite;
   const gesamtH = oben ? ph + KENNZEICHEN_H + REIHENABSTAND + ansichten.hoehe : Math.max(ph + KENNZEICHEN_H, ansichten.hoehe);
-  return { p, ph, oben, ansichten, neben, breite: gesamtB, hoehe: gesamtH };
+  return { p, ph, oben, ansichten, neben, breite: gesamtB, hoehe: gesamtH, wert: p };
 }
 
 // Kennzeichen klein unter ein Bild schreiben
@@ -203,14 +222,17 @@ function kennzeichenSchreiben(doc, text, x, y) {
 function spalteZeichnen(doc, v, bilder, lage, x, y, kennzeichen, blickText) {
   const { p, ph, oben, ansichten } = lage;
   // Perspektive (ohne Maßstab), mittig über den Ansichten bzw. links daneben; mit Tabelle daneben bündig links
-  const px = lage.neben ? x : oben ? x + (lage.breite - p) / 2 : x;
-  const py = oben ? y : y + (lage.hoehe - ph - KENNZEICHEN_H) / 2;
-  doc.addImage(bilder.perspektive, 'JPEG', px, py, p, ph, `v${v.id}-p`);
-  kennzeichenSchreiben(doc, blickText(v), px, py + ph + 0.8);
+  if (p > 0) {
+    const px = lage.neben ? x : oben ? x + (lage.breite - p) / 2 : x;
+    const py = oben ? y : y + (lage.hoehe - ph - KENNZEICHEN_H) / 2;
+    doc.addImage(bilder.perspektive, 'JPEG', px, py, p, ph, `v${v.id}-p`);
+    kennzeichenSchreiben(doc, blickText(v), px, py + ph + 0.8);
+  }
+  if (!ansichten) return; // nur Perspektive (Sitzung 23i)
 
   // Ansichten, Reihe für Reihe auf gemeinsamer Unterkante mit Geländelinie
   const ax0 = oben ? x + (lage.breite - ansichten.breite) / 2 : x + p + 2 * ANSICHTSABSTAND;
-  let ry = oben ? y + ph + KENNZEICHEN_H + REIHENABSTAND : y + (lage.hoehe - ansichten.hoehe) / 2;
+  let ry = p === 0 ? y : oben ? y + ph + KENNZEICHEN_H + REIHENABSTAND : y + (lage.hoehe - ansichten.hoehe) / 2;
   for (const r of ansichten.reihen) {
     const grundlinie = ry + r.ueber;
     let ax = ax0 + (ansichten.breite - r.breite) / 2;
@@ -230,12 +252,15 @@ function spalteZeichnen(doc, v, bilder, lage, x, y, kennzeichen, blickText) {
  * Seit Sitzung 20c ohne Schrift: nur Kennzeichen der Bilder und der Maßstab; Kennwerte-Tabelle nur, wenn gewünscht.
  * varianten: 1–4 gespeicherte Varianten (älteste zuerst); modellName: Dateiname der IFC (nur für die Datei-Eigenschaften);
  * massstab: 50, 100, 200 oder 500 (gilt für alle Ansichten); blattgroesse: 'a4' … 'a0' (immer quer); mitKennwerte: Tabelle „Kennwerte“ zeigen;
- * einzelseiten: ab 2 Varianten nach der Übersicht je Variante eine eigene Seite;
+ * seiten (Sitzung 23i, nur ab 2 Varianten): 'einzeln' = je Variante eine Seite, 'vergleich' = alle auf einer Seite,
+ *   'beides' = Vergleichsseite und danach je Variante eine Seite (Kennwerte dann nur auf der Vergleichsseite);
+ * bildwahl (Sitzung 23i): 'alle' = Perspektive + Ansichten, 'ansichten' = nur Ansichten, 'perspektive' = nur Perspektive;
  * kennzeichen(variante, richtung): Beschriftung einer Ansicht, z. B. „Ansicht Nord“ oder „Ansicht Nordost“;
  * blickText(variante): Beschriftung der Perspektive, z. B. „Perspektive aus Südosten, 15°“
  */
-export async function pdfErstellen({ varianten, modellName, kennzeichen, blickText, massstab = 100, blattgroesse = 'a3', mitKennwerte = true, einzelseiten = false }) {
-  const alt = varianten.find((v) => !v.masse);
+export async function pdfErstellen({ varianten, modellName, kennzeichen, blickText, massstab = 100, blattgroesse = 'a3', mitKennwerte = true, seiten = 'einzeln', bildwahl = 'alle' }) {
+  const mitAnsichten = bildwahl !== 'perspektive';
+  const alt = mitAnsichten && varianten.find((v) => !v.masse);
   if (alt) throw new Error(`„${alt.name}“ wurde vor dem Update gespeichert und kennt ihre Maße nicht. Bitte die Variante laden und neu speichern.`);
   const [JsPdf, schrift] = await Promise.all([bibliothekLaden(), schriftLaden()]);
 
@@ -243,42 +268,48 @@ export async function pdfErstellen({ varianten, modellName, kennzeichen, blickTe
   const bilder = new Map();
   for (const v of varianten) {
     const b = { perspektive: new Uint8Array(await v.bilder.perspektive.arrayBuffer()) };
-    for (const r of Object.keys(RICHTUNGSNAMEN)) b[r] = await ansichtZuschneiden(v.bilder[r], v.masse[r], massstab);
+    if (mitAnsichten) for (const r of Object.keys(RICHTUNGSNAMEN)) b[r] = await ansichtZuschneiden(v.bilder[r], v.masse[r], massstab);
     bilder.set(v, b);
   }
 
-  // Vorher prüfen, ob alles aufs Blatt passt (Übersicht und Einzelseiten), sonst gröberen Maßstab oder größeres Blatt vorschlagen
-  const mitEinzelseiten = einzelseiten && varianten.length > 1;
+  // Welche Seiten ins PDF kommen: [{ varianten, mitKennwerte }]
+  const liste = [];
+  if (varianten.length === 1 || seiten !== 'einzeln') liste.push({ varianten, mitKennwerte });
+  if (varianten.length > 1 && seiten !== 'vergleich') {
+    for (const v of varianten) liste.push({ varianten: [v], mitKennwerte: mitKennwerte && seiten === 'einzeln' });
+  }
+
+  // Vorher prüfen, ob alle Seiten aufs Blatt passen, sonst gröberen Maßstab oder größeres Blatt vorschlagen
   const blatt = BLATTGROESSEN[blattgroesse] ?? BLATTGROESSEN.a3;
-  const passt = (b) => seitenLage(varianten, bilder, mitKennwerte, b)
-    && !(mitEinzelseiten && varianten.some((v) => !seitenLage([v], bilder, false, b)));
+  const passt = (b) => liste.every((s) => seitenLage(s.varianten, bilder, s.mitKennwerte, b, bildwahl));
   if (!passt(blatt)) {
-    const groeber = MASSSTAEBE.find((m) => m > massstab);
+    const groeber = mitAnsichten && MASSSTAEBE.find((m) => m > massstab);
     const groesser = Object.values(BLATTGROESSEN).find((b) => b.b > blatt.b && passt(b));
     const vorschlaege = [groeber && `1:${groeber}`, groesser && `das Blatt ${groesser.name}`].filter(Boolean);
-    throw new Error(`Die Ansichten passen in 1:${massstab} nicht auf ${blatt.name}. `
+    throw new Error((mitAnsichten ? `Die Ansichten passen in 1:${massstab} nicht auf ${blatt.name}. ` : `Das passt nicht auf ${blatt.name}. `)
       + (vorschlaege.length ? `Bitte ${vorschlaege.join(' oder ')} wählen.` : 'Bitte weniger Varianten ankreuzen.'));
   }
 
   const doc = new JsPdf({ orientation: 'landscape', unit: 'mm', format: blattgroesse in BLATTGROESSEN ? blattgroesse : 'a3' });
   schriftEinbetten(doc, schrift);
-  doc.setProperties({ title: `${varianten.length === 1 ? 'Fassadenvariante' : 'Variantenvergleich'} – ${modellName}`, creator: 'Fassaden-Tool' });
-  const angaben = { bilder, kennzeichen, blickText, massstab, blatt };
-  seiteZeichnen(doc, varianten, { ...angaben, mitKennwerte });
-  if (mitEinzelseiten) {
-    for (const v of varianten) {
-      doc.addPage([blatt.b, blatt.h], 'landscape');
-      seiteZeichnen(doc, [v], { ...angaben, mitKennwerte: false });
-    }
-  }
+  doc.setProperties({ title: `${pdfArt(varianten.length, seiten)} – ${modellName}`, creator: 'Fassaden-Tool' });
+  const angaben = { bilder, kennzeichen, blickText, massstab, blatt, bildwahl };
+  liste.forEach((s, i) => {
+    if (i > 0) doc.addPage([blatt.b, blatt.h], 'landscape');
+    seiteZeichnen(doc, s.varianten, { ...angaben, mitKennwerte: s.mitKennwerte });
+  });
   return doc;
 }
+
+// Art des PDFs für Titel und Dateiname
+const pdfArt = (anzahl, seiten) => (anzahl === 1 ? 'Fassadenvariante' : seiten === 'einzeln' ? 'Fassadenvarianten' : 'Variantenvergleich');
 
 // Lage aller Spalten einer Seite; null, wenn es nicht passt.
 // Alle Spalten bekommen dieselbe Lage (größte Ansicht je Richtung über alle Varianten), damit sie auf einer Höhe stehen.
 // Größte Ansicht je Richtung über alle Varianten: alle bekommen dieselbe Lage, damit sie auf einer Höhe stehen
 function groessteAnsichten(varianten, bilder) {
   const groessen = {};
+  if (!bilder.get(varianten[0]).N) return groessen; // nur Perspektive: keine Ansichten vorbereitet
   for (const r of Object.keys(RICHTUNGSNAMEN)) {
     const alle = varianten.map((v) => bilder.get(v)[r]);
     groessen[r] = { b: Math.max(...alle.map((a) => a.b)), h: Math.max(...alle.map((a) => a.h)), sockel: Math.max(...alle.map((a) => a.sockel)) };
@@ -290,7 +321,7 @@ function groessteAnsichten(varianten, bilder) {
 // - Spalten: eine Spalte je Variante nebeneinander, Kennwerte darunter (bei 1 Variante auch rechts oder neben der Perspektive)
 // - Zeilen (ab 2 Varianten): je Variante ein Streifen über die ganze Breite, Kennwerte rechts im Streifen
 // Liefert { lage, plaetze: [{ x, y, tabelle: [x, y] | null }], tabelleB }
-function seitenLage(varianten, bilder, mitKennwerte, blatt) {
+function seitenLage(varianten, bilder, mitKennwerte, blatt, bildwahl = 'alle') {
   const n = varianten.length;
   const groessen = groessteAnsichten(varianten, bilder);
   const gesamtB = blatt.b - 2 * RAND;
@@ -304,7 +335,7 @@ function seitenLage(varianten, bilder, mitKennwerte, blatt) {
     const rechts = mitKennwerte && wo === 'rechts', neben = mitKennwerte && wo === 'neben', unten = mitKennwerte && wo === 'unten';
     const breite = rechts ? spaltenB - tabelleS - 12 : spaltenB;
     const hoehe = gesamtH - (unten ? 8 + KENNWERTE_HOEHE : 0);
-    const lage = spalteAnordnen(groessen, breite, hoehe, n === 1, neben ? tabelleS + 12 : 0);
+    const lage = spalteAnordnen(groessen, breite, hoehe, n === 1, neben ? tabelleS + 12 : 0, bildwahl);
     if (!lage) return;
     const y = RAND + (hoehe - lage.hoehe) / 2;
     const plaetze = varianten.map((_, i) => {
@@ -316,14 +347,14 @@ function seitenLage(varianten, bilder, mitKennwerte, blatt) {
     moeglich.push({ lage, plaetze, tabelleB: tabelleS });
   };
   spalten('unten');
-  if (mitKennwerte && n === 1) { spalten('rechts'); spalten('neben'); }
+  if (mitKennwerte && n === 1) { spalten('rechts'); if (bildwahl !== 'ansichten') spalten('neben'); }
 
   // Zeilen
   if (n > 1) {
     const streifenH = (gesamtH - (n - 1) * SPALTENABSTAND) / n;
     const tabelleZ = 110;
     const breite = gesamtB - (mitKennwerte ? tabelleZ + 12 : 0);
-    const lage = spalteAnordnen(groessen, breite, streifenH, true);
+    const lage = spalteAnordnen(groessen, breite, streifenH, true, 0, bildwahl);
     if (lage && (!mitKennwerte || streifenH >= KENNWERTE_HOEHE)) {
       const plaetze = varianten.map((_, i) => {
         const sy = RAND + i * (streifenH + SPALTENABSTAND);
@@ -333,13 +364,13 @@ function seitenLage(varianten, bilder, mitKennwerte, blatt) {
       moeglich.push({ lage, plaetze, tabelleB: tabelleZ });
     }
   }
-  return moeglich.sort((a, b) => b.lage.p - a.lage.p)[0] ?? null;
+  return moeglich.sort((a, b) => b.lage.wert - a.lage.wert)[0] ?? null;
 }
 
 // Eine Seite (quer, Größe aus blatt) ohne Kopf und Namen: Bilder je Variante, auf Wunsch Kennwerte.
-// Unten rechts der Maßstab, mit Kennwerten unten links deren kurze Erklärung.
-function seiteZeichnen(doc, varianten, { bilder, kennzeichen, blickText, massstab, blatt, mitKennwerte }) {
-  const { lage, plaetze, tabelleB } = seitenLage(varianten, bilder, mitKennwerte, blatt);
+// Unten rechts der Maßstab (nur wenn Ansichten drauf sind), mit Kennwerten unten links deren kurze Erklärung.
+function seiteZeichnen(doc, varianten, { bilder, kennzeichen, blickText, massstab, blatt, mitKennwerte, bildwahl }) {
+  const { lage, plaetze, tabelleB } = seitenLage(varianten, bilder, mitKennwerte, blatt, bildwahl);
   for (const [i, v] of varianten.entries()) {
     const { x, y, tabelle } = plaetze[i];
     spalteZeichnen(doc, v, bilder.get(v), lage, x, y, kennzeichen, blickText);
@@ -348,13 +379,15 @@ function seiteZeichnen(doc, varianten, { bilder, kennzeichen, blickText, masssta
 
   const fussY = blatt.h - RAND + 2;
   doc.setFont(SCHRIFT, 'normal').setFontSize(9).setTextColor(...TEXT);
-  doc.text(`Ansichten M 1:${massstab}`, blatt.b - RAND, fussY, { align: 'right' });
+  const massstabText = bildwahl === 'perspektive' ? '' : `Ansichten M 1:${massstab}`;
+  if (massstabText) doc.text(massstabText, blatt.b - RAND, fussY, { align: 'right' });
   // Umgebung aus OpenStreetMap (Sitzung 23): Namensnennung ist Pflicht – einzige Schrift-Ausnahme, winzig, links vom Maßstab.
-  // Vorlagen (Sitzung 23b) sind frei erfunden und brauchen keinen Vermerk; Varianten ohne „art“ stammen aus Sitzung 23 = OSM
-  if (varianten.some((v) => v.umgebung && (v.umgebung.art ?? 'osm') === 'osm')) {
-    const massstabBreite = doc.getTextWidth(`Ansichten M 1:${massstab}`);
+  // Vorlagen (Sitzung 23b) sind frei erfunden und brauchen keinen Vermerk; Varianten ohne „art“ stammen aus Sitzung 23 = OSM.
+  // Die Umgebung steht nur in der Perspektive – bei „nur Ansichten“ also kein Vermerk.
+  if (bildwahl !== 'ansichten' && varianten.some((v) => v.umgebung && (v.umgebung.art ?? 'osm') === 'osm')) {
+    const abstand = massstabText ? doc.getTextWidth(massstabText) + 8 : 0;
     doc.setFontSize(6).setTextColor(...LEISE);
-    doc.text('Umgebung © OpenStreetMap-Mitwirkende', blatt.b - RAND - massstabBreite - 8, fussY, { align: 'right' });
+    doc.text('Umgebung © OpenStreetMap-Mitwirkende', blatt.b - RAND - abstand, fussY, { align: 'right' });
   }
   if (mitKennwerte) {
     doc.setFontSize(7).setTextColor(...LEISE);
@@ -364,8 +397,8 @@ function seiteZeichnen(doc, varianten, { bilder, kennzeichen, blickText, masssta
 }
 
 // Dateiname wie „Variantenvergleich_Entwurf_2026-11-17.pdf“ (ohne Zeichen, die Windows nicht mag)
-export function pdfDateiname(modellName, anzahl) {
+export function pdfDateiname(modellName, anzahl, seiten = 'vergleich') {
   const basis = modellName.replace(/\.ifc$/i, '').replace(/[\\/:*?"<>|]+/g, '').trim() || 'Modell';
   const datum = new Date().toLocaleDateString('sv-SE'); // ergibt 2026-11-17
-  return `${anzahl === 1 ? 'Fassadenvariante' : 'Variantenvergleich'}_${basis}_${datum}.pdf`;
+  return `${pdfArt(anzahl, seiten)}_${basis}_${datum}.pdf`;
 }
