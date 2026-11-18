@@ -1,5 +1,5 @@
 // Bedienoberfläche: Datei wählen oder hineinziehen, Modell anzeigen, Fassade gestalten
-import { Szene } from './szene.js?v=41';
+import { Szene } from './szene.js?v=42';
 import { ifcLaden } from './ifc.js?v=19';
 import { aussenwaendeErkennen, wandFaerben, oeffnungenZuordnen, fensterAnpassen, stuetzenVorbereiten, stuetzeFaerben, dachVorbereiten, dachFaerben, kennwerteBerechnen, hauptrichtungBestimmen, fensterFaerben, anbauteileZuordnen } from './fassade.js?v=25f';
 import {
@@ -877,6 +877,7 @@ function varianteLaden(variante) {
   // Sonne übernehmen: gespeichert mit Sonne → an mit deren Datum/Uhrzeit/Ort, ohne Sonne → aus
   // (ältere Varianten vor Sitzung 15 kennen die Sonne nicht: Einstellung bleibt)
   if (variante.sonne !== undefined) {
+    tagesverlaufStoppen(); // Variante bringt ihre eigene Uhrzeit mit
     sonneAn = !!variante.sonne;
     if (variante.sonne) {
       const { datum, minuten, breite, laenge, ortName = '' } = variante.sonne; // ortName erst ab Sitzung 16
@@ -1367,6 +1368,7 @@ for (const knopf of $('stilwahl').querySelectorAll('button')) {
 // Knopf „Sonne“ im 3D-Fenster: an = Schatten zu Datum, Uhrzeit und Ort. Ist die Sonne beim Speichern an,
 // haben auch die 5 Bilder Schatten, und Datum/Uhrzeit/Ort werden mit der Variante gespeichert.
 let sonneAn = false;
+let tagesverlauf = null; // { start: Startzeit in Minuten, beginn: Zeitpunkt des Starts } während die Animation läuft
 let sonneAufgeklappt = false; // Einstellungen nur bei Bedarf zeigen (Wunsch der Nutzerin: Feld verdeckte das Gebäude)
 // Start mit heutigem Datum und aktueller deutscher Uhrzeit (Sitzung 19c), Uhrzeit auf die Viertelstunde
 // gerundet wie der Regler; Ort bleibt Oldenburg
@@ -1405,6 +1407,9 @@ function sonneAnzeigen() {
   $('sonneKnopf').title = sonneAn ? 'Sonne und Schatten aus' : 'Sonne und Schatten an';
   // Einstellungen zugeklappt; der kleine Pfeil neben der Sonne klappt sie auf
   $('sonneAufklappen').hidden = !sonneAn;
+  $('sonneAbspielen').hidden = !sonneAn; // Tagesverlauf nur bei eingeschalteter Sonne (Nachtrag 19e)
+  $('sonneLaufzeit').hidden = !sonneAn || !tagesverlauf;
+  $('sonneLaufzeit').textContent = uhrzeitText(sonne.minuten);
   $('sonneAufklappen').setAttribute('aria-expanded', String(sonneAufgeklappt));
   tagesverlaufMalen();
   $('sonnenfeld').hidden = !sonneAn || !sonneAufgeklappt;
@@ -1439,14 +1444,53 @@ function sonneAnwenden() {
 
 $('sonneKnopf').addEventListener('click', () => {
   sonneAn = !sonneAn;
+  if (!sonneAn) tagesverlaufStoppen();
   sonneAnzeigen();
   sonneAnwenden();
+});
+
+// ---------- Tagesverlauf als Animation (Sitzung 19e) ----------
+// Abspiel-Knopf neben dem Uhrzeit-Regler: Die Sonne läuft genau 24 Stunden ab der eingestellten Uhrzeit
+// (über Mitternacht hinweg, Datum bleibt) in TAGESVERLAUF_DAUER Millisekunden. Am Ende steht die Startzeit wieder da.
+// Pause hält an der aktuellen Uhrzeit an. Das Modell bleibt währenddessen drehbar.
+const TAGESVERLAUF_DAUER = 20000;
+
+function tagesverlaufKnopf() {
+  const laeuft = !!tagesverlauf;
+  $('sonneLaufzeit').hidden = !laeuft;
+  $('sonneAbspielen').textContent = laeuft ? '⏸' : '▶';
+  $('sonneAbspielen').setAttribute('aria-pressed', String(laeuft));
+  $('sonneAbspielen').title = laeuft ? 'Tagesverlauf anhalten' : 'Tagesverlauf abspielen (24 Stunden ab dieser Uhrzeit)';
+  $('sonneAbspielen').setAttribute('aria-label', laeuft ? 'Tagesverlauf anhalten' : 'Tagesverlauf abspielen');
+}
+
+function tagesverlaufStoppen() {
+  tagesverlauf = null;
+  tagesverlaufKnopf();
+}
+
+function tagesverlaufSchritt(jetzt) {
+  if (!tagesverlauf) return;
+  const anteil = Math.min(1, (jetzt - tagesverlauf.beginn) / TAGESVERLAUF_DAUER);
+  sonne.minuten = Math.round(tagesverlauf.start + anteil * 1440) % 1440; // nach 23:59 geht es bei 0:00 weiter
+  sonneAnzeigen();
+  sonneAnwenden();
+  if (anteil < 1) requestAnimationFrame(tagesverlaufSchritt);
+  else tagesverlaufStoppen(); // 24 Stunden geschafft: wieder bei der Startzeit
+}
+
+$('sonneAbspielen').addEventListener('click', () => {
+  if (tagesverlauf) { tagesverlaufStoppen(); return; }
+  tagesverlauf = { start: sonne.minuten, beginn: performance.now() };
+  tagesverlaufKnopf();
+  requestAnimationFrame(tagesverlaufSchritt);
 });
 $('sonneAufklappen').addEventListener('click', () => {
   sonneAufgeklappt = !sonneAufgeklappt;
   sonneAnzeigen();
 });
 $('sonneZeit').addEventListener('input', () => {
+  tagesverlaufStoppen(); // selbst am Regler gezogen: Animation hört auf
   sonne.minuten = Number($('sonneZeit').value);
   sonneAnzeigen();
   sonneAnwenden();

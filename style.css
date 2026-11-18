@@ -440,6 +440,20 @@ select:hover, select:focus, .eingabe:hover, .eingabe:focus { border-color: var(-
 .sonnenfeld input[type="range"].nacht::-moz-range-thumb { background: #dfe3ea; box-shadow: 0 0 0 1px #8a93a5; }
 .sonnenfeld output { color: var(--text); font-variant-numeric: tabular-nums; }
 .sonne-uhr { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 6px; }
+/* Abspiel-Knopf Tagesverlauf (Sitzung 19e): klein und rund, Sonnengelb wie der Sonnenknopf */
+.sonne-abspielen {
+  width: 22px; height: 22px; padding: 0; border: 0; border-radius: 50%; cursor: pointer;
+  font-size: 10px; line-height: 22px; text-align: center; color: #7a4f00; background: #fbe3a6;
+}
+.sonne-abspielen:hover { background: #f5b82e; color: #fff; }
+.sonne-abspielen[aria-pressed="true"] { background: #f5b82e; color: #fff; }
+.sonne-abspielen[hidden], .sonne-laufzeit[hidden] { display: none; }
+/* Uhrzeit neben dem Abspiel-Knopf, solange der Tagesverlauf läuft (klein, als Glas-Pille) */
+.sonne-laufzeit {
+  font-size: 11px; color: var(--text); font-variant-numeric: tabular-nums; padding: 2px 8px; border-radius: 999px;
+  background: rgba(255, 255, 255, .62); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, .9);
+}
 .sonne-tage { display: flex; gap: 2px; }
 .sonne-tage button {
   flex: 1; font: inherit; font-size: 11px; padding: 2px 0; border: 0; border-radius: 999px;

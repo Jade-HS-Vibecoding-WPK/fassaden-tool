@@ -47,7 +47,7 @@ nebeneinander vergleicht und als PDF mitnimmt.
 - [ ] Zusätzlicher Kennwert: Fensterfläche / Grundfläche (z. B. Belichtung nach 1/8-Regel);
       braucht Räume (IfcSpace) oder Decken in der IFC, sonst zeigt die App „nicht berechenbar“
 - [ ] Varianten als Arbeitsdatei sichern und später wieder laden (ein PDF kann die App nicht zurücklesen)
-- [ ] Sonnenverlauf als Animation über den Tag
+- [x] Sonnenverlauf als Animation über den Tag (Sitzung 19e)
 - [ ] Grobe Kosten und CO₂ pro Variante
 - [ ] Geänderte Fassade wieder als IFC speichern
 
@@ -126,6 +126,7 @@ Erledigte Sitzungen abhaken, die oberste offene Zeile ist dran (die Nummern blei
 - [x] 19b. PDF auch in der Darstellung „realistisch“ (Wunsch der Nutzerin 18.11.) (18.11.)
 - [x] 19c. Sonne startet mit heutigem Datum und aktueller Uhrzeit (Wunsch der Nutzerin 18.11.) (18.11.)
 - [x] 19d. Weitere Zeichenstile neben „Zeichnung“: Aquarell und Bleistiftzeichnung (Wunsch der Nutzerin 18.11.) (18.11.)
+- [x] 19e. Sonnenverlauf als Animation (Could, vorgezogen, Wunsch der Nutzerin 18.11.) (18.11.)
 - [ ] 20. Ab ca. 10:30: Test mit eigener IFC, Fehler beheben ← **als Nächstes**
 - [ ] 21. Auf GitHub hochladen und über GitHub Pages veröffentlichen → **12 Uhr Freeze**
 - [ ] 22. Nachmittag: README (Poster macht die Nutzerin selbst nach Moodle-Vorlage)
@@ -734,6 +735,38 @@ Mit der Nutzerin als Testseite entworfen und abgestimmt („erstmal so festhalte
   kein Unterschied. Nur auf diesem Rechner gemessen; über dem 3D-Bild nur wenige, kleine Glas-Elemente verwenden.
 
 ## Nächste Schritte
+- **Nachtrag 2 zu 19e (erledigt 18.11.):** Umgesetzt wie unten geplant, nur `szene.js` (v=42, `app.js` v=45).
+  Leuchtende Fenster mindestens 60 % warm getönt. Getestet am 18.11. in Oldenburg: 14:15 (Sonne 13°) erstes Fenster an,
+  15:45 (Sonne 4°) mehrere, 23:00 einige wieder aus. Keine Fehler in der Konsole. Probleme: keine.
+- **Nachtrag 2 zu 19e (Planung, Wunsch der Nutzerin 18.11.):** Fensterlichter im Aquarell zeitlich weiter auseinanderziehen,
+  die ersten früher an und früher aus. Bisher: alle gleichzeitig an bei Sonne < 10°, 23–2 Uhr aus, 5–7 Uhr an, alle
+  gleichzeitig aus bei Sonne > 10°. Vorschlag (`lichterAnteil` in `szene.js`): abends nach und nach an von Sonne 14° bis −4°;
+  nachts nach und nach aus von 21 bis 2 Uhr; morgens 5–7 Uhr an und nach und nach aus, bis die Sonne 14° hoch steht.
+  Leuchtende Fenster dafür auch bei noch hoher Sonne schon warm getönt (sonst sieht man die ersten nicht).
+- **Nachtrag 19e (erledigt 18.11., Wunsch der Nutzerin):** Abspiel-Knopf sitzt jetzt in der oberen Zeile links neben Pfeil
+  und Sonnenknopf, nur bei eingeschalteter Sonne zu sehen (auf- und zugeklappt). Während die Animation läuft, steht links
+  daneben klein die Uhrzeit als Glas-Pille. `index.html`, `style.css` (v=27), `app.js` (v=44).
+  Getestet: Sonne aus → kein Knopf; an + zugeklappt → Knopf da, Uhrzeit läuft mit; Sonne aus während der Animation → stoppt,
+  Knopf weg; aufgeklappt → Knopf bleibt oben. Keine Fehler in der Konsole. Probleme: keine.
+- **Sitzung 19e (erledigt 18.11.):** Abspiel-Knopf ▶/⏸ (Sonnengelb), zuerst links neben dem Uhrzeit-Regler (s. Nachtrag).
+  Läuft 24 Stunden ab der eingestellten Uhrzeit in 20 s (`TAGESVERLAUF_DAUER` in `app.js`), minutengenau, über Mitternacht,
+  und hält am Ende wieder bei der Startzeit an. Stoppt auch, wenn man selbst am Regler zieht, die Sonne ausschaltet oder eine
+  Variante lädt. Geändert: `index.html`, `style.css` (v=26), `app.js` (v=43).
+  Getestet mit Test-Neu.ifc im Aquarell: 10:15 → 12:36 → … → 00:43 → … → 10:15 in 20 s, flüssig; Pause hält bei 17:26 an.
+  Keine Fehler in der Konsole. Probleme: keine. Hinweis: Nach einer Pause steht die Uhr auf einer krummen Minute
+  (z. B. 17:26), der Regler zeigt dann die nächste Viertelstunde.
+- **Sitzung 19e (Planung, Wunsch der Nutzerin 18.11.):** Sonnenverlauf als kleine Animation, gedacht vor allem fürs Aquarell
+  (Schatten wandern, am Ende Abendlicht mit lila-orangem Himmel und leuchtenden Fenstern). Geklärt mit der Nutzerin (18.11.):
+  - **Nur ansehen**, kein Video-Export: Abspiel-Knopf (▶/⏸) neben dem Uhrzeit-Regler im Sonnen-Feld.
+  - Die App schiebt den Uhrzeit-Regler selbst weiter, Modell bleibt dabei drehbar.
+  - **Start bei der Uhrzeit, die gerade am Regler steht** (beim Öffnen der Seite ist das „jetzt“, s. Sitzung 19c), und
+    **genau 24 Stunden** bis zur selben Uhrzeit am nächsten Tag (Wunsch der Nutzerin 18.11.). Um Mitternacht springt der
+    Regler von 23:45 auf 0:00 weiter; das Datum bleibt gleich (ein Tag Unterschied ändert den Sonnenstand kaum).
+    Nachts zeigt der Regler wie gehabt den Mond, keine Schatten. Vorschlag Dauer: ca. 20 s für die 24 Stunden.
+    Am Ende hält die Animation an, der Regler steht wieder auf der Startzeit.
+  - Läuft in jeder Darstellung, wirkt aber im Aquarell am schönsten. Schaltet bei Bedarf die Sonne ein.
+  - Vor Sitzung 20 eingeschoben, damit sie beim Test mitgeprüft wird. Wenn es ruckelt (Aquarell malt jedes Bild neu):
+    weniger Bilder pro Sekunde.
 - **Sitzung 19c (erledigt 18.11.):** Beim Öffnen der Seite steht die Sonne auf **heute und jetzt** (deutsche Uhrzeit,
   auf die Viertelstunde gerundet wie der Regler, höchstens 23:45), Ort weiter Oldenburg. Danach frei verstellbar; die eigene
   Einstellung bleibt bis zum Neuladen. Geladene Varianten mit Sonne bringen weiter ihr gespeichertes Datum/Uhrzeit mit.

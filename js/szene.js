@@ -110,17 +110,23 @@ export class Szene {
     return THREE.MathUtils.clamp((-4 - this.sonnenstand.hoehe) / 14, 0, 1);
   }
 
-  // Wie viele Fenster nachts noch Licht haben (Wunsch der Nutzerin): bis 23 Uhr alle, bis Mitternacht gehen wenige
-  // einzelne aus (noch 85 %), bis 2 Uhr nach und nach die übrigen, 2 bis 5 Uhr alles dunkel, 5 bis 7 Uhr gehen sie
-  // nach und nach wieder an. this.uhrzeit = Minuten seit Mitternacht (app.js)
+  // Wie viele Fenster Licht haben (0 bis 1), weit auseinandergezogen (Wunsch der Nutzerin, Nachtrag 2 zu 19e):
+  // nach der Sonne: steht sie höher als 14°, ist kein Licht an; bis 4° unter dem Horizont gehen nach und nach alle an
+  // (abends an, morgens in umgekehrter Richtung aus);
+  // nach der Uhr: ab 21 Uhr gehen sie nach und nach aus, um 2 Uhr ist alles dunkel, 5 bis 7 Uhr gehen sie wieder an.
+  // Es gilt das Kleinere von beiden. this.uhrzeit = Minuten seit Mitternacht (app.js)
   lichterAnteil() {
+    if (!this.modell || !this.sonnenstand) return 0;
+    const nachSonne = THREE.MathUtils.clamp((14 - this.sonnenstand.hoehe) / 18, 0, 1);
     const m = this.uhrzeit;
-    if (m == null) return 1;
-    if (m >= 1380) return 1 - 0.15 * (m - 1380) / 60; // 23–24 Uhr
-    if (m < 120) return 0.85 * (1 - m / 120);           // 0–2 Uhr
-    if (m < 300) return 0;                              // 2–5 Uhr
-    if (m < 420) return (m - 300) / 120;                // 5–7 Uhr
-    return 1;
+    let nachUhr = 1;
+    if (m != null) {
+      if (m >= 1260) nachUhr = 1 - (m - 1260) / 300;      // 21–24 Uhr
+      else if (m < 120) nachUhr = 1 - (m + 180) / 300;    // 0–2 Uhr
+      else if (m < 300) nachUhr = 0;                      // 2–5 Uhr
+      else if (m < 420) nachUhr = (m - 300) / 120;        // 5–7 Uhr
+    }
+    return Math.min(nachSonne, nachUhr);
   }
 
   // Feste Zufallszahl je Fenster (aus seiner Lage), damit immer dieselben Fenster zuerst dunkel werden;
@@ -171,15 +177,18 @@ export class Szene {
       // Gläser: tagsüber dunkler als im Zeichenstil (Wunsch der Nutzerin); abends leuchten sie warm,
       // ein Fenster ohne Licht wird dunkelblau
       const tagGlas = new THREE.Color(0x76889c);
-      this.fensterLicht.color.copy(tagGlas).lerp(new THREE.Color(0xffc261), abend);
+      // Leuchtende Fenster schon bei noch hoher Sonne deutlich warm, damit man die ersten Lichter sieht
+      const leuchten = Math.max(abend, 0.6);
+      this.fensterLicht.color.copy(tagGlas).lerp(new THREE.Color(0xffc261), leuchten);
       this.fensterDunkel.color.copy(tagGlas).lerp(new THREE.Color(0x232838), abend);
-      this.fensterLicht.opacity = this.fensterDunkel.opacity = THREE.MathUtils.lerp(0.75, 1, abend);
+      this.fensterLicht.opacity = THREE.MathUtils.lerp(0.75, 1, leuchten);
+      this.fensterDunkel.opacity = THREE.MathUtils.lerp(0.75, 1, abend);
       const anteil = this.lichterAnteil();
       this.modell.traverse((teil) => {
         if (!teil.isMesh || teil.material !== MATERIAL.fenster) return;
         getauscht.push(teil);
-        // tagsüber und ohne Licht: Glas mit Licht und Schatten; mit Licht: leuchtet selbst
-        teil.material = abend > 0 && Szene.fensterZufall(teil) < anteil ? this.fensterLicht : this.fensterDunkel;
+        // ohne Licht: Glas mit Licht und Schatten; mit Licht: leuchtet selbst
+        teil.material = Szene.fensterZufall(teil) < anteil ? this.fensterLicht : this.fensterDunkel;
       });
     }
     if (abend > 0) {

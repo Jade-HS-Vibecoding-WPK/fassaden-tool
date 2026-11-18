@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Fassaden-Tool</title>
-  <link rel="stylesheet" href="style.css?v=25">
+  <link rel="stylesheet" href="style.css?v=27">
   <!-- Bibliotheken aus dem Internet: three.js (3D) und web-ifc (IFC lesen) -->
   <script type="importmap">
   {
@@ -16,7 +16,7 @@
   }
   </script>
   <!-- ?v=… erzwingt nach Änderungen die neue Fassung (sonst hält der Browser alte Dateien fest) -->
-  <script type="module" src="js/app.js?v=42"></script>
+  <script type="module" src="js/app.js?v=45"></script>
 </head>
 <body>
   <!-- Hintergrund: dunkler Farbverlauf mit weichen Farbflecken (Sitzung 15b, Glassmorphism) -->
@@ -244,6 +244,10 @@
            daneben die Einstellungen auf (Start: zugeklappt, Wunsch der Nutzerin) -->
       <div class="sonnenwahl" id="sonnenwahl" hidden>
         <div class="sonnen-zeile">
+          <!-- Tagesverlauf (Sitzung 19e): nur bei eingeschalteter Sonne, auch zugeklappt; Uhrzeit nur während er läuft -->
+          <output class="sonne-laufzeit" id="sonneLaufzeit" hidden></output>
+          <button type="button" class="sonne-abspielen" id="sonneAbspielen" aria-pressed="false" hidden
+            title="Tagesverlauf abspielen (24 Stunden ab dieser Uhrzeit)" aria-label="Tagesverlauf abspielen">▶</button>
           <button type="button" class="sonnen-mehr" id="sonneAufklappen" aria-expanded="false" aria-controls="sonnenfeld"
             aria-label="Datum, Uhrzeit und Ort einstellen" title="Datum, Uhrzeit und Ort einstellen" hidden></button>
           <button type="button" class="sonnenknopf" id="sonneKnopf" aria-pressed="false" aria-label="Sonne und Schatten"
@@ -266,10 +270,10 @@
             <button type="button" data-tag="12-21" title="kürzester Tag">21.12.</button>
           </div>
           <input type="date" class="eingabe" id="sonneDatum" autocomplete="off" required aria-label="Datum">
-          <label class="sonne-uhr">
+          <div class="sonne-uhr">
             <input type="range" id="sonneZeit" min="0" max="1425" step="15" autocomplete="off" aria-label="Uhrzeit">
             <output id="sonneZeitWert"></output>
-          </label>
+          </div>
           <form class="ortssuche" id="ortssuche" role="search">
             <input type="search" class="eingabe" id="ortSuchfeld" maxlength="120" autocomplete="off"
               placeholder="Ort suchen …" aria-label="Ort suchen (Enter drücken)" title="Ort oder Adresse eintippen und Enter drücken">
