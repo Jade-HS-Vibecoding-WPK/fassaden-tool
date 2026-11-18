@@ -279,7 +279,8 @@ export class Szene {
     const sonnenKraft = this.sonne.intensity;
     const grundKraft = this.grundlicht.intensity;
     const scheint = this.sonneScheint();
-    if (!scheint) this.sonne.position.set(-20, 30, 35);
+    // In den Ansichten der gespeicherten Bilder (Sitzung 20f) kommt das Licht von vorne, das bleibt
+    if (!scheint && !this.lichtVonVorne) this.sonne.position.set(-20, 30, 35);
     this.grundlicht.intensity = scheint ? 0.7 : 0.8;
     // Himmelslicht von oben leicht kühl, vom Boden zurückgeworfenes Licht warm und dunkler (wie draußen)
     this.grundlicht.color.set(0xdfe9f7);
@@ -581,6 +582,26 @@ export class Szene {
     this.steuerung.update();
   }
 
+  // Ansichten ohne Schatten (Sitzung 20f, Wunsch der Nutzerin): sonst wären immer zwei Seiten zu dunkel.
+  // Licht kommt von vorne (hinter dem Betrachter), etwas von links und von oben – so ist jede Fassade gleich hell.
+  // Keine Bauteile werfen Schatten, der Schattenboden ist aus. Zurückgestellt wird in bilderAufnehmen.
+  lichtVonVorneSetzen(kamera, mitte, abstand) {
+    const vorne = kamera.getWorldDirection(new THREE.Vector3()); // Blickrichtung der Ansicht
+    const oben = new THREE.Vector3(0, 1, 0);
+    const rechts = new THREE.Vector3().crossVectors(vorne, oben).normalize();
+    const zumLicht = vorne.clone().negate().addScaledVector(rechts, -0.5).addScaledVector(oben, 0.6).normalize();
+    this.sonne.target.position.copy(mitte);
+    this.sonne.position.copy(mitte).addScaledVector(zumLicht, abstand * 3);
+    this.sonne.updateMatrixWorld();
+    this.sonne.target.updateMatrixWorld();
+    if (!this.lichtVonVorne) { // nur einmal: Schatten aus
+      this.lichtVonVorne = true;
+      this.modell?.traverse((teil) => { if (teil.isMesh) teil.castShadow = false; });
+      this.schattenBoden.visible = false;
+      this.renderer.shadowMap.needsUpdate = true;
+    }
+  }
+
   // 5 Bilder aus fester Kamera, unabhängig von der aktuellen Blickrichtung:
   // Perspektive (eingestellter Blick, s. blickRichtung) und die Ansichten Nord/Ost/Süd/West als Parallelprojektion.
   // drehung: um wie viel Grad das Gebäude im Plan gedreht ist (im Uhrzeigersinn positiv).
@@ -645,9 +666,12 @@ export class Szene {
       this.schattenBauteileMarkieren();
       this.renderer.shadowMap.needsUpdate = true;
     }
+    const sonnenLage = this.sonne.position.clone();
+    const sonnenZiel = this.sonne.target.position.clone();
     try {
       const kameras = { perspektive, ...Object.fromEntries(Object.entries(ANSICHTEN).map(([r, v]) => [r, ansichtKamera(v, r)])) };
       for (const [name, kamera] of Object.entries(kameras)) {
+        if (name !== 'perspektive') this.lichtVonVorneSetzen(kamera, mitte, groesse.length());
         // in der Darstellung, die gerade im 3D-Fenster eingestellt ist (Sitzung 19b), Hintergrund immer weiß
         this.zeichnen(kamera, true);
         // Bild sofort abholen, solange es noch auf der Zeichenfläche liegt
@@ -655,6 +679,15 @@ export class Szene {
         bilder[name] = alsBlob(this.renderer.domElement.toDataURL('image/jpeg', 0.85));
       }
     } finally {
+      // Sonne und Schatten wieder wie im 3D-Fenster
+      this.lichtVonVorne = false;
+      this.sonne.position.copy(sonnenLage);
+      this.sonne.target.position.copy(sonnenZiel);
+      this.sonne.updateMatrixWorld();
+      this.sonne.target.updateMatrixWorld();
+      this.schattenBoden.visible = this.sonneScheint();
+      this.schattenFingerabdruck = null; // Schatten sicher neu berechnen
+      if (this.modell) this.schattenBauteileMarkieren();
       this.renderer.setClearColor(this.HINTERGRUND);
       this.renderer.setPixelRatio(alteDichte);
       this.renderer.setSize(alteGroesse.x, alteGroesse.y, false);

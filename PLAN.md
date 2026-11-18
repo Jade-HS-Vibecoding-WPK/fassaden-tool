@@ -134,6 +134,10 @@ Erledigte Sitzungen abhaken, die oberste offene Zeile ist dran (die Nummern blei
 - [x] 20d. Fehler: Varianten lassen sich nicht löschen (gemeldet 18.11.) (18.11.). Ursache vermutlich: „Löschen“ fragt mit einem
       Browser-Fenster (`confirm`) nach, das im App-Browser von Claude nicht erscheint und dann als „Nein“ zählt.
       Vorschlag: Nachfrage direkt im Knopf – 1. Klick macht „Wirklich löschen?“ (rot, ein paar Sekunden), 2. Klick löscht.
+- [x] 20f. Ansichten ohne Schatten (Wunsch der Nutzerin 18.11., vor 20e gestellt) (18.11.): bisher waren in den Ansichten N/O/S/W
+      immer 2 Seiten zu dunkel (Licht fest von Südost bzw. echte Sonne). Neu: für jede Ansicht Licht von vorne, leicht
+      von links oben → alle 4 Fassaden gleich hell, keine Sonnenschatten.
+      Perspektive bleibt wie sie ist (mit Sonne). Technisch: `lichtVonVorneSetzen` in `szene.js`, aufgerufen in `bilderAufnehmen`.
 - [ ] 20e. Beschriftung „Ansicht Nord“ statt „N“ (Wunsch der Nutzerin 18.11.): im PDF und im Variantenvergleich unter jeder
       Ansicht „Ansicht Nord / Nordost / Ost …“ – die Richtung, in die die Fassade wirklich zeigt, in 8 Stufen (nicht mehr „N (NNW)“).
       Genau dazwischen (z. B. NNW) → zur Hauptrichtung runden („Ansicht Nord“). Technisch: `ansichtKennzeichen` in `app.js`.
@@ -744,6 +748,14 @@ Mit der Nutzerin als Testseite entworfen und abgestimmt („erstmal so festhalte
   kein Unterschied. Nur auf diesem Rechner gemessen; über dem 3D-Bild nur wenige, kleine Glas-Elemente verwenden.
 
 ## Nächste Schritte
+- **Sitzung 20f (erledigt 18.11.):** Ansichten ohne Schatten. Für jede der 4 Ansichten (nur gespeicherte Bilder, Vergleich, PDF)
+  stellt `lichtVonVorneSetzen` die Sonne hinter den Betrachter, etwas nach links und oben; kein Bauteil wirft Schatten,
+  Schattenboden aus. Danach stellt `bilderAufnehmen` Sonne und Schatten fürs 3D-Fenster zurück. `realistischZeichnen`
+  setzt die feste Sonne (ohne Sonnenstand) dann nicht. Hinweis: In einer geraden Ansicht sieht man Laibungen und
+  Rücksprünge kaum als Fläche, sie zeigen sich über die Kantenlinien (echte Schlagschatten wären eine eigene Sitzung).
+  Getestet mit `Test-Neu.ifc`: Zeichnung ohne Sonne und Aquarell mit Sonne (11:30) – alle 4 Ansichten gleich hell,
+  3D-Fenster behält Sonne und Schatten, keine Fehler. Zwei Testvarianten („Variante 1/2“ von Test-Neu.ifc) noch im Speicher.
+  Versionsnummern `szene.js?v=45` (in `app.js`), `app.js?v=48c`.
 - **Sitzung 20d (erledigt 18.11.):** Löschen fragt jetzt im Knopf nach statt mit `confirm()`: 1. Klick → rotes „Wirklich löschen?“,
   2. Klick innerhalb von 4 s löscht, sonst springt der Knopf zurück. Ein Doppelklick löscht nicht (2. Klick zählt erst ab 0,4 s).
   Nur `app.js` (v=48b) und `style.css` (v=29b). Getestet im App-Browser: Nachfrage erscheint, Doppelklick löscht nicht,
