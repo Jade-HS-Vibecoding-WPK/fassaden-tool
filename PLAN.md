@@ -49,6 +49,13 @@ nebeneinander vergleicht und als PDF mitnimmt.
 - [ ] Varianten als Arbeitsdatei sichern und später wieder laden (ein PDF kann die App nicht zurücklesen)
 - [x] Sonnenverlauf als Animation über den Tag (Sitzung 19e)
 - [ ] Grobe Kosten und CO₂ pro Variante
+- [ ] Programm zum Herunterladen (Wunsch der Nutzerin 19.11., eigene Sitzung, nach Feature Freeze erst nach der Abgabe).
+      Gewünscht war eine .exe. Zu klären: (a) **App installieren** (Vorschlag): Chrome/Edge bieten „Als App installieren“
+      an, wenn die Seite eine kleine Beschreibungsdatei (Manifest) und einen Offline-Speicher hat – eigenes Fenster und
+      Symbol im Startmenü, keine .exe, keine Sicherheitswarnung, läuft auch auf Mac. (b) Echte .exe: bräuchte zusätzliche
+      Werkzeuge (z. B. Python-Paket PyInstaller oder Electron/Node, beides nicht auf dem Rechner), wäre ohne teure
+      Signatur von Windows als „unbekannter Herausgeber“ gewarnt und liefe nur unter Windows. Bei beiden müssten
+      three.js/web-ifc/jsPDF ins Projekt, wenn es ganz ohne Internet laufen soll.
 - [–] ~~Geänderte Fassade wieder als IFC speichern~~ (gestrichen 18.11., Wunsch der Nutzerin)
 
 ## Wie es technisch gelöst wird (einfach erklärt)
@@ -420,7 +427,7 @@ Erledigte Sitzungen abhaken, die oberste offene Zeile ist dran (die Nummern blei
          **Erledigt (19.11.):** `docs/qr-code.png` (2624 × 2624 px) und `docs/qr-code.svg` (beliebig groß, fürs Poster am
          besten). Selbst erzeugt mit kleinem Python-Programm (QR Version 4, Fehlerkorrektur M), weil eine fremde
          QR-Bibliothek nicht nachgeladen werden durfte. Muster (Ecken, Taktlinien, Ausrichtung) geprüft; ob er sich
-         lesen lässt, kann nur das Handy zeigen – **Handytest steht noch aus.**
+         lesen lässt, kann nur das Handy zeigen – Handytest: **funktioniert** (Nutzerin, 19.11.).
       5. Als Letztes: Release v1.0.0 mit kurzen Release Notes (was das Tool kann + Link).
          Prüfen: rechts im Repo steht v1.0.0.
       Danach: Live-Demo einmal auf fremdem Rechner/Handy testen.
