@@ -5,6 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Fassaden-Tool</title>
   <link rel="stylesheet" href="style.css?v=35c">
+  <!-- Als App installierbar (Sitzung 24): Beschreibung, Symbol, Farbe der Titelleiste -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="symbole/symbol-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="symbole/apple-touch-icon.png">
+  <meta name="theme-color" content="#1f3a68">
+  <script>
+    // Offline-Speicher anmelden (offline.js), damit die App auch ohne Internet startet
+    if ('serviceWorker' in navigator) {
+      addEventListener('load', () => navigator.serviceWorker.register('offline.js').catch(() => {}));
+    }
+  </script>
   <!-- Bibliotheken aus dem Internet: three.js (3D) und web-ifc (IFC lesen) -->
   <script type="importmap">
   {

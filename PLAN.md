@@ -49,7 +49,7 @@ nebeneinander vergleicht und als PDF mitnimmt.
 - [ ] Varianten als Arbeitsdatei sichern und später wieder laden (ein PDF kann die App nicht zurücklesen)
 - [x] Sonnenverlauf als Animation über den Tag (Sitzung 19e)
 - [ ] Grobe Kosten und CO₂ pro Variante
-- [ ] Programm zum Herunterladen (Wunsch der Nutzerin 19.11., eigene Sitzung, nach Feature Freeze erst nach der Abgabe).
+- [x] Programm zum Herunterladen – als installierbare App gebaut (Sitzung 24, Nebenzweig `app-installieren`).
       Gewünscht war eine .exe. Zu klären: (a) **App installieren** (Vorschlag): Chrome/Edge bieten „Als App installieren“
       an, wenn die Seite eine kleine Beschreibungsdatei (Manifest) und einen Offline-Speicher hat – eigenes Fenster und
       Symbol im Startmenü, keine .exe, keine Sicherheitswarnung, läuft auch auf Mac. (b) Echte .exe: bräuchte zusätzliche
@@ -438,6 +438,18 @@ Erledigte Sitzungen abhaken, die oberste offene Zeile ist dran (die Nummern blei
       Danach: Live-Demo einmal auf fremdem Rechner/Handy testen.
       Selbst erledigen (Nutzerin): Moodle-Frage „Darf das Projekt veröffentlicht werden?“ beantworten; Poster hochladen.
       Fr 20.11.: Poster + Live-Vorstellung **vom eigenen Rechner** (lokal, nicht über GitHub).
+
+- [x] 24. App zum Installieren (Wunsch der Nutzerin 19.11., trotz Feature Freeze – **nur auf dem Nebenzweig
+      `app-installieren`**, nicht auf `main`; Live-Demo und Präsentationsfassung bleiben unberührt. Nach der Abgabe in
+      `main` übernehmen). Keine .exe, sondern „Als App installieren“ in Chrome/Edge (eigenes Fenster, Symbol im Startmenü).
+      Gebaut (19.11.): `manifest.webmanifest` (Name, Farben, Symbole), `symbole/` (Haus mit Sonne, selbst gezeichnet
+      mit kleinem Python-Programm), `offline.js` (Offline-Speicher/Service Worker, angemeldet in `index.html`).
+      Eigene Dateien immer zuerst frisch aus dem Netz (keine alten Fassungen), nur ohne Internet aus dem Speicher;
+      three.js, web-ifc (samt .wasm) und jsPDF werden beim ersten Öffnen gleich mitgemerkt. OpenStreetMap bleibt online.
+      Die Bibliotheken liegen also weiter nicht im Projekt – die App muss **einmal mit Internet** geöffnet werden.
+      Getestet (localhost): Speicher läuft, alle Dateien gemerkt; Server aus → App startet trotzdem, IFC-Leser bereit.
+      Nicht getestet: Installieren selbst (Knopf in der Adresszeile), IFC laden und PDF ganz ohne Internet,
+      Mac. Varianten liegen in der installierten App und im Browser im selben Speicher (gleiche Adresse).
 
 **Fr 20.11.** – Polieren & präsentieren, Abgabe bis 16 Uhr
 
