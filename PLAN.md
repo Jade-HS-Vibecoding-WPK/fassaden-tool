@@ -390,6 +390,10 @@ Erledigte Sitzungen abhaken, die oberste offene Zeile ist dran (die Nummern blei
       2. Screenshots in `docs/screenshots/` (ca. 1600 × 900): Startseite und wichtigste Funktion
          (z. B. Fassade mit Material + Variantenvergleich). Kein Playwright (kein Node) – über das Browser-Fenster
          oder die Nutzerin macht sie selbst. Nur eigenes Modell zeigen, nicht die Test-IFC der Kammer.
+         **Zusätzlich fürs Poster (Wunsch der Nutzerin 19.11.):** gute, große Bilder (Druck A1), z. B. Aquarell mit
+         Abendlicht, Variantenvergleich, Umgebung, PDF-Blatt. Fürs Poster in hoher Auflösung, für die README ca. 1600 × 900.
+         Modelle (eigene Entwürfe der Nutzerin, Archicad): `Desktop\Testdatei.ifc` (17 Wände, 4 Fenster, 5 Türen) und
+         `Desktop\IFC TEST.ifc` (17 Wände, 26 Fenster). Zum Testen nach `testdaten/` kopieren (nicht hochladen).
       3. README: oben ein Satz, was das Tool macht, + Link zur Live-Demo; Screenshots; kurze Anleitung
          (Link öffnen bzw. lokal mit `python -m http.server`); am Ende Quellen mit Lizenz
          (three.js, web-ifc, jsPDF, Source Sans 3/OFL, OpenStreetMap/Nominatim/Overpass © OSM-Mitwirkende/ODbL)
