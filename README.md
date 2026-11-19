@@ -7,7 +7,7 @@
 ![Aquarell in der Dämmerung: Klinkerfassade mit leuchtenden Fenstern](docs/screenshots/aquarell-daemmerung.png)
 
 Eine kleine Web-App für Architekturstudierende, entstanden in der Vibecoding KI-Werkstatt an der Jade Hochschule (16.–20.11.2026).
-Es braucht keine Installation und kein Konto. Die IFC-Datei bleibt im eigenen Browser und wird nirgends hochgeladen.
+Es braucht keine Installation und kein Konto – wer mag, installiert sie als App (siehe unten). Die IFC-Datei bleibt im eigenen Browser und wird nirgends hochgeladen.
 
 ## Was das Tool kann
 
@@ -36,6 +36,12 @@ Es braucht keine Installation und kein Konto. Die IFC-Datei bleibt im eigenen Br
 Tipps für den IFC-Export stehen in der App auf der Startseite unter „IFC-Export – Tipps“.
 
 ![Startseite mit Anleitung](docs/screenshots/startseite.png)
+
+**Als App installieren** (eigenes Fenster, Symbol im Startmenü, startet auch ohne Internet): die
+[Live-Demo](https://jade-hs-vibecoding-wpk.github.io/fassaden-tool/) in **Chrome oder Edge** öffnen und rechts in der
+Adresszeile auf das Symbol „App installieren“ klicken (oder Menü ⋮ → „Fassaden-Tool installieren“ bzw. Edge: „Apps“ →
+„Diese Website als App installieren“). Einmal mit Internet öffnen, danach geht es auch offline – nur Ortssuche und
+Umgebung „Echter Ort“ brauchen weiter Internet. Kein Download einer .exe, keine Sicherheitswarnung.
 
 **Lokal starten** (ohne Internet für die App selbst, Bibliotheken kommen aber per CDN): Ordner herunterladen und darin
 

@@ -49,7 +49,7 @@ nebeneinander vergleicht und als PDF mitnimmt.
 - [ ] Varianten als Arbeitsdatei sichern und später wieder laden (ein PDF kann die App nicht zurücklesen)
 - [x] Sonnenverlauf als Animation über den Tag (Sitzung 19e)
 - [ ] Grobe Kosten und CO₂ pro Variante
-- [x] Programm zum Herunterladen – als installierbare App gebaut (Sitzung 24, Nebenzweig `app-installieren`).
+- [x] Programm zum Herunterladen – als installierbare App gebaut (Sitzung 24, seit 19.11. auf `main` und live).
       Gewünscht war eine .exe. Zu klären: (a) **App installieren** (Vorschlag): Chrome/Edge bieten „Als App installieren“
       an, wenn die Seite eine kleine Beschreibungsdatei (Manifest) und einen Offline-Speicher hat – eigenes Fenster und
       Symbol im Startmenü, keine .exe, keine Sicherheitswarnung, läuft auch auf Mac. (b) Echte .exe: bräuchte zusätzliche
@@ -450,6 +450,10 @@ Erledigte Sitzungen abhaken, die oberste offene Zeile ist dran (die Nummern blei
       Getestet (localhost): Speicher läuft, alle Dateien gemerkt; Server aus → App startet trotzdem, IFC-Leser bereit.
       Nicht getestet: Installieren selbst (Knopf in der Adresszeile), IFC laden und PDF ganz ohne Internet,
       Mac. Varianten liegen in der installierten App und im Browser im selben Speicher (gleiche Adresse).
+      **Auf `main` übernommen (19.11., Wunsch der Nutzerin: „App jetzt downloadbar“)** – damit ist sie in der Live-Demo
+      installierbar. Vorher nochmal getestet (localhost, unsichtbarer Edge): keine Installierbarkeits-Fehler, Speicher
+      füllt alle Dateien, Neuladen ohne Internet → App startet, **IFC laden ohne Internet klappt**. README: Abschnitt
+      „Als App installieren“. Weiter nicht getestet: Klick auf „Installieren“ selbst, PDF offline, Mac.
 
 **Fr 20.11.** – Polieren & präsentieren, Abgabe bis 16 Uhr
 
