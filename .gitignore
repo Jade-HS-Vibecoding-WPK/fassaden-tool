@@ -5,3 +5,6 @@ testdaten/
 Thumbs.db
 desktop.ini
 .DS_Store
+
+# Große Poster-Bilder (Sitzung 22): nur für den Druck, nicht ins Repo
+docs/poster/

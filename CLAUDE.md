@@ -13,6 +13,8 @@ Entsteht in der Vibecoding KI-Werkstatt (Jade Hochschule, 16.–20.11.2026). Abg
   und die Nutzerin daran erinnern.
 - Neue Regel oder Entscheidung → sofort hier bzw. in PLAN.md eintragen.
 - Keine API-Keys, keine personenbezogenen Daten, keine Büro-/Kundendaten.
+- `docs/poster/` (große Bilder fürs Poster, 35 MB) nicht auf GitHub hochladen – steht in `.gitignore`;
+  fürs README reichen die kleinen Bilder in `docs/screenshots/`.
 - `testdaten/` nicht auf GitHub hochladen (Beispiel-IFC von der Bundesingenieurkammer, Nutzungsbedingungen nicht geklärt) – steht in `.gitignore`.
 
 # Technik

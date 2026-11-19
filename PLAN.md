@@ -394,6 +394,20 @@ Erledigte Sitzungen abhaken, die oberste offene Zeile ist dran (die Nummern blei
          Abendlicht, Variantenvergleich, Umgebung, PDF-Blatt. Fürs Poster in hoher Auflösung, für die README ca. 1600 × 900.
          Modelle (eigene Entwürfe der Nutzerin, Archicad): `Desktop\Testdatei.ifc` (17 Wände, 4 Fenster, 5 Türen) und
          `Desktop\IFC TEST.ifc` (17 Wände, 26 Fenster). Zum Testen nach `testdaten/` kopieren (nicht hochladen).
+         **Erledigt (19.11.):** Aufgenommen mit unsichtbarem Edge (Fernsteuerung, doppelte/dreifache Schärfe).
+         `docs/screenshots/` (1600 × 900, fürs README): startseite, aquarell-abend, realistisch, variantenvergleich, marker-wald.
+         `docs/poster/` (35 MB, **nicht im Repo**, steht in `.gitignore`): app-… = mit Oberfläche 3200 × 1800;
+         aquarell-abend, realistisch, marker-wald = nur Bild 3834 × 2376; stil-… = dasselbe Haus in allen 5 Stilen
+         2556 × 1584; variantenvergleich-lang 3200 × 3000. Nicht gemacht: Bild eines PDF-Blatts (Nutzerin kann ein
+         eigenes PDF öffnen und abfotografieren). Hinweis: A1 bei 3834 px Breite ≈ 115 dpi auf voller Breite – als
+         halbe Posterbreite gut scharf.
+         **Nachtrag (Wunsch der Nutzerin: kontrastreichere Aquarelle):** vier weitere Motive, je als
+         `aquarell-<motiv>.png` (README-Größe, Poster nur Bild) und `app-aquarell-<motiv>.png` (Poster mit Oberfläche):
+         schatten (Putz altweiß, Wiese, 21.6. 19:00, Blick SW – helle und dunkle Seiten, langer Schlagschatten),
+         gegenlicht (dasselbe, Blick SO – Schatten fällt nach vorn), daemmerung (Klinker, Ländlich, 19.11. 17:30 –
+         lila Himmel, alle Fenster leuchten), nacht (Klinker, 19.11. 22:30 – nachtblau, nur einzelne Fenster an).
+         Erkenntnis: Kräftige Schatten sieht man im Aquarell am besten mit hellem Putz, tiefer Sonne (ca. 20°) und
+         Blick auf eine Sonnen- und eine Schattenseite; bei Sonne im Rücken der Kamera wirkt alles flach.
       3. README: oben ein Satz, was das Tool macht, + Link zur Live-Demo; Screenshots; kurze Anleitung
          (Link öffnen bzw. lokal mit `python -m http.server`); am Ende Quellen mit Lizenz
          (three.js, web-ifc, jsPDF, Source Sans 3/OFL, OpenStreetMap/Nominatim/Overpass © OSM-Mitwirkende/ODbL)
