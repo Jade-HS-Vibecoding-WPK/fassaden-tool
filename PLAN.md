@@ -412,7 +412,15 @@ Erledigte Sitzungen abhaken, die oberste offene Zeile ist dran (die Nummern blei
          (Link öffnen bzw. lokal mit `python -m http.server`); am Ende Quellen mit Lizenz
          (three.js, web-ifc, jsPDF, Source Sans 3/OFL, OpenStreetMap/Nominatim/Overpass © OSM-Mitwirkende/ODbL)
          und KI-Nutzung kennzeichnen (gebaut mit Claude Code). Prüfen: Bilder und Link auf GitHub sichtbar?
+      **Schritt 3 erledigt (19.11.):** README neu (Satz + Live-Demo-Link, 6 Screenshots, Funktionen, Anleitung, lokal starten,
+         Datenschutz, Quellen mit Lizenz, KI-Nutzung). Auf GitHub geprüft: Überschrift, alle 6 Bilder und Link sichtbar.
+         Offen für die Nutzerin: Die Kurzbeschreibung rechts im Repo („About“, noch „Grundriss hochladen …“) ist veraltet –
+         auf GitHub beim Zahnrad neben „About“ ändern, z. B. „IFC hochladen, Fassaden und Fenster ausprobieren, Varianten vergleichen“.
       4. QR-Code zur Live-Demo als `docs/qr-code.png`, scharf genug für A1 – mit dem Handy testen.
+         **Erledigt (19.11.):** `docs/qr-code.png` (2624 × 2624 px) und `docs/qr-code.svg` (beliebig groß, fürs Poster am
+         besten). Selbst erzeugt mit kleinem Python-Programm (QR Version 4, Fehlerkorrektur M), weil eine fremde
+         QR-Bibliothek nicht nachgeladen werden durfte. Muster (Ecken, Taktlinien, Ausrichtung) geprüft; ob er sich
+         lesen lässt, kann nur das Handy zeigen – **Handytest steht noch aus.**
       5. Als Letztes: Release v1.0.0 mit kurzen Release Notes (was das Tool kann + Link).
          Prüfen: rechts im Repo steht v1.0.0.
       Danach: Live-Demo einmal auf fremdem Rechner/Handy testen.
