@@ -456,7 +456,9 @@ Erledigte Sitzungen abhaken, die oberste offene Zeile ist dran (die Nummern blei
       „Als App installieren“. Weiter nicht getestet: Klick auf „Installieren“ selbst, PDF offline, Mac.
       Nutzerin hat die installierte App getestet (19.11.): Installieren klappt ✓.
 
-- [ ] 25. Gemalte Stile schneller (Wunsch der Nutzerin 19.11.: Aquarell, Marker, Collage sind etwas langsam).
+- [ ] 25. **Zurückgestellt (19.11.):** Kursleitung sagt, die Langsamkeit ist nicht schlimm → vorerst nicht bauen,
+      nur noch als Idee für später (Could).
+      Gemalte Stile schneller (Wunsch der Nutzerin 19.11.: Aquarell, Marker, Collage sind etwas langsam).
       Ursache (`szene.js` Zeile 93, `stile.js`): Das Bild wird **60-mal pro Sekunde neu gemalt, auch wenn sich nichts
       bewegt**, in voller Bildschirmschärfe (`devicePixelRatio`), und der Malfilter liest für jeden Bildpunkt viele
       Nachbarpunkte (Schleifen mit 9–25 Proben, Wolken-Rauschen). Bleistift ist leichter, daher dort kaum spürbar.
