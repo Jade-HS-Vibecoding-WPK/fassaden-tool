@@ -390,7 +390,7 @@ Erledigte Sitzungen abhaken, die oberste offene Zeile ist dran (die Nummern blei
 - [–] 23l. ~~Variante wieder als IFC speichern~~ – **gestrichen (18.11., Wunsch der Nutzerin)**.
       War schon gebaut und getestet (Knopf „Als IFC speichern“, `js/ifcexport.js`), die Nutzerin will den
       Rückweg nach Archicad dann doch nicht. Alles wieder entfernt, nichts davon committet.
-- [ ] 22. Nachmittag: Abgabe veröffentlichen (nach Präsentation „Tag 4 · Vom Laptop in die Welt“, 19.11.;
+- [x] 22. Nachmittag: Abgabe veröffentlichen (nach Präsentation „Tag 4 · Vom Laptop in die Welt“, 19.11.;
       Poster macht die Nutzerin selbst nach Moodle-Vorlage). Ab 12:00 Feature Freeze: nur noch reparieren/polieren.
       Ein Schritt, dann selbst prüfen, dann der nächste:
       1. Sichern: `git status`, Code nach Keys/Passwörtern durchsuchen, commit + push (Live-Demo läuft schon).
@@ -430,6 +430,11 @@ Erledigte Sitzungen abhaken, die oberste offene Zeile ist dran (die Nummern blei
          lesen lässt, kann nur das Handy zeigen – Handytest: **funktioniert** (Nutzerin, 19.11.).
       5. Als Letztes: Release v1.0.0 mit kurzen Release Notes (was das Tool kann + Link).
          Prüfen: rechts im Repo steht v1.0.0.
+         **Stand (19.11.):** Versionsmarke `v1.0.0` ist gesetzt und auf GitHub. Das Release selbst (Seite mit Notizen)
+         braucht die Anmeldung bei GitHub im Browser – `gh` ist nicht installiert. Nutzerin hat sich im Browser-Fenster angemeldet,
+         Release „Fassaden-Tool 1.0.0“ veröffentlicht (19.11.), rechts im Repo steht „Releases 1 · v1.0.0“ ✓.
+         **Sitzung 22 erledigt.** Noch offen (Nutzerin): Live-Demo auf fremdem Rechner/Handy testen, „About“-Text auf GitHub
+         ändern, Moodle-Frage beantworten, Poster (Bilder in `docs/poster/`, QR-Code `docs/qr-code.svg`) hochladen.
       Danach: Live-Demo einmal auf fremdem Rechner/Handy testen.
       Selbst erledigen (Nutzerin): Moodle-Frage „Darf das Projekt veröffentlicht werden?“ beantworten; Poster hochladen.
       Fr 20.11.: Poster + Live-Vorstellung **vom eigenen Rechner** (lokal, nicht über GitHub).
