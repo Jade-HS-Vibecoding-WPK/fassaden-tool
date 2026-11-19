@@ -383,7 +383,23 @@ Erledigte Sitzungen abhaken, die oberste offene Zeile ist dran (die Nummern blei
 - [–] 23l. ~~Variante wieder als IFC speichern~~ – **gestrichen (18.11., Wunsch der Nutzerin)**.
       War schon gebaut und getestet (Knopf „Als IFC speichern“, `js/ifcexport.js`), die Nutzerin will den
       Rückweg nach Archicad dann doch nicht. Alles wieder entfernt, nichts davon committet.
-- [ ] 22. Nachmittag: README (Poster macht die Nutzerin selbst nach Moodle-Vorlage)
+- [ ] 22. Nachmittag: Abgabe veröffentlichen (nach Präsentation „Tag 4 · Vom Laptop in die Welt“, 19.11.;
+      Poster macht die Nutzerin selbst nach Moodle-Vorlage). Ab 12:00 Feature Freeze: nur noch reparieren/polieren.
+      Ein Schritt, dann selbst prüfen, dann der nächste:
+      1. Sichern: `git status`, Code nach Keys/Passwörtern durchsuchen, commit + push (Live-Demo läuft schon).
+      2. Screenshots in `docs/screenshots/` (ca. 1600 × 900): Startseite und wichtigste Funktion
+         (z. B. Fassade mit Material + Variantenvergleich). Kein Playwright (kein Node) – über das Browser-Fenster
+         oder die Nutzerin macht sie selbst. Nur eigenes Modell zeigen, nicht die Test-IFC der Kammer.
+      3. README: oben ein Satz, was das Tool macht, + Link zur Live-Demo; Screenshots; kurze Anleitung
+         (Link öffnen bzw. lokal mit `python -m http.server`); am Ende Quellen mit Lizenz
+         (three.js, web-ifc, jsPDF, Source Sans 3/OFL, OpenStreetMap/Nominatim/Overpass © OSM-Mitwirkende/ODbL)
+         und KI-Nutzung kennzeichnen (gebaut mit Claude Code). Prüfen: Bilder und Link auf GitHub sichtbar?
+      4. QR-Code zur Live-Demo als `docs/qr-code.png`, scharf genug für A1 – mit dem Handy testen.
+      5. Als Letztes: Release v1.0.0 mit kurzen Release Notes (was das Tool kann + Link).
+         Prüfen: rechts im Repo steht v1.0.0.
+      Danach: Live-Demo einmal auf fremdem Rechner/Handy testen.
+      Selbst erledigen (Nutzerin): Moodle-Frage „Darf das Projekt veröffentlicht werden?“ beantworten; Poster hochladen.
+      Fr 20.11.: Poster + Live-Vorstellung **vom eigenen Rechner** (lokal, nicht über GitHub).
 
 **Fr 20.11.** – Polieren & präsentieren, Abgabe bis 16 Uhr
 
