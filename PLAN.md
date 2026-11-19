@@ -454,6 +454,16 @@ Erledigte Sitzungen abhaken, die oberste offene Zeile ist dran (die Nummern blei
       installierbar. Vorher nochmal getestet (localhost, unsichtbarer Edge): keine Installierbarkeits-Fehler, Speicher
       füllt alle Dateien, Neuladen ohne Internet → App startet, **IFC laden ohne Internet klappt**. README: Abschnitt
       „Als App installieren“. Weiter nicht getestet: Klick auf „Installieren“ selbst, PDF offline, Mac.
+      Nutzerin hat die installierte App getestet (19.11.): Installieren klappt ✓.
+
+- [ ] 25. Gemalte Stile schneller (Wunsch der Nutzerin 19.11.: Aquarell, Marker, Collage sind etwas langsam).
+      Ursache (`szene.js` Zeile 93, `stile.js`): Das Bild wird **60-mal pro Sekunde neu gemalt, auch wenn sich nichts
+      bewegt**, in voller Bildschirmschärfe (`devicePixelRatio`), und der Malfilter liest für jeden Bildpunkt viele
+      Nachbarpunkte (Schleifen mit 9–25 Proben, Wolken-Rauschen). Bleistift ist leichter, daher dort kaum spürbar.
+      Plan: (a) nur neu malen, wenn sich etwas ändert (Kamera, Einstellung, Sonnen-Animation) – im Stillstand kein
+      Rechnen mehr, Laptop bleibt kühl; (b) während des Drehens/Zoomens in halber Schärfe malen, beim Loslassen
+      wieder scharf. Gespeicherte Bilder und PDF bleiben unverändert scharf.
+      Achtung: Präsentation Fr 20.11. – auf einem Nebenzweig bauen, erst nach Test auf `main` (ist sofort live).
 
 **Fr 20.11.** – Polieren & präsentieren, Abgabe bis 16 Uhr
 
